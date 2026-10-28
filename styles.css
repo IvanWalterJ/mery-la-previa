@@ -1,18 +1,21 @@
 :root {
-  /* Refero Styles Palette: Wise "Deep Moss & Lime Voltage" + Perk "Warm Parchment" + TE Industrial Grid */
-  --void-moss: #050a06;
-  --forest-ink: #0b170e;
-  --forest-surface: #102115;
-  --forest-elevated: #162d1d;
-  --lime-voltage: #9fe870;
-  --acid-lime: #beff50;
-  --parchment: #f4f1ea;
-  --parchment-muted: #a6b0a8;
-  --crimson-tag: #ff2525;
-  --grid-hairline: rgba(159, 232, 112, 0.16);
-  --grid-solid: rgba(244, 241, 234, 0.14);
-  --font-display: 'Britney', cursive, serif;
-  --font-body: 'Quicksand', -apple-system, BlinkMacSystemFont, sans-serif;
+  /* @meryjane.laprevia Official Nocturnal Club Palette */
+  --pitch-black: #050203;
+  --blood-velvet: #120406;
+  --crimson-surface: #1b0609;
+  --neon-red: #ff2216;
+  --neon-orange-glow: #ff4d29;
+  --neon-halo: rgba(255, 34, 22, 0.52);
+  --silver-chrome: #f5f2eb;
+  --silver-muted: #b0a8a6;
+  --border-crimson: rgba(255, 56, 38, 0.24);
+  --border-subtle: rgba(245, 242, 235, 0.14);
+
+  /* High-Fashion Nightlife Typography (Matches "LA PREVIA 13/11" Ice Cube + Modern Club) */
+  --font-serif: 'Instrument Serif', Georgia, serif;
+  --font-display: 'Syne', sans-serif;
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-script: 'Caveat', cursive;
 }
 
 *, *::before, *::after {
@@ -24,233 +27,230 @@
 html, body {
   width: 100%;
   height: 100%;
-  background-color: var(--void-moss);
-  color: var(--parchment);
-  font-family: var(--font-body);
-  font-weight: 500;
+  background-color: var(--pitch-black);
+  color: var(--silver-chrome);
+  font-family: var(--font-sans);
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
 }
 
 /* ==========================================================================
-   1. FULLSCREEN 360° BOTTLE PLINTH STAGE
+   1. FULLSCREEN NEON WALL BACKDROP ("MERY LA PREVIA" ON BLACK FLUTED WALL)
    ========================================================================== */
-.bottle-video-stage {
+.neon-wall-stage {
   position: fixed;
   inset: 0;
   z-index: 0;
-  background: #000;
-  display: grid;
-  place-items: center;
+  background: #020101;
   overflow: hidden;
 }
 
-.bottle-video-stage video {
+.neon-wall-stage img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
   transform: scale(1.03);
-  filter: brightness(0.96) contrast(1.08);
-  transition:
-    transform 1.4s cubic-bezier(0.16, 1, 0.3, 1),
-    filter 1.4s cubic-bezier(0.16, 1, 0.3, 1);
+  /* Starts unlit/dim and flickers on like a real neon tube */
+  filter: brightness(0.12) contrast(1.25) saturate(0.4);
+  transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1), filter 0.6s ease;
 }
 
-body.intro-revealed .bottle-video-stage video {
-  transform: scale(1);
-  filter: brightness(0.68) contrast(1.12);
+/* Keyframe simulating real glass neon tube ignition (flicker -> full red glow) */
+@keyframes neonTubeIgnite {
+  0%   { filter: brightness(0.08) contrast(1.2) saturate(0.2); }
+  12%  { filter: brightness(1.25) contrast(1.25) saturate(1.3); }
+  18%  { filter: brightness(0.18) contrast(1.2) saturate(0.4); }
+  28%  { filter: brightness(0.95) contrast(1.15) saturate(1.1); }
+  34%  { filter: brightness(0.25) contrast(1.2) saturate(0.5); }
+  52%  { filter: brightness(1.35) contrast(1.22) saturate(1.35); }
+  60%  { filter: brightness(0.75) contrast(1.15) saturate(1); }
+  100% { filter: brightness(1.05) contrast(1.16) saturate(1.18); }
 }
 
-body.in-dimension .bottle-video-stage video {
-  transform: scale(1.28);
-  filter: brightness(0.16) contrast(1.25) saturate(0.8);
+body.neon-igniting .neon-wall-stage img {
+  animation: neonTubeIgnite 1.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-.ambient-vignette {
+body.neon-lit .neon-wall-stage img {
+  filter: brightness(0.92) contrast(1.16) saturate(1.15);
+  animation: subtleNeonPulse 4s ease-in-out infinite alternate;
+}
+
+@keyframes subtleNeonPulse {
+  0%   { filter: brightness(0.88) contrast(1.16) saturate(1.12); }
+  100% { filter: brightness(1.04) contrast(1.2) saturate(1.25); }
+}
+
+/* When inside one of the dedicated sections, dim the neon wall into a dark club background */
+body.in-section .neon-wall-stage img {
+  transform: scale(1.12);
+  filter: brightness(0.24) contrast(1.25) blur(6px);
+  animation: none;
+}
+
+.club-vignette {
   position: fixed;
   inset: 0;
   z-index: 1;
   pointer-events: none;
   background:
-    radial-gradient(circle at 50% 50%, transparent 28%, rgba(5, 10, 6, 0.82) 90%),
-    linear-gradient(180deg, rgba(5, 10, 6, 0.72) 0%, transparent 22%, transparent 78%, rgba(5, 10, 6, 0.88) 100%);
+    radial-gradient(circle at 50% 42%, transparent 18%, rgba(5, 2, 3, 0.72) 85%, #030102 100%),
+    linear-gradient(180deg, rgba(5, 2, 3, 0.65) 0%, transparent 25%, rgba(5, 2, 3, 0.92) 100%);
 }
 
 /* ==========================================================================
-   2. HYPERSPACE / TIME-WARP CANVAS & VIEW TRANSITIONS API
+   2. DIRECTIONAL SLIDE VIEW TRANSITIONS (CLEAN LATERAL SLIDE — NO STARS)
    ========================================================================== */
-#warpCanvas {
-  position: fixed;
-  inset: 0;
-  z-index: 60;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-
-body.warping #warpCanvas {
-  opacity: 1;
-}
-
 ::view-transition-group(root) {
-  animation-duration: 0.68s;
-  animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+  animation-duration: 0.52s;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
   @media (prefers-reduced-motion: reduce) {
     animation: none !important;
   }
 }
 
-@keyframes warp-out-forward {
-  0% {
-    opacity: 1;
-    transform: perspective(1000px) translateZ(0) scale(1);
-    filter: blur(0px);
-  }
-  100% {
-    opacity: 0;
-    transform: perspective(1000px) translateZ(720px) scale(2.4);
-    filter: blur(16px) brightness(2);
+@keyframes slide-to-left {
+  to {
+    transform: translateX(-100%);
+    opacity: 0.35;
   }
 }
 
-@keyframes warp-in-forward {
-  0% {
-    opacity: 0;
-    transform: perspective(1000px) translateZ(-780px) scale(0.28);
-    filter: blur(18px) brightness(2.2);
-  }
-  100% {
-    opacity: 1;
-    transform: perspective(1000px) translateZ(0) scale(1);
-    filter: blur(0px) brightness(1);
+@keyframes slide-from-right {
+  from {
+    transform: translateX(100%);
   }
 }
 
-@keyframes warp-out-backward {
-  0% {
-    opacity: 1;
-    transform: perspective(1000px) translateZ(0) scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: perspective(1000px) translateZ(-700px) scale(0.35);
-    filter: blur(14px);
+@keyframes slide-to-right {
+  to {
+    transform: translateX(100%);
+    opacity: 0.35;
   }
 }
 
-@keyframes warp-in-backward {
-  0% {
-    opacity: 0;
-    transform: perspective(1000px) translateZ(640px) scale(2.15);
-    filter: blur(16px) brightness(1.8);
-  }
-  100% {
-    opacity: 1;
-    transform: perspective(1000px) translateZ(0) scale(1);
-    filter: blur(0px) brightness(1);
+@keyframes slide-from-left {
+  from {
+    transform: translateX(-100%);
   }
 }
 
 html:active-view-transition-type(forward)::view-transition-old(root) {
-  animation-name: warp-out-forward;
+  animation-name: slide-to-left;
 }
 html:active-view-transition-type(forward)::view-transition-new(root) {
-  animation-name: warp-in-forward;
+  animation-name: slide-from-right;
 }
 
 html:active-view-transition-type(backward)::view-transition-old(root) {
-  animation-name: warp-out-backward;
+  animation-name: slide-to-right;
 }
 html:active-view-transition-type(backward)::view-transition-new(root) {
-  animation-name: warp-in-backward;
+  animation-name: slide-from-left;
 }
 
-.dimension-stage.warp-anim-forward {
-  animation: warp-in-forward 0.68s cubic-bezier(0.22, 1, 0.36, 1);
+/* Fallback CSS Slide classes when View Transitions API is unavailable */
+.slide-enter-right {
+  animation: slide-from-right 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
-.dimension-stage.warp-anim-backward {
-  animation: warp-in-backward 0.68s cubic-bezier(0.22, 1, 0.36, 1);
+.slide-enter-left {
+  animation: slide-from-left 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* ==========================================================================
-   3. CRUZA POLO + TEENAGE ENGINEERING TOP & BOTTOM HORIZON RAILS
+   3. TOP & BOTTOM CRUZA-STYLE CLUB RAILS + NEON SOUND BUTTON
    ========================================================================== */
-.cruza-horizon-top,
-.cruza-horizon-bottom {
+.club-rail-top,
+.club-rail-bottom {
   position: fixed;
   left: 0;
   right: 0;
-  z-index: 30;
+  z-index: 35;
   display: flex;
   align-items: center;
-  padding: 0 3.5vw;
-  opacity: 0;
-  transform: translateY(12px);
-  transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 0 4vw;
+  gap: 18px;
 }
 
-.cruza-horizon-top {
+.club-rail-top {
   top: 24px;
-  gap: 16px;
 }
 
-.cruza-horizon-bottom {
+.club-rail-bottom {
   bottom: 22px;
-  gap: 16px;
 }
 
-body.intro-revealed .cruza-horizon-top,
-body.intro-revealed .cruza-horizon-bottom {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.rail-tag {
+.rail-brand {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.74rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--silver-chrome);
+  white-space: nowrap;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--parchment);
-  white-space: nowrap;
 }
 
-.rail-dot {
+.neon-pulse-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--lime-voltage);
-  box-shadow: 0 0 12px var(--lime-voltage);
+  background: var(--neon-red);
+  box-shadow: 0 0 12px var(--neon-red), 0 0 24px var(--neon-red);
 }
 
-.horizon-line {
+.rail-line {
   flex: 1;
   height: 1px;
-  background: var(--grid-solid);
+  background: linear-gradient(90deg, rgba(255, 34, 22, 0.55) 0%, rgba(245, 242, 235, 0.14) 100%);
 }
 
-.rail-coords {
+.club-rail-bottom .rail-line {
+  background: linear-gradient(90deg, rgba(245, 242, 235, 0.14) 0%, rgba(255, 34, 22, 0.55) 100%);
+}
+
+.btn-sound-neon {
+  appearance: none;
+  border: 1px solid rgba(255, 34, 22, 0.6);
+  background: rgba(18, 4, 6, 0.82);
+  backdrop-filter: blur(10px);
+  color: var(--silver-chrome);
+  font-family: var(--font-sans);
+  font-weight: 700;
   font-size: 0.7rem;
-  font-weight: 600;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--parchment-muted);
-  white-space: nowrap;
+  padding: 8px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 0 20px rgba(255, 34, 22, 0.25);
+  transition: all 0.22s ease;
 }
 
-.horizon-monogram {
-  font-family: var(--font-display);
+.btn-sound-neon:hover {
+  background: var(--neon-red);
+  color: #fff;
+  box-shadow: 0 0 30px var(--neon-halo);
+}
+
+.neon-quote-script {
+  font-family: var(--font-script);
   font-size: 1.45rem;
-  color: var(--lime-voltage);
+  color: #ff694a;
+  text-shadow: 0 0 14px rgba(255, 34, 22, 0.75);
   white-space: nowrap;
 }
 
 /* ==========================================================================
-   4. HOME PORTAL (SINGLE 100VH SCREEN — CRUZA POLO + LIME VOLTAGE)
+   4. PORTAL HOME (100VH — NEON SIGN HERO + CRUZA NIGHT NAVIGATION)
    ========================================================================== */
-.dimension-stage {
+.stage-viewport {
   position: relative;
   z-index: 10;
   width: 100vw;
@@ -267,144 +267,128 @@ body.intro-revealed .cruza-horizon-bottom {
   display: flex;
 }
 
-.home-portal {
+.home-club-portal {
   flex-direction: column;
+  justify-content: flex-end;
   align-items: center;
-  justify-content: center;
+  padding: 80px 5vw 76px;
   text-align: center;
-  padding: 80px 4vw;
 }
 
+/* Staggered upward fade-in after the neon sign finishes igniting */
 .reveal-up {
   opacity: 0;
-  transform: translateY(32px);
+  transform: translateY(28px);
   transition:
-    opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+    opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-body.intro-revealed .reveal-up {
+body.ui-revealed .reveal-up {
   opacity: 1;
   transform: translateY(0);
 }
 
-body.intro-revealed .delay-1 { transition-delay: 0.06s; }
-body.intro-revealed .delay-2 { transition-delay: 0.18s; }
-body.intro-revealed .delay-3 { transition-delay: 0.32s; }
-body.intro-revealed .delay-4 { transition-delay: 0.42s; }
-body.intro-revealed .delay-5 { transition-delay: 0.52s; }
-body.intro-revealed .delay-6 { transition-delay: 0.62s; }
+body.ui-revealed .delay-1 { transition-delay: 0.05s; }
+body.ui-revealed .delay-2 { transition-delay: 0.16s; }
+body.ui-revealed .delay-3 { transition-delay: 0.27s; }
+body.ui-revealed .delay-4 { transition-delay: 0.38s; }
+body.ui-revealed .delay-5 { transition-delay: 0.49s; }
 
-.portal-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
-  border: 1px solid var(--grid-hairline);
-  background: rgba(11, 23, 14, 0.72);
-  color: var(--lime-voltage);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  margin-bottom: 14px;
-}
-
-.brand-main-title {
-  font-family: var(--font-display);
-  font-weight: 400;
-  font-size: clamp(3.8rem, 9.2vw, 7.6rem);
-  line-height: 0.92;
-  color: var(--parchment);
-  margin-bottom: 38px;
-  text-shadow: 0 18px 55px rgba(0, 0, 0, 0.9);
-}
-
-/* Cruza Polo Interactive Index Stack with Teenage Engineering Index Numbers */
-.cruza-menu-list {
-  list-style: none;
-  width: min(92vw, 560px);
-  border-top: 1px solid var(--grid-solid);
-}
-
-.cruza-menu-list li {
-  border-bottom: 1px solid var(--grid-solid);
-}
-
-.cruza-nav-btn {
-  appearance: none;
-  width: 100%;
-  background: rgba(7, 15, 10, 0.42);
-  backdrop-filter: blur(6px);
-  border: none;
-  padding: 16px 20px;
-  display: grid;
-  grid-template-columns: 44px 1fr auto;
-  align-items: center;
-  text-align: left;
-  color: var(--parchment);
-  font-family: var(--font-body);
-  cursor: pointer;
-  transition: background 0.22s ease, color 0.22s ease, padding-left 0.25s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.nav-idx {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  color: var(--lime-voltage);
-}
-
-.nav-label {
-  font-size: clamp(1.1rem, 2.1vw, 1.45rem);
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
-
-.nav-meta {
+.portal-sub-kicker {
+  font-family: var(--font-sans);
   font-size: 0.74rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  color: var(--parchment-muted);
-  transition: color 0.22s ease, transform 0.22s ease;
+  font-weight: 700;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: rgba(245, 242, 235, 0.78);
+  margin-bottom: 18px;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.95);
 }
 
-.cruza-nav-btn:hover {
-  background: var(--lime-voltage);
-  color: var(--void-moss);
-  padding-left: 28px;
+/* Horizontal / Stacked Cruza Nightclub Menu Bar at Lower Third so Neon Sign Shines Above */
+.cruza-night-nav {
+  width: min(94vw, 960px);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
 }
 
-.cruza-nav-btn:hover .nav-idx,
-.cruza-nav-btn:hover .nav-meta {
-  color: var(--void-moss);
+.night-nav-card {
+  appearance: none;
+  background: rgba(12, 3, 5, 0.76);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 56, 38, 0.32);
+  padding: 20px 18px;
+  text-align: left;
+  color: var(--silver-chrome);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.26s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.26s ease, background 0.26s ease, box-shadow 0.26s ease;
 }
 
-.cruza-nav-btn:hover .nav-meta {
-  transform: translateX(4px);
+.night-nav-card:hover {
+  transform: translateY(-5px);
+  background: rgba(34, 6, 9, 0.92);
+  border-color: var(--neon-red);
+  box-shadow: 0 14px 40px rgba(255, 34, 22, 0.32);
+}
+
+.nav-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: var(--neon-orange-glow);
+}
+
+.nav-card-title {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 2rem;
+  line-height: 0.95;
+  letter-spacing: 0.01em;
+  color: var(--silver-chrome);
+}
+
+.nav-card-title em {
+  font-style: italic;
+  color: #ff694a;
+}
+
+.nav-card-sub {
+  font-size: 0.74rem;
+  color: var(--silver-muted);
+  letter-spacing: 0.04em;
 }
 
 /* ==========================================================================
-   5. DEDICATED FULL-SCREEN SECTIONS (SCROLLABLE EDITORIAL ARCHITECTURE)
+   5. DEDICATED FULL-SCREEN SECTIONS (SLIDE-IN NIGHTCLUB PAGES)
    ========================================================================== */
 .dedicated-page {
   width: 100%;
   height: 100vh;
   overflow-y: auto;
-  padding: 76px 3.5vw 84px;
-  background: rgba(5, 10, 6, 0.84);
-  backdrop-filter: blur(16px);
+  padding: 74px 4vw 80px;
+  background: rgba(6, 2, 3, 0.88);
+  backdrop-filter: blur(18px);
 }
 
 .page-shell {
-  max-width: 1280px;
+  max-width: 1260px;
   margin: 0 auto;
-  border: 1px solid var(--grid-solid);
-  background: var(--forest-ink);
+  border: 1px solid var(--border-crimson);
+  background: var(--blood-velvet);
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.9);
 }
 
-/* Top Sticky Section Bar inside each Dedicated Page */
 .page-topbar {
   position: sticky;
   top: 0;
@@ -414,10 +398,10 @@ body.intro-revealed .delay-6 { transition-delay: 0.62s; }
   justify-content: space-between;
   align-items: center;
   gap: 16px;
-  padding: 18px 28px;
-  background: rgba(11, 23, 14, 0.94);
+  padding: 16px 28px;
+  background: rgba(14, 3, 5, 0.94);
   backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--grid-solid);
+  border-bottom: 1px solid var(--border-crimson);
 }
 
 .page-breadcrumb {
@@ -428,30 +412,31 @@ body.intro-revealed .delay-6 { transition-delay: 0.62s; }
 
 .page-idx-pill {
   padding: 4px 10px;
-  background: var(--lime-voltage);
-  color: var(--void-moss);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
+  background: var(--neon-red);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
+  box-shadow: 0 0 16px rgba(255, 34, 22, 0.5);
 }
 
 .page-code-label {
-  font-size: 0.76rem;
+  font-size: 0.74rem;
   font-weight: 700;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--parchment-muted);
+  color: var(--silver-muted);
 }
 
-.btn-warp-back {
+.btn-slide-back {
   appearance: none;
-  border: 1px solid var(--lime-voltage);
-  background: transparent;
-  color: var(--lime-voltage);
-  font-family: var(--font-body);
+  border: 1px solid rgba(255, 56, 38, 0.55);
+  background: rgba(255, 34, 22, 0.1);
+  color: var(--silver-chrome);
+  font-family: var(--font-sans);
   font-weight: 700;
-  font-size: 0.76rem;
+  font-size: 0.74rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   padding: 10px 18px;
@@ -459,77 +444,83 @@ body.intro-revealed .delay-6 { transition-delay: 0.62s; }
   transition: all 0.2s ease;
 }
 
-.btn-warp-back:hover {
-  background: var(--lime-voltage);
-  color: var(--void-moss);
+.btn-slide-back:hover {
+  background: var(--neon-red);
+  color: #fff;
+  box-shadow: 0 0 24px var(--neon-halo);
 }
 
 /* Section Hero Banner */
 .page-hero-strip {
   display: grid;
-  grid-template-columns: 1.2fr 0.8fr;
-  border-bottom: 1px solid var(--grid-solid);
+  grid-template-columns: 1.15fr 0.85fr;
+  border-bottom: 1px solid var(--border-crimson);
 }
 
 .page-hero-title-col {
-  padding: 36px 28px;
-  border-right: 1px solid var(--grid-solid);
+  padding: 34px 28px;
+  border-right: 1px solid var(--border-crimson);
 }
 
 .page-hero-title {
-  font-family: var(--font-display);
+  font-family: var(--font-serif);
   font-weight: 400;
-  font-size: clamp(2.8rem, 5.5vw, 4.6rem);
-  line-height: 0.95;
-  color: var(--parchment);
+  font-size: clamp(3rem, 5.8vw, 4.8rem);
+  line-height: 0.92;
+  color: var(--silver-chrome);
+}
+
+.page-hero-title em {
+  font-style: italic;
+  color: var(--neon-orange-glow);
 }
 
 .page-hero-meta-col {
-  padding: 36px 28px;
+  padding: 34px 28px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   gap: 16px;
-  background: var(--forest-surface);
+  background: var(--crimson-surface);
 }
 
 .page-hero-lead {
-  font-size: 0.96rem;
+  font-size: 0.95rem;
   line-height: 1.55;
-  color: var(--parchment-muted);
+  color: var(--silver-muted);
 }
 
 .spec-row {
   display: flex;
   justify-content: space-between;
   padding-top: 12px;
-  border-top: 1px solid var(--grid-solid);
-  font-size: 0.76rem;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--lime-voltage);
+  color: var(--neon-orange-glow);
 }
 
 /* ==========================================================================
-   SECTION 01: LA CARTA GASTRONÓMICA (MERY JANE GREEN CARD + CATALOGUE GRID)
+   SECTION 01: LA CARTA NOCTURNA (COCKTAILS 11:11, CARNES & MERY JANE WINES)
    ========================================================================== */
 .carta-filter-bar {
   display: flex;
   flex-wrap: wrap;
-  border-bottom: 1px solid var(--grid-solid);
-  background: var(--void-moss);
+  border-bottom: 1px solid var(--border-crimson);
+  background: var(--pitch-black);
 }
 
 .carta-tab-btn {
   appearance: none;
   border: none;
-  border-right: 1px solid var(--grid-solid);
+  border-right: 1px solid var(--border-crimson);
   background: transparent;
-  color: var(--parchment-muted);
-  font-family: var(--font-body);
+  color: var(--silver-muted);
+  font-family: var(--font-sans);
   font-weight: 700;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   padding: 16px 24px;
@@ -538,13 +529,13 @@ body.intro-revealed .delay-6 { transition-delay: 0.62s; }
 }
 
 .carta-tab-btn:hover {
-  color: var(--parchment);
-  background: rgba(159, 232, 112, 0.07);
+  color: var(--silver-chrome);
+  background: rgba(255, 34, 22, 0.1);
 }
 
 .carta-tab-btn.active {
-  background: var(--lime-voltage);
-  color: var(--void-moss);
+  background: var(--neon-red);
+  color: #fff;
 }
 
 .carta-workspace {
@@ -552,25 +543,24 @@ body.intro-revealed .delay-6 { transition-delay: 0.62s; }
   grid-template-columns: 1.05fr 0.95fr;
 }
 
-/* Left: Featured Mery Jane Green Velvet Card (Preserving User's Screenshot) */
 .carta-plinth-col {
   padding: 28px;
-  border-right: 1px solid var(--grid-solid);
-  background: #060d08;
+  border-right: 1px solid var(--border-crimson);
+  background: #080203;
 }
 
 .mery-product-card {
-  background: #09140d;
-  border: 1px solid rgba(159, 232, 112, 0.28);
-  border-radius: 20px;
+  background: #0d0305;
+  border: 1px solid rgba(255, 56, 38, 0.35);
+  border-radius: 18px;
   overflow: hidden;
 }
 
 .mery-card-media {
   position: relative;
-  height: 310px;
+  height: 320px;
   overflow: hidden;
-  background: #040906;
+  background: #040102;
 }
 
 .mery-card-media img {
@@ -586,9 +576,9 @@ body.intro-revealed .delay-6 { transition-delay: 0.62s; }
   left: 16px;
   padding: 7px 14px;
   border-radius: 999px;
-  background: rgba(8, 16, 11, 0.88);
-  border: 1px solid rgba(216, 180, 103, 0.38);
-  color: #d8b467;
+  background: rgba(8, 3, 4, 0.88);
+  border: 1px solid rgba(245, 242, 235, 0.28);
+  color: var(--silver-chrome);
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.16em;
@@ -601,11 +591,11 @@ body.intro-revealed .delay-6 { transition-delay: 0.62s; }
   right: 16px;
   padding: 7px 16px;
   border-radius: 999px;
-  background: var(--crimson-tag);
+  background: var(--neon-red);
   color: #fff;
-  font-weight: 700;
+  font-weight: 800;
   font-size: 0.9rem;
-  box-shadow: 0 0 20px rgba(255, 37, 37, 0.55);
+  box-shadow: 0 0 22px var(--neon-halo);
 }
 
 .mery-card-body {
@@ -613,31 +603,31 @@ body.intro-revealed .delay-6 { transition-delay: 0.62s; }
 }
 
 .mery-card-title {
-  font-family: var(--font-display);
+  font-family: var(--font-serif);
   font-weight: 400;
-  font-size: 2.15rem;
-  line-height: 1.02;
-  color: var(--parchment);
-  margin-bottom: 12px;
+  font-size: 2.35rem;
+  line-height: 0.98;
+  color: var(--silver-chrome);
+  margin-bottom: 10px;
 }
 
 .mery-card-desc {
-  font-size: 0.94rem;
+  font-size: 0.92rem;
   line-height: 1.55;
-  color: var(--parchment-muted);
-  margin-bottom: 20px;
+  color: var(--silver-muted);
+  margin-bottom: 18px;
 }
 
 .mery-spec-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  border: 1px solid var(--grid-solid);
+  border: 1px solid var(--border-crimson);
   margin-bottom: 18px;
 }
 
 .mery-spec-cell {
   padding: 10px 12px;
-  border-right: 1px solid var(--grid-solid);
+  border-right: 1px solid var(--border-crimson);
 }
 
 .mery-spec-cell:last-child {
@@ -646,19 +636,18 @@ body.intro-revealed .delay-6 { transition-delay: 0.62s; }
 
 .mery-spec-cell span {
   display: block;
-  font-size: 0.64rem;
+  font-size: 0.62rem;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--parchment-muted);
+  color: var(--silver-muted);
 }
 
 .mery-spec-cell strong {
-  font-size: 0.86rem;
-  color: var(--lime-voltage);
+  font-size: 0.84rem;
+  color: var(--neon-orange-glow);
 }
 
-/* Right: Industrial Catalogue Dish Rows */
 .carta-list-col {
   display: flex;
   flex-direction: column;
@@ -670,13 +659,13 @@ body.intro-revealed .delay-6 { transition-delay: 0.62s; }
   text-align: left;
   background: transparent;
   border: none;
-  border-bottom: 1px solid var(--grid-solid);
-  padding: 20px 24px;
-  color: var(--parchment);
-  font-family: var(--font-body);
+  border-bottom: 1px solid var(--border-crimson);
+  padding: 18px 24px;
+  color: var(--silver-chrome);
+  font-family: var(--font-sans);
   cursor: pointer;
   display: grid;
-  grid-template-columns: 64px 1fr auto;
+  grid-template-columns: 66px 1fr auto;
   align-items: center;
   gap: 16px;
   transition: background 0.2s ease;
@@ -684,36 +673,38 @@ body.intro-revealed .delay-6 { transition-delay: 0.62s; }
 
 .carta-row-item:hover,
 .carta-row-item.active {
-  background: var(--forest-elevated);
+  background: rgba(255, 34, 22, 0.12);
 }
 
 .carta-row-item.active {
-  border-left: 4px solid var(--lime-voltage);
+  border-left: 4px solid var(--neon-red);
 }
 
 .carta-row-thumb {
-  width: 64px;
-  height: 64px;
+  width: 66px;
+  height: 66px;
   object-fit: cover;
-  border: 1px solid var(--grid-solid);
+  border-radius: 8px;
+  border: 1px solid var(--border-subtle);
 }
 
 .carta-row-title {
-  font-weight: 700;
-  font-size: 1rem;
+  font-family: var(--font-serif);
+  font-size: 1.35rem;
   display: block;
+  line-height: 1.05;
   margin-bottom: 3px;
 }
 
 .carta-row-sub {
-  font-size: 0.8rem;
-  color: var(--parchment-muted);
+  font-size: 0.78rem;
+  color: var(--silver-muted);
 }
 
 .carta-row-price {
-  font-weight: 700;
-  font-size: 0.95rem;
-  color: var(--lime-voltage);
+  font-weight: 800;
+  font-size: 0.92rem;
+  color: var(--neon-orange-glow);
 }
 
 /* ==========================================================================
@@ -726,18 +717,18 @@ body.intro-revealed .delay-6 { transition-delay: 0.62s; }
 
 .bday-configurator {
   padding: 32px 28px;
-  border-right: 1px solid var(--grid-solid);
+  border-right: 1px solid var(--border-crimson);
   display: flex;
   flex-direction: column;
   gap: 24px;
 }
 
 .config-step-label {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.18em;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--lime-voltage);
+  color: var(--neon-orange-glow);
   margin-bottom: 10px;
   display: block;
 }
@@ -750,10 +741,10 @@ body.intro-revealed .delay-6 { transition-delay: 0.62s; }
 
 .tier-btn {
   appearance: none;
-  border: 1px solid var(--grid-solid);
-  background: var(--void-moss);
-  color: var(--parchment);
-  font-family: var(--font-body);
+  border: 1px solid var(--border-crimson);
+  background: var(--pitch-black);
+  color: var(--silver-chrome);
+  font-family: var(--font-sans);
   padding: 16px 12px;
   cursor: pointer;
   text-align: left;
@@ -762,35 +753,34 @@ body.intro-revealed .delay-6 { transition-delay: 0.62s; }
 
 .tier-btn strong {
   display: block;
-  font-size: 1.05rem;
-  margin-bottom: 4px;
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 1.45rem;
+  margin-bottom: 2px;
 }
 
 .tier-btn span {
-  font-size: 0.75rem;
-  color: var(--parchment-muted);
+  font-size: 0.74rem;
+  color: var(--silver-muted);
 }
 
 .tier-btn.active,
 .tier-btn:hover {
-  border-color: var(--lime-voltage);
-  background: var(--forest-elevated);
-}
-
-.tier-btn.active strong {
-  color: var(--lime-voltage);
+  border-color: var(--neon-red);
+  background: rgba(255, 34, 22, 0.15);
+  box-shadow: 0 0 22px rgba(255, 34, 22, 0.22);
 }
 
 .bday-perks-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  border: 1px solid var(--grid-solid);
+  border: 1px solid var(--border-crimson);
 }
 
 .perk-cell {
   padding: 16px;
-  border-right: 1px solid var(--grid-solid);
-  border-bottom: 1px solid var(--grid-solid);
+  border-right: 1px solid var(--border-crimson);
+  border-bottom: 1px solid var(--border-crimson);
 }
 
 .perk-cell:nth-child(2n) { border-right: none; }
@@ -799,19 +789,19 @@ body.intro-revealed .delay-6 { transition-delay: 0.62s; }
 .perk-cell strong {
   display: block;
   font-size: 0.88rem;
-  color: var(--lime-voltage);
+  color: var(--silver-chrome);
   margin-bottom: 4px;
 }
 
 .perk-cell p {
   font-size: 0.8rem;
-  color: var(--parchment-muted);
-  line-height: 1.4;
+  color: var(--silver-muted);
+  line-height: 1.45;
 }
 
 .bday-summary-col {
   padding: 32px 28px;
-  background: #07110a;
+  background: #080203;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -820,56 +810,64 @@ body.intro-revealed .delay-6 { transition-delay: 0.62s; }
 
 .summary-photo {
   width: 100%;
-  height: 210px;
+  height: 220px;
   object-fit: cover;
-  border: 1px solid var(--grid-solid);
+  border: 1px solid var(--border-crimson);
 }
 
-.btn-lime-primary {
+.btn-neon-action {
   appearance: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
   width: 100%;
-  border: none;
-  background: var(--lime-voltage);
-  color: var(--void-moss);
-  font-family: var(--font-body);
-  font-weight: 700;
-  font-size: 0.86rem;
-  letter-spacing: 0.16em;
+  border: 1px solid var(--neon-red);
+  background: var(--neon-red);
+  color: #fff;
+  font-family: var(--font-sans);
+  font-weight: 800;
+  font-size: 0.82rem;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   padding: 16px 24px;
   text-decoration: none;
   cursor: pointer;
-  transition: background 0.2s ease, transform 0.2s ease;
+  box-shadow: 0 0 28px var(--neon-halo);
+  transition: all 0.22s ease;
 }
 
-.btn-lime-primary:hover {
-  background: var(--acid-lime);
+.btn-neon-action:hover {
+  background: #ff3b2f;
   transform: translateY(-2px);
+  box-shadow: 0 0 42px rgba(255, 34, 22, 0.8);
 }
 
 /* ==========================================================================
-   SECTION 03: EVENTOS & DJ LINEUP (13/11 ZINE POSTER + TIMETABLE)
+   SECTION 03 & 04: LINEUP 13/11 & HORARIOS
    ========================================================================== */
-.events-editorial-grid {
+.events-editorial-grid,
+.horarios-grid {
   display: grid;
-  grid-template-columns: 0.9fr 1.1fr;
+  grid-template-columns: 0.92fr 1.08fr;
 }
 
-.event-poster-col {
+.event-poster-col,
+.schedule-table-col {
   padding: 28px;
-  border-right: 1px solid var(--grid-solid);
-  background: #060e09;
+  border-right: 1px solid var(--border-crimson);
+  background: #080203;
+}
+
+.schedule-table-col {
+  padding: 0;
 }
 
 .event-poster-img {
   width: 100%;
-  height: 390px;
+  height: 380px;
   object-fit: cover;
-  border: 1px solid var(--grid-solid);
+  border: 1px solid var(--border-crimson);
   margin-bottom: 16px;
 }
 
@@ -878,84 +876,52 @@ body.intro-revealed .delay-6 { transition-delay: 0.62s; }
   flex-direction: column;
 }
 
-.lineup-slot-row {
+.lineup-slot-row,
+.day-row {
   display: grid;
   grid-template-columns: 110px 1fr auto;
   align-items: center;
   gap: 18px;
   padding: 22px 28px;
-  border-bottom: 1px solid var(--grid-solid);
-}
-
-.slot-time {
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  color: var(--lime-voltage);
-  text-transform: uppercase;
-}
-
-.slot-dj {
-  font-family: var(--font-display);
-  font-size: 1.75rem;
-  color: var(--parchment);
-  line-height: 1;
-  margin-bottom: 4px;
-}
-
-.slot-style {
-  font-size: 0.82rem;
-  color: var(--parchment-muted);
-}
-
-.slot-badge {
-  padding: 5px 10px;
-  border: 1px solid var(--grid-hairline);
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--lime-voltage);
-}
-
-/* ==========================================================================
-   SECTION 04: HORARIOS, CORREDOR ZONA SUR & RESERVA DE MESA
-   ========================================================================== */
-.horarios-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-}
-
-.schedule-table-col {
-  border-right: 1px solid var(--grid-solid);
+  border-bottom: 1px solid var(--border-crimson);
 }
 
 .day-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 20px 28px;
-  border-bottom: 1px solid var(--grid-solid);
 }
 
-.day-name {
-  font-weight: 700;
-  font-size: 0.95rem;
-  letter-spacing: 0.12em;
+.slot-time,
+.day-hours {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: var(--neon-orange-glow);
   text-transform: uppercase;
 }
 
-.day-vibe {
-  display: block;
-  font-size: 0.78rem;
-  color: var(--parchment-muted);
-  margin-top: 2px;
+.slot-dj {
+  font-family: var(--font-serif);
+  font-size: 1.9rem;
+  color: var(--silver-chrome);
+  line-height: 1;
+  margin-bottom: 4px;
 }
 
-.day-hours {
+.slot-style,
+.day-vibe {
+  font-size: 0.82rem;
+  color: var(--silver-muted);
+}
+
+.slot-badge {
+  padding: 5px 10px;
+  border: 1px solid rgba(255, 56, 38, 0.45);
+  font-size: 0.68rem;
   font-weight: 700;
-  font-size: 0.92rem;
-  color: var(--lime-voltage);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--neon-orange-glow);
 }
 
 .corridor-col {
@@ -964,20 +930,20 @@ body.intro-revealed .delay-6 { transition-delay: 0.62s; }
   flex-direction: column;
   justify-content: space-between;
   gap: 24px;
-  background: var(--forest-surface);
+  background: var(--crimson-surface);
 }
 
 .zone-distance-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  border: 1px solid var(--grid-solid);
-  background: var(--void-moss);
+  border: 1px solid var(--border-crimson);
+  background: var(--pitch-black);
 }
 
 .zone-cell {
   padding: 16px;
-  border-right: 1px solid var(--grid-solid);
-  border-bottom: 1px solid var(--grid-solid);
+  border-right: 1px solid var(--border-crimson);
+  border-bottom: 1px solid var(--border-crimson);
 }
 
 .zone-cell:nth-child(2n) { border-right: none; }
@@ -985,16 +951,21 @@ body.intro-revealed .delay-6 { transition-delay: 0.62s; }
 
 .zone-cell strong {
   display: block;
-  font-size: 0.95rem;
-  color: var(--parchment);
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 1.35rem;
+  color: var(--silver-chrome);
 }
 
 .zone-cell span {
   font-size: 0.76rem;
-  color: var(--lime-voltage);
+  color: var(--neon-orange-glow);
 }
 
-@media (max-width: 900px) {
+@media (max-width: 920px) {
+  .cruza-night-nav {
+    grid-template-columns: repeat(2, 1fr);
+  }
   .page-hero-strip,
   .carta-workspace,
   .bday-Split-layout,
@@ -1008,9 +979,15 @@ body.intro-revealed .delay-6 { transition-delay: 0.62s; }
   .event-poster-col,
   .schedule-table-col {
     border-right: none;
-    border-bottom: 1px solid var(--grid-solid);
+    border-bottom: 1px solid var(--border-crimson);
   }
   .guest-tier-btns {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .cruza-night-nav {
     grid-template-columns: 1fr;
   }
 }
