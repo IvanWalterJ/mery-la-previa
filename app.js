@@ -126,6 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const introWrap = document.querySelector('.intro-enter-wrap');
   const btnIntroUnmute = document.getElementById('btnIntroUnmute');
   let buttonRevealed = false;
+  let audioUnlocked = false;
 
   function revealEnterButton() {
     if (buttonRevealed || !introWrap) return;
@@ -134,24 +135,40 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnIntroUnmute) btnIntroUnmute.classList.remove('visible');
   }
 
+  // Safety fallback: guaranteed reveal after 3.4s so mobile is NEVER trapped
+  const enterSafetyTimer = setTimeout(revealEnterButton, 3400);
+
   function activateAudio() {
     if (!neonIntroVideo) return;
     neonIntroVideo.muted = false;
     neonIntroVideo.volume = 1;
+    // Keep playing smoothly without seeking to 0 (avoids buffer freezing on mobile)
+    const p = neonIntroVideo.play();
+    if (p !== undefined) {
+      p.catch(() => {});
+    }
+    audioUnlocked = true;
     if (btnIntroUnmute) btnIntroUnmute.classList.remove('visible');
   }
 
   if (neonIntroVideo) {
-    // When the neon video finishes igniting (around 3.2s or on ended), fade in the enter button
+    // When neon video reaches ignition finish (~3s or ended), show enter button
     neonIntroVideo.addEventListener('timeupdate', () => {
-      if (neonIntroVideo.currentTime >= 3.2) {
+      if (neonIntroVideo.currentTime >= 3.0) {
         revealEnterButton();
       }
     });
 
-    neonIntroVideo.addEventListener('ended', () => {
-      revealEnterButton();
+    neonIntroVideo.addEventListener('ended', revealEnterButton);
+
+    // If mobile battery saver or browser pauses/stalls video, reveal button safely
+    neonIntroVideo.addEventListener('pause', () => {
+      if (!introCurtain.classList.contains('dismissed')) {
+        setTimeout(revealEnterButton, 500);
+      }
     });
+
+    neonIntroVideo.addEventListener('error', revealEnterButton);
 
     // Attempt unmuted autoplay immediately on entry
     neonIntroVideo.muted = false;
@@ -160,49 +177,44 @@ document.addEventListener('DOMContentLoaded', () => {
       // Unmuted autoplay was permitted by browser
       if (btnIntroUnmute) btnIntroUnmute.classList.remove('visible');
     }).catch(() => {
-      // Browser blocked unmuted autoplay (standard on mobile until first user touch).
-      // Play muted immediately so the visual video NEVER gets stuck frozen:
+      // Browser blocked unmuted autoplay (standard on mobile).
+      // Play muted immediately so visual video runs fluidly without stalling:
       neonIntroVideo.muted = true;
       neonIntroVideo.play().catch(() => {});
-      // Display the glowing sound pill so the user can easily activate sound with 1 tap:
+      // Display sound pill so user can easily un-mute with 1 tap:
       if (btnIntroUnmute && !buttonRevealed) {
         btnIntroUnmute.classList.add('visible');
       }
     });
   }
 
-  // Tapping anywhere on the curtain (or the sound pill) instantly activates sound
-  function handleCurtainTap(e) {
-    if (btnDismissIntro && btnDismissIntro.contains(e.target)) return;
-    if (neonIntroVideo && neonIntroVideo.muted) {
-      activateAudio();
-      // If tapped during the first half, replay from 0 so they hear the full ignition:
-      if (neonIntroVideo.currentTime < 2.5) {
-        neonIntroVideo.currentTime = 0;
-        neonIntroVideo.play().catch(() => {});
-      }
+  // Sound pill tap handler: single clean event handler
+  function handleSoundTap(e) {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
     }
+    activateAudio();
   }
 
   if (btnIntroUnmute) {
-    btnIntroUnmute.addEventListener('click', (e) => {
-      e.stopPropagation();
-      activateAudio();
-      if (neonIntroVideo) {
-        neonIntroVideo.currentTime = 0;
-        neonIntroVideo.play().catch(() => {});
-      }
-    });
+    btnIntroUnmute.addEventListener('click', handleSoundTap);
+    btnIntroUnmute.addEventListener('touchend', handleSoundTap);
   }
 
+  // Tapping anywhere on the curtain also un-mutes smoothly
   if (introCurtain) {
-    introCurtain.addEventListener('pointerdown', handleCurtainTap);
-    introCurtain.addEventListener('touchstart', handleCurtainTap, { passive: true });
+    introCurtain.addEventListener('click', (e) => {
+      if (btnDismissIntro && btnDismissIntro.contains(e.target)) return;
+      if (btnIntroUnmute && btnIntroUnmute.contains(e.target)) return;
+      if (!audioUnlocked) activateAudio();
+    });
   }
 
   if (btnDismissIntro && introCurtain) {
     btnDismissIntro.addEventListener('click', (e) => {
       e.stopPropagation();
+      clearTimeout(enterSafetyTimer);
       if (neonIntroVideo) neonIntroVideo.pause();
       introCurtain.classList.add('dismissed');
     });
