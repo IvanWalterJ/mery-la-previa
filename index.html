@@ -12,9 +12,14 @@
 </head>
 <body>
 
-  <!-- 1. NEON INTRO CURTAIN (No auto-redirect: stays until user clicks the Qitchen-styled Enter button) -->
-  <div id="neonIntroCurtain" class="neon-intro-curtain igniting" aria-label="Intro Cartel Luminoso Mery La Previa">
-    <img src="assets/img/neon-wall-mery.jpg" alt="Cartel de neón MERY LA PREVIA" />
+  <!-- 1. NEON INTRO CURTAIN (Frame-locked MP4 video with muxed neon ignition audio) -->
+  <div id="neonIntroCurtain" class="neon-intro-curtain" aria-label="Intro Cartel Luminoso Mery La Previa">
+    <video
+      id="neonIntroVideo"
+      src="assets/video/neon-intro-mery.mp4"
+      playsinline
+      preload="auto"
+    ></video>
     <div class="intro-enter-wrap">
       <button type="button" id="btnDismissIntro" class="intro-enter-btn">
         <span class="intro-diamond"></span>
@@ -211,10 +216,10 @@
               <div>
                 <h3>Miércoles a Domingo</h3>
                 <p style="margin-top: 10px;">
-                  <strong>Mié &amp; Jue:</strong> 19:30 a 02:30 hs (Wine &amp; After)<br />
-                  <strong>Vie &amp; Sáb:</strong> 20:00 a 05:00 hs (Cena + Club)<br />
-                  <strong>Domingos:</strong> 19:00 a 02:00 hs (Tutto Passa)<br />
-                  <strong>Dress Code:</strong> Elegante Night (+21)
+                  <strong>Vie &amp; Sáb:</strong> 19:00 a 03:00 hs (Cena + Previa Club)<br />
+                  <strong>Mié, Jue &amp; Dom:</strong> 19:00 a 01:30 hs (Wine &amp; Friends)<br />
+                  <strong>Dirección:</strong> Calle 101 N° 85<br />
+                  <strong>Concepto:</strong> Tu noche empieza acá 🍸
                 </p>
               </div>
               <button type="button" class="q-btn-submit" data-goto="reservation">

@@ -111,96 +111,10 @@ const VIEW_CONFIG = {
   }
 };
 
-// Web Audio API Synthesizer for Realistic Glass Neon Tube Ignition (Sparks + Transformer Hum)
-let audioCtx = null;
-function playNeonIgnitionSound() {
-  try {
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContextClass) return false;
-    if (!audioCtx) audioCtx = new AudioContextClass();
-
-    const triggerSequence = () => {
-      const now = audioCtx.currentTime;
-
-      function triggerSpark(offsetSec, durationSec, gainLevel) {
-        const bufferSize = Math.floor(audioCtx.sampleRate * durationSec);
-        const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-        const data = noiseBuffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) {
-          data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.45));
-        }
-
-        const noise = audioCtx.createBufferSource();
-        noise.buffer = noiseBuffer;
-
-        const filter = audioCtx.createBiquadFilter();
-        filter.type = 'bandpass';
-        filter.frequency.setValueAtTime(2400, now + offsetSec);
-        filter.Q.setValueAtTime(3.2, now + offsetSec);
-
-        const sparkGain = audioCtx.createGain();
-        sparkGain.gain.setValueAtTime(gainLevel, now + offsetSec);
-        sparkGain.gain.exponentialRampToValueAtTime(0.001, now + offsetSec + durationSec);
-
-        noise.connect(filter);
-        filter.connect(sparkGain);
-        sparkGain.connect(audioCtx.destination);
-        noise.start(now + offsetSec);
-      }
-
-      triggerSpark(0.05, 0.09, 0.32);
-      triggerSpark(0.32, 0.08, 0.25);
-      triggerSpark(0.68, 0.14, 0.38);
-
-      const osc60 = audioCtx.createOscillator();
-      const osc120 = audioCtx.createOscillator();
-      osc60.type = 'sawtooth';
-      osc120.type = 'sine';
-      osc60.frequency.setValueAtTime(60, now);
-      osc120.frequency.setValueAtTime(120, now);
-
-      const humFilter = audioCtx.createBiquadFilter();
-      humFilter.type = 'lowpass';
-      humFilter.frequency.setValueAtTime(340, now);
-
-      const humGain = audioCtx.createGain();
-      humGain.gain.setValueAtTime(0.0001, now);
-      humGain.gain.setValueAtTime(0.06, now + 0.08);
-      humGain.gain.setValueAtTime(0.006, now + 0.20);
-      humGain.gain.setValueAtTime(0.05, now + 0.35);
-      humGain.gain.setValueAtTime(0.008, now + 0.48);
-      humGain.gain.linearRampToValueAtTime(0.09, now + 0.75);
-      humGain.gain.exponentialRampToValueAtTime(0.015, now + 2.2);
-      humGain.gain.exponentialRampToValueAtTime(0.0001, now + 3.2);
-
-      osc60.connect(humFilter);
-      osc120.connect(humFilter);
-      humFilter.connect(humGain);
-      humGain.connect(audioCtx.destination);
-
-      osc60.start(now);
-      osc120.start(now);
-      osc60.stop(now + 3.25);
-      osc120.stop(now + 3.25);
-    };
-
-    if (audioCtx.state === 'suspended') {
-      audioCtx.resume().then(() => {
-        if (audioCtx.state === 'running') triggerSequence();
-      }).catch(() => {});
-      return false;
-    }
-
-    triggerSequence();
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 document.addEventListener('DOMContentLoaded', () => {
   const appEl = document.getElementById('qitchenApp');
   const introCurtain = document.getElementById('neonIntroCurtain');
+  const neonIntroVideo = document.getElementById('neonIntroVideo');
   const btnDismissIntro = document.getElementById('btnDismissIntro');
   const leftHeroTitle = document.getElementById('leftHeroTitle');
   const showcaseVideo = document.getElementById('bottleShowcaseVideo');
@@ -208,28 +122,63 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnOpenOverlay = document.getElementById('btnOpenOverlay');
   const btnCloseOverlay = document.getElementById('btnCloseOverlay');
 
-  // 1. Attempt Neon Ignition Sound Immediately on Load; if browser blocks until first gesture, fire on first movement/touch
-  let neonSoundPlayed = playNeonIgnitionSound();
+  // 1. Frame-Locked Neon Intro Video + Muxed Ignition Audio (100% Synchronized)
+  let neonIgnitedWithAudio = false;
+  let dismissingAfterIgnition = false;
 
-  function unlockNeonSoundOnce() {
-    if (!neonSoundPlayed && introCurtain && !introCurtain.classList.contains('dismissed')) {
-      neonSoundPlayed = true;
-      playNeonIgnitionSound();
+  async function startSynchronizedNeonVideo() {
+    if (!neonIntroVideo || neonIgnitedWithAudio) return false;
+    try {
+      neonIntroVideo.currentTime = 0;
+      neonIntroVideo.muted = false;
+      neonIntroVideo.volume = 0.9;
+      await neonIntroVideo.play();
+      neonIgnitedWithAudio = true;
+      return true;
+    } catch {
+      // Hold at frame 0 (unlit neon sign) so visuals NEVER run ahead of the audio
+      neonIntroVideo.pause();
+      neonIntroVideo.currentTime = 0;
+      return false;
     }
   }
 
-  window.addEventListener('pointerdown', unlockNeonSoundOnce, { once: true });
-  window.addEventListener('keydown', unlockNeonSoundOnce, { once: true });
+  // Try immediate unmuted playback on page load
+  startSynchronizedNeonVideo();
 
-  // No auto-redirect! The Neon Intro stays open until the user clicks the Enter button
-  if (btnDismissIntro && introCurtain) {
-    btnDismissIntro.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (!neonSoundPlayed) {
-        neonSoundPlayed = true;
-        playNeonIgnitionSound();
+  // If browser blocked unmuted autoplay on a fresh tab, ignite with audio on first tap anywhere on the curtain
+  if (introCurtain) {
+    introCurtain.addEventListener('pointerdown', (e) => {
+      if (btnDismissIntro && btnDismissIntro.contains(e.target)) return;
+      if (!neonIgnitedWithAudio) {
+        startSynchronizedNeonVideo();
       }
-      introCurtain.classList.add('dismissed');
+    });
+  }
+
+  if (btnDismissIntro && introCurtain) {
+    btnDismissIntro.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if (dismissingAfterIgnition) return;
+
+      // If the neon sign already ignited with audio on load, dismiss immediately without re-triggering sound
+      if (neonIgnitedWithAudio) {
+        if (neonIntroVideo) neonIntroVideo.pause();
+        introCurtain.classList.add('dismissed');
+        return;
+      }
+
+      // If this button click is the very first gesture on a cold tab, play the synchronized video+audio ignition first (1.2s) then open
+      dismissingAfterIgnition = true;
+      const started = await startSynchronizedNeonVideo();
+      if (started) {
+        setTimeout(() => {
+          if (neonIntroVideo) neonIntroVideo.pause();
+          introCurtain.classList.add('dismissed');
+        }, 1250);
+      } else {
+        introCurtain.classList.add('dismissed');
+      }
     });
   }
 
@@ -352,21 +301,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function navigateView(targetView) {
     if (targetView === currentView) return;
-    const direction = targetView === 'home' ? 'backward' : 'forward';
 
     if (!document.startViewTransition) {
       updateDOMView(targetView);
       return;
     }
 
-    try {
-      document.startViewTransition({
-        update: () => updateDOMView(targetView),
-        types: [direction]
-      });
-    } catch {
-      document.startViewTransition(() => updateDOMView(targetView));
-    }
+    document.startViewTransition(() => updateDOMView(targetView));
   }
 
   document.querySelectorAll('[data-goto]').forEach((el) => {

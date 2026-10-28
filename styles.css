@@ -67,7 +67,7 @@ html, body {
   z-index: 0;
 }
 
-.neon-intro-curtain img {
+.neon-intro-curtain video {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -75,22 +75,6 @@ html, body {
   object-fit: cover;
   object-position: center;
   z-index: 1;
-  filter: brightness(0.12) contrast(1.2) saturate(0.3);
-}
-
-@keyframes neonTubeIgnite {
-  0%   { filter: brightness(0.08) contrast(1.2) saturate(0.2); }
-  14%  { filter: brightness(1.25) contrast(1.25) saturate(1.3); }
-  20%  { filter: brightness(0.18) contrast(1.2) saturate(0.4); }
-  32%  { filter: brightness(0.95) contrast(1.15) saturate(1.1); }
-  38%  { filter: brightness(0.22) contrast(1.2) saturate(0.5); }
-  56%  { filter: brightness(1.35) contrast(1.22) saturate(1.35); }
-  64%  { filter: brightness(0.78) contrast(1.15) saturate(1); }
-  100% { filter: brightness(1.06) contrast(1.16) saturate(1.18); }
-}
-
-.neon-intro-curtain.igniting img {
-  animation: neonTubeIgnite 1.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 /* Qitchen-styled Enter Control (No Emoji, Forum Serif + Ornamental Diamonds) */
@@ -248,41 +232,44 @@ html, body {
 }
 
 /* ==========================================================================
-   3. DIRECTIONAL LATERAL SLIDE VIEW TRANSITIONS
+   3. EXACT QITCHEN FRAMER APPEAR TRANSITION (Subtle 10px Vertical Rise + Fade)
    ========================================================================== */
 ::view-transition-group(root) {
-  animation-duration: 0.5s;
-  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  animation-duration: 0.4s;
+  animation-timing-function: cubic-bezier(0.44, 0, 0.56, 1);
   @media (prefers-reduced-motion: reduce) {
-    animation: none !important;
+    animation-duration: 0.15s;
   }
 }
 
-@keyframes slide-to-left {
-  to { transform: translateX(-36%); opacity: 0; }
-}
-@keyframes slide-from-right {
-  from { transform: translateX(36%); opacity: 0; }
-}
-@keyframes slide-to-right {
-  to { transform: translateX(36%); opacity: 0; }
-}
-@keyframes slide-from-left {
-  from { transform: translateX(-36%); opacity: 0; }
+@keyframes qitchen-fade-out {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-6px); }
 }
 
-html:active-view-transition-type(forward)::view-transition-old(root) {
-  animation-name: slide-to-left;
+@keyframes qitchen-fade-up {
+  from { opacity: 0.001; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
-html:active-view-transition-type(forward)::view-transition-new(root) {
-  animation-name: slide-from-right;
+
+::view-transition-old(root) {
+  animation: qitchen-fade-out 0.32s cubic-bezier(0.5, 0, 0.88, 0.77) forwards;
 }
-html:active-view-transition-type(backward)::view-transition-old(root) {
-  animation-name: slide-to-right;
+
+::view-transition-new(root) {
+  animation: qitchen-fade-up 0.42s cubic-bezier(0.44, 0, 0.56, 1) forwards;
 }
-html:active-view-transition-type(backward)::view-transition-new(root) {
-  animation-name: slide-from-left;
+
+.q-view.active > * {
+  animation: qitchen-fade-up 0.42s cubic-bezier(0.44, 0, 0.56, 1) both;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
 }
+
+.q-home-stack.active > .q-bento-card:nth-child(1) { animation-delay: 0.02s; }
+.q-home-stack.active > .q-bento-card:nth-child(2) { animation-delay: 0.09s; }
+.q-home-stack.active > .q-bento-card:nth-child(3) { animation-delay: 0.16s; }
 
 /* ==========================================================================
    4. QITCHEN BENTO MASTER SHELL (24PX OUTER PADDING, SPLIT LEFT/RIGHT)
@@ -887,8 +874,8 @@ html:active-view-transition-type(backward)::view-transition-new(root) {
 }
 
 @media (max-width: 720px) {
-  /* Prevent the 16:9 'MERY LA PREVIA' neon sign from cropping horizontally on vertical phones */
-  .neon-intro-curtain img {
+  /* Prevent the 16:9 'MERY LA PREVIA' neon sign video from cropping horizontally on vertical phones */
+  .neon-intro-curtain video {
     object-fit: contain;
     padding: 0 8px;
   }
