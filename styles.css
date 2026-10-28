@@ -1,21 +1,22 @@
 :root {
-  /* @meryjane.laprevia Official Nocturnal Club Palette */
-  --pitch-black: #050203;
-  --blood-velvet: #120406;
-  --crimson-surface: #1b0609;
-  --neon-red: #ff2216;
-  --neon-orange-glow: #ff4d29;
-  --neon-halo: rgba(255, 34, 22, 0.52);
-  --silver-chrome: #f5f2eb;
-  --silver-muted: #b0a8a6;
-  --border-crimson: rgba(255, 56, 38, 0.24);
-  --border-subtle: rgba(245, 242, 235, 0.14);
+  /* Official Qitchen Framer Template Color Tokens + Mery La Previa Neon Accent */
+  --q-bg: #0a0b0a;
+  --q-surface: #111210;
+  --q-card: rgba(24, 24, 24, 0.55);
+  --q-cream: #efe7d2;
+  --q-cream-muted: rgba(245, 242, 234, 0.7);
+  --q-gold: #cfbe91;
+  --q-border: rgba(239, 231, 210, 0.15);
+  --q-border-strong: rgba(239, 231, 210, 0.28);
+  --q-neon-red: #ff2519;
 
-  /* High-Fashion Nightlife Typography (Matches "LA PREVIA 13/11" Ice Cube + Modern Club) */
-  --font-serif: 'Instrument Serif', Georgia, serif;
-  --font-display: 'Syne', sans-serif;
+  /* Official Qitchen Typography: Forum (Display Serif) + Plus Jakarta / Geist (Clean Sans) */
+  --font-forum: 'Forum', Georgia, serif;
   --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-script: 'Caveat', cursive;
+
+  --q-radius-outer: 16px;
+  --q-radius-inner: 12px;
+  --q-gap: 16px;
 }
 
 *, *::before, *::after {
@@ -27,80 +28,88 @@
 html, body {
   width: 100%;
   height: 100%;
-  background-color: var(--pitch-black);
-  color: var(--silver-chrome);
+  background-color: var(--q-bg);
+  color: var(--q-cream);
   font-family: var(--font-sans);
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
 }
 
 /* ==========================================================================
-   1. FULLSCREEN NEON WALL BACKDROP ("MERY LA PREVIA" ON BLACK FLUTED WALL)
+   1. NEON INTRO OVERLAY (KEEPING THE USER'S FAVORITE 11:11 / MERY NEON INTRO)
    ========================================================================== */
-.neon-wall-stage {
+.neon-intro-curtain {
   position: fixed;
   inset: 0;
-  z-index: 0;
-  background: #020101;
-  overflow: hidden;
+  z-index: 200;
+  background: #040202;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  padding-bottom: 48px;
+  transition: opacity 0.85s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.85s ease;
 }
 
-.neon-wall-stage img {
+.neon-intro-curtain.dismissed {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.neon-intro-curtain img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center;
-  transform: scale(1.03);
-  /* Starts unlit/dim and flickers on like a real neon tube */
-  filter: brightness(0.12) contrast(1.25) saturate(0.4);
-  transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1), filter 0.6s ease;
+  filter: brightness(0.12) contrast(1.2) saturate(0.3);
 }
 
-/* Keyframe simulating real glass neon tube ignition (flicker -> full red glow) */
 @keyframes neonTubeIgnite {
   0%   { filter: brightness(0.08) contrast(1.2) saturate(0.2); }
-  12%  { filter: brightness(1.25) contrast(1.25) saturate(1.3); }
-  18%  { filter: brightness(0.18) contrast(1.2) saturate(0.4); }
-  28%  { filter: brightness(0.95) contrast(1.15) saturate(1.1); }
-  34%  { filter: brightness(0.25) contrast(1.2) saturate(0.5); }
-  52%  { filter: brightness(1.35) contrast(1.22) saturate(1.35); }
-  60%  { filter: brightness(0.75) contrast(1.15) saturate(1); }
-  100% { filter: brightness(1.05) contrast(1.16) saturate(1.18); }
+  14%  { filter: brightness(1.25) contrast(1.25) saturate(1.3); }
+  20%  { filter: brightness(0.18) contrast(1.2) saturate(0.4); }
+  32%  { filter: brightness(0.95) contrast(1.15) saturate(1.1); }
+  38%  { filter: brightness(0.22) contrast(1.2) saturate(0.5); }
+  56%  { filter: brightness(1.35) contrast(1.22) saturate(1.35); }
+  64%  { filter: brightness(0.75) contrast(1.15) saturate(1); }
+  100% { filter: brightness(1.06) contrast(1.16) saturate(1.18); }
 }
 
-body.neon-igniting .neon-wall-stage img {
-  animation: neonTubeIgnite 1.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+.neon-intro-curtain.igniting img {
+  animation: neonTubeIgnite 1.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-body.neon-lit .neon-wall-stage img {
-  filter: brightness(0.92) contrast(1.16) saturate(1.15);
-  animation: subtleNeonPulse 4s ease-in-out infinite alternate;
+.intro-enter-pill {
+  position: relative;
+  z-index: 2;
+  appearance: none;
+  border: 1px solid var(--q-border-strong);
+  background: rgba(10, 11, 10, 0.85);
+  backdrop-filter: blur(12px);
+  color: var(--q-cream);
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 12px 24px;
+  border-radius: 999px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.25s ease;
 }
 
-@keyframes subtleNeonPulse {
-  0%   { filter: brightness(0.88) contrast(1.16) saturate(1.12); }
-  100% { filter: brightness(1.04) contrast(1.2) saturate(1.25); }
-}
-
-/* When inside one of the dedicated sections, dim the neon wall into a dark club background */
-body.in-section .neon-wall-stage img {
-  transform: scale(1.12);
-  filter: brightness(0.24) contrast(1.25) blur(6px);
-  animation: none;
-}
-
-.club-vignette {
-  position: fixed;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  background:
-    radial-gradient(circle at 50% 42%, transparent 18%, rgba(5, 2, 3, 0.72) 85%, #030102 100%),
-    linear-gradient(180deg, rgba(5, 2, 3, 0.65) 0%, transparent 25%, rgba(5, 2, 3, 0.92) 100%);
+.intro-enter-pill:hover {
+  background: var(--q-cream);
+  color: var(--q-bg);
 }
 
 /* ==========================================================================
-   2. DIRECTIONAL SLIDE VIEW TRANSITIONS (CLEAN LATERAL SLIDE — NO STARS)
+   2. DIRECTIONAL LATERAL SLIDE VIEW TRANSITIONS (CLEAN FRAMER SLIDE)
    ========================================================================== */
 ::view-transition-group(root) {
   animation-duration: 0.52s;
@@ -111,29 +120,16 @@ body.in-section .neon-wall-stage img {
 }
 
 @keyframes slide-to-left {
-  to {
-    transform: translateX(-100%);
-    opacity: 0.35;
-  }
+  to { transform: translateX(-40%); opacity: 0; }
 }
-
 @keyframes slide-from-right {
-  from {
-    transform: translateX(100%);
-  }
+  from { transform: translateX(40%); opacity: 0; }
 }
-
 @keyframes slide-to-right {
-  to {
-    transform: translateX(100%);
-    opacity: 0.35;
-  }
+  to { transform: translateX(40%); opacity: 0; }
 }
-
 @keyframes slide-from-left {
-  from {
-    transform: translateX(-100%);
-  }
+  from { transform: translateX(-40%); opacity: 0; }
 }
 
 html:active-view-transition-type(forward)::view-transition-old(root) {
@@ -142,7 +138,6 @@ html:active-view-transition-type(forward)::view-transition-old(root) {
 html:active-view-transition-type(forward)::view-transition-new(root) {
   animation-name: slide-from-right;
 }
-
 html:active-view-transition-type(backward)::view-transition-old(root) {
   animation-name: slide-to-right;
 }
@@ -150,844 +145,680 @@ html:active-view-transition-type(backward)::view-transition-new(root) {
   animation-name: slide-from-left;
 }
 
-/* Fallback CSS Slide classes when View Transitions API is unavailable */
-.slide-enter-right {
-  animation: slide-from-right 0.5s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.slide-enter-left {
-  animation: slide-from-left 0.5s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
 /* ==========================================================================
-   3. TOP & BOTTOM CRUZA-STYLE CLUB RAILS + NEON SOUND BUTTON
+   3. QITCHEN BENTO MASTER SHELL (24PX OUTER PADDING, SPLIT LEFT/RIGHT)
    ========================================================================== */
-.club-rail-top,
-.club-rail-bottom {
-  position: fixed;
-  left: 0;
-  right: 0;
-  z-index: 35;
-  display: flex;
-  align-items: center;
-  padding: 0 4vw;
-  gap: 18px;
-}
-
-.club-rail-top {
-  top: 24px;
-}
-
-.club-rail-bottom {
-  bottom: 22px;
-}
-
-.rail-brand {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 0.74rem;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  color: var(--silver-chrome);
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.neon-pulse-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--neon-red);
-  box-shadow: 0 0 12px var(--neon-red), 0 0 24px var(--neon-red);
-}
-
-.rail-line {
-  flex: 1;
-  height: 1px;
-  background: linear-gradient(90deg, rgba(255, 34, 22, 0.55) 0%, rgba(245, 242, 235, 0.14) 100%);
-}
-
-.club-rail-bottom .rail-line {
-  background: linear-gradient(90deg, rgba(245, 242, 235, 0.14) 0%, rgba(255, 34, 22, 0.55) 100%);
-}
-
-.btn-sound-neon {
-  appearance: none;
-  border: 1px solid rgba(255, 34, 22, 0.6);
-  background: rgba(18, 4, 6, 0.82);
-  backdrop-filter: blur(10px);
-  color: var(--silver-chrome);
-  font-family: var(--font-sans);
-  font-weight: 700;
-  font-size: 0.7rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  padding: 8px 14px;
-  border-radius: 999px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  box-shadow: 0 0 20px rgba(255, 34, 22, 0.25);
-  transition: all 0.22s ease;
-}
-
-.btn-sound-neon:hover {
-  background: var(--neon-red);
-  color: #fff;
-  box-shadow: 0 0 30px var(--neon-halo);
-}
-
-.neon-quote-script {
-  font-family: var(--font-script);
-  font-size: 1.45rem;
-  color: #ff694a;
-  text-shadow: 0 0 14px rgba(255, 34, 22, 0.75);
-  white-space: nowrap;
-}
-
-/* ==========================================================================
-   4. PORTAL HOME (100VH — NEON SIGN HERO + CRUZA NIGHT NAVIGATION)
-   ========================================================================== */
-.stage-viewport {
-  position: relative;
-  z-index: 10;
+.qitchen-app {
   width: 100vw;
   height: 100vh;
+  padding: 24px;
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: var(--q-gap);
 }
 
-.screen-view {
+/* On Home View: Left 68% Video Showcase + Right 32% 3-Card Stack (Exact Qitchen Home Ratio) */
+.qitchen-app[data-view="home"] {
+  grid-template-columns: 1.85fr 1fr;
+}
+
+/* ==========================================================================
+   4. LEFT BENTO COLUMN: STICKY 360° BOTTLE VIDEO + FLOATING PILL NAVBAR
+   ========================================================================== */
+.qitchen-left-showcase {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--q-radius-outer);
+  overflow: hidden;
+  border: 1px solid var(--q-border);
+  background: #050605;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 40px 44px;
+}
+
+.qitchen-left-showcase video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  filter: brightness(0.84) contrast(1.08);
+  transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1), filter 0.6s ease;
+}
+
+.qitchen-left-showcase::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(10, 11, 10, 0.45) 0%,
+    rgba(10, 11, 10, 0.05) 45%,
+    rgba(10, 11, 10, 0.86) 100%
+  );
+}
+
+/* Qitchen Floating Top-Left Pill Navbar */
+.qitchen-pill-navbar {
+  position: relative;
+  z-index: 5;
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  background: rgba(10, 11, 10, 0.86);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--q-border);
+  border-radius: 12px;
+}
+
+.q-Menu-icon-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  border: 1px solid var(--q-border);
+  background: rgba(239, 231, 210, 0.04);
+  color: var(--q-cream);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.q-Menu-icon-btn:hover {
+  background: rgba(239, 231, 210, 0.14);
+}
+
+.q-brand-logo {
+  font-family: var(--font-forum);
+  font-size: 1.45rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--q-cream);
+  padding: 0 12px 0 8px;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+.q-nav-link {
+  appearance: none;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--q-cream);
+  font-family: var(--font-sans);
+  font-size: 0.74rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 9px 13px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.q-nav-link:hover,
+.q-nav-link.active {
+  background: rgba(239, 231, 210, 0.08);
+  border-color: var(--q-border);
+}
+
+.q-nav-book {
+  border-color: var(--q-border-strong);
+  background: rgba(239, 231, 210, 0.06);
+}
+
+.q-nav-book:hover {
+  background: var(--q-cream);
+  color: var(--q-bg);
+}
+
+/* Bottom-Left Giant Forum Display Title inside Video Panel */
+.qitchen-hero-bottom {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 20px;
+}
+
+.qitchen-giant-title {
+  font-family: var(--font-forum);
+  font-weight: 400;
+  font-size: clamp(3.6rem, 6.8vw, 6.6rem);
+  line-height: 0.92;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--q-cream);
+}
+
+/* Qitchen Bottom-Right Inverted Cutout Social Badges inside Left Showcase */
+.qitchen-social-dock {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  z-index: 6;
+  background: var(--q-bg);
+  padding: 12px 0 0 16px;
+  border-top-left-radius: 20px;
+  display: flex;
+  gap: 8px;
+}
+
+/* Smooth inverted curve ears matching Framer Qitchen template */
+.qitchen-social-dock::before {
+  content: '';
+  position: absolute;
+  top: -20px;
+  right: 0;
+  width: 20px;
+  height: 20px;
+  border-bottom-right-radius: 16px;
+  box-shadow: 6px 6px 0 6px var(--q-bg);
+  pointer-events: none;
+}
+
+.qitchen-social-dock::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: -20px;
+  width: 20px;
+  height: 20px;
+  border-bottom-right-radius: 16px;
+  box-shadow: 6px 6px 0 6px var(--q-bg);
+  pointer-events: none;
+}
+
+.q-social-pill {
+  appearance: none;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--q-border);
+  background: rgba(239, 231, 210, 0.04);
+  color: var(--q-cream);
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.q-social-pill:hover {
+  background: var(--q-cream);
+  color: var(--q-bg);
+}
+
+/* ==========================================================================
+   5. RIGHT BENTO COLUMN: SWITCHABLE VIEWS (HOME STACK, MENU, CUMPLES, RESERVATION)
+   ========================================================================== */
+.qitchen-right-column {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.q-view {
   display: none;
   width: 100%;
   height: 100%;
 }
 
-.screen-view.active {
+.q-view.active {
   display: flex;
 }
 
-.home-club-portal {
+/* --- VIEW 0: HOME 3-CARD STACK (Exact Qitchen Right Sidebar) --- */
+.q-home-stack {
   flex-direction: column;
-  justify-content: flex-end;
-  align-items: center;
-  padding: 80px 5vw 76px;
-  text-align: center;
-}
-
-/* Staggered upward fade-in after the neon sign finishes igniting */
-.reveal-up {
-  opacity: 0;
-  transform: translateY(28px);
-  transition:
-    opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-body.ui-revealed .reveal-up {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-body.ui-revealed .delay-1 { transition-delay: 0.05s; }
-body.ui-revealed .delay-2 { transition-delay: 0.16s; }
-body.ui-revealed .delay-3 { transition-delay: 0.27s; }
-body.ui-revealed .delay-4 { transition-delay: 0.38s; }
-body.ui-revealed .delay-5 { transition-delay: 0.49s; }
-
-.portal-sub-kicker {
-  font-family: var(--font-sans);
-  font-size: 0.74rem;
-  font-weight: 700;
-  letter-spacing: 0.32em;
-  text-transform: uppercase;
-  color: rgba(245, 242, 235, 0.78);
-  margin-bottom: 18px;
-  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.95);
-}
-
-/* Horizontal / Stacked Cruza Nightclub Menu Bar at Lower Third so Neon Sign Shines Above */
-.cruza-night-nav {
-  width: min(94vw, 960px);
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-}
-
-.night-nav-card {
-  appearance: none;
-  background: rgba(12, 3, 5, 0.76);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 56, 38, 0.32);
-  padding: 20px 18px;
-  text-align: left;
-  color: var(--silver-chrome);
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 14px;
-  position: relative;
-  overflow: hidden;
-  transition: transform 0.26s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.26s ease, background 0.26s ease, box-shadow 0.26s ease;
-}
-
-.night-nav-card:hover {
-  transform: translateY(-5px);
-  background: rgba(34, 6, 9, 0.92);
-  border-color: var(--neon-red);
-  box-shadow: 0 14px 40px rgba(255, 34, 22, 0.32);
-}
-
-.nav-card-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.2em;
-  color: var(--neon-orange-glow);
-}
-
-.nav-card-title {
-  font-family: var(--font-serif);
-  font-weight: 400;
-  font-size: 2rem;
-  line-height: 0.95;
-  letter-spacing: 0.01em;
-  color: var(--silver-chrome);
-}
-
-.nav-card-title em {
-  font-style: italic;
-  color: #ff694a;
-}
-
-.nav-card-sub {
-  font-size: 0.74rem;
-  color: var(--silver-muted);
-  letter-spacing: 0.04em;
-}
-
-/* ==========================================================================
-   5. DEDICATED FULL-SCREEN SECTIONS (SLIDE-IN NIGHTCLUB PAGES)
-   ========================================================================== */
-.dedicated-page {
-  width: 100%;
-  height: 100vh;
-  overflow-y: auto;
-  padding: 74px 4vw 80px;
-  background: rgba(6, 2, 3, 0.88);
-  backdrop-filter: blur(18px);
-}
-
-.page-shell {
-  max-width: 1260px;
-  margin: 0 auto;
-  border: 1px solid var(--border-crimson);
-  background: var(--blood-velvet);
-  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.9);
-}
-
-.page-topbar {
-  position: sticky;
-  top: 0;
-  z-index: 25;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  padding: 16px 28px;
-  background: rgba(14, 3, 5, 0.94);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border-crimson);
-}
-
-.page-breadcrumb {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.page-idx-pill {
-  padding: 4px 10px;
-  background: var(--neon-red);
-  color: #fff;
-  font-size: 0.7rem;
-  font-weight: 800;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  box-shadow: 0 0 16px rgba(255, 34, 22, 0.5);
-}
-
-.page-code-label {
-  font-size: 0.74rem;
-  font-weight: 700;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--silver-muted);
-}
-
-.btn-slide-back {
-  appearance: none;
-  border: 1px solid rgba(255, 56, 38, 0.55);
-  background: rgba(255, 34, 22, 0.1);
-  color: var(--silver-chrome);
-  font-family: var(--font-sans);
-  font-weight: 700;
-  font-size: 0.74rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  padding: 10px 18px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-slide-back:hover {
-  background: var(--neon-red);
-  color: #fff;
-  box-shadow: 0 0 24px var(--neon-halo);
-}
-
-/* Section Hero Banner */
-.page-hero-strip {
-  display: grid;
-  grid-template-columns: 1.15fr 0.85fr;
-  border-bottom: 1px solid var(--border-crimson);
-}
-
-.page-hero-title-col {
-  padding: 34px 28px;
-  border-right: 1px solid var(--border-crimson);
-}
-
-.page-hero-title {
-  font-family: var(--font-serif);
-  font-weight: 400;
-  font-size: clamp(3rem, 5.8vw, 4.8rem);
-  line-height: 0.92;
-  color: var(--silver-chrome);
-}
-
-.page-hero-title em {
-  font-style: italic;
-  color: var(--neon-orange-glow);
-}
-
-.page-hero-meta-col {
-  padding: 34px 28px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 16px;
-  background: var(--crimson-surface);
-}
-
-.page-hero-lead {
-  font-size: 0.95rem;
-  line-height: 1.55;
-  color: var(--silver-muted);
-}
-
-.spec-row {
-  display: flex;
-  justify-content: space-between;
-  padding-top: 12px;
-  border-top: 1px solid var(--border-subtle);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--neon-orange-glow);
-}
-
-/* ==========================================================================
-   SECTION 01: LA CARTA NOCTURNA (COCKTAILS 11:11, CARNES & MERY JANE WINES)
-   ========================================================================== */
-.carta-filter-bar {
-  display: flex;
-  flex-wrap: wrap;
-  border-bottom: 1px solid var(--border-crimson);
-  background: var(--pitch-black);
-}
-
-.carta-tab-btn {
-  appearance: none;
-  border: none;
-  border-right: 1px solid var(--border-crimson);
-  background: transparent;
-  color: var(--silver-muted);
-  font-family: var(--font-sans);
-  font-weight: 700;
-  font-size: 0.76rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  padding: 16px 24px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.carta-tab-btn:hover {
-  color: var(--silver-chrome);
-  background: rgba(255, 34, 22, 0.1);
-}
-
-.carta-tab-btn.active {
-  background: var(--neon-red);
-  color: #fff;
-}
-
-.carta-workspace {
-  display: grid;
-  grid-template-columns: 1.05fr 0.95fr;
-}
-
-.carta-plinth-col {
-  padding: 28px;
-  border-right: 1px solid var(--border-crimson);
-  background: #080203;
-}
-
-.mery-product-card {
-  background: #0d0305;
-  border: 1px solid rgba(255, 56, 38, 0.35);
-  border-radius: 18px;
-  overflow: hidden;
-}
-
-.mery-card-media {
-  position: relative;
-  height: 320px;
-  overflow: hidden;
-  background: #040102;
-}
-
-.mery-card-media img {
-  width: 100%;
+  gap: var(--q-gap);
   height: 100%;
-  object-fit: cover;
-  transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.mery-pill-tag {
-  position: absolute;
-  top: 16px;
-  left: 16px;
-  padding: 7px 14px;
-  border-radius: 999px;
-  background: rgba(8, 3, 4, 0.88);
-  border: 1px solid rgba(245, 242, 235, 0.28);
-  color: var(--silver-chrome);
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
-
-.mery-price-pill {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  padding: 7px 16px;
-  border-radius: 999px;
-  background: var(--neon-red);
-  color: #fff;
-  font-weight: 800;
-  font-size: 0.9rem;
-  box-shadow: 0 0 22px var(--neon-halo);
-}
-
-.mery-card-body {
-  padding: 24px;
-}
-
-.mery-card-title {
-  font-family: var(--font-serif);
-  font-weight: 400;
-  font-size: 2.35rem;
-  line-height: 0.98;
-  color: var(--silver-chrome);
-  margin-bottom: 10px;
-}
-
-.mery-card-desc {
-  font-size: 0.92rem;
-  line-height: 1.55;
-  color: var(--silver-muted);
-  margin-bottom: 18px;
-}
-
-.mery-spec-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  border: 1px solid var(--border-crimson);
-  margin-bottom: 18px;
-}
-
-.mery-spec-cell {
-  padding: 10px 12px;
-  border-right: 1px solid var(--border-crimson);
-}
-
-.mery-spec-cell:last-child {
-  border-right: none;
-}
-
-.mery-spec-cell span {
-  display: block;
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--silver-muted);
-}
-
-.mery-spec-cell strong {
-  font-size: 0.84rem;
-  color: var(--neon-orange-glow);
-}
-
-.carta-list-col {
-  display: flex;
-  flex-direction: column;
-}
-
-.carta-row-item {
-  appearance: none;
-  width: 100%;
+.q-bento-card {
+  position: relative;
+  flex: 1;
+  border-radius: var(--q-radius-outer);
+  overflow: hidden;
+  border: 1px solid var(--q-border);
+  cursor: pointer;
+  background: #121311;
   text-align: left;
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid var(--border-crimson);
-  padding: 18px 24px;
-  color: var(--silver-chrome);
-  font-family: var(--font-sans);
-  cursor: pointer;
-  display: grid;
-  grid-template-columns: 66px 1fr auto;
-  align-items: center;
-  gap: 16px;
-  transition: background 0.2s ease;
-}
-
-.carta-row-item:hover,
-.carta-row-item.active {
-  background: rgba(255, 34, 22, 0.12);
-}
-
-.carta-row-item.active {
-  border-left: 4px solid var(--neon-red);
-}
-
-.carta-row-thumb {
-  width: 66px;
-  height: 66px;
-  object-fit: cover;
-  border-radius: 8px;
-  border: 1px solid var(--border-subtle);
-}
-
-.carta-row-title {
-  font-family: var(--font-serif);
-  font-size: 1.35rem;
-  display: block;
-  line-height: 1.05;
-  margin-bottom: 3px;
-}
-
-.carta-row-sub {
-  font-size: 0.78rem;
-  color: var(--silver-muted);
-}
-
-.carta-row-price {
-  font-weight: 800;
-  font-size: 0.92rem;
-  color: var(--neon-orange-glow);
-}
-
-/* ==========================================================================
-   SECTION 02: CUMPLEAÑOS & VIP INTERACTIVE CONFIGURATOR
-   ========================================================================== */
-.bday-Split-layout {
-  display: grid;
-  grid-template-columns: 1.1fr 0.9fr;
-}
-
-.bday-configurator {
-  padding: 32px 28px;
-  border-right: 1px solid var(--border-crimson);
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.config-step-label {
-  font-size: 0.7rem;
-  font-weight: 800;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--neon-orange-glow);
-  margin-bottom: 10px;
-  display: block;
-}
-
-.guest-tier-btns {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-}
-
-.tier-btn {
-  appearance: none;
-  border: 1px solid var(--border-crimson);
-  background: var(--pitch-black);
-  color: var(--silver-chrome);
-  font-family: var(--font-sans);
-  padding: 16px 12px;
-  cursor: pointer;
-  text-align: left;
-  transition: all 0.2s ease;
-}
-
-.tier-btn strong {
-  display: block;
-  font-family: var(--font-serif);
-  font-weight: 400;
-  font-size: 1.45rem;
-  margin-bottom: 2px;
-}
-
-.tier-btn span {
-  font-size: 0.74rem;
-  color: var(--silver-muted);
-}
-
-.tier-btn.active,
-.tier-btn:hover {
-  border-color: var(--neon-red);
-  background: rgba(255, 34, 22, 0.15);
-  box-shadow: 0 0 22px rgba(255, 34, 22, 0.22);
-}
-
-.bday-perks-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  border: 1px solid var(--border-crimson);
-}
-
-.perk-cell {
-  padding: 16px;
-  border-right: 1px solid var(--border-crimson);
-  border-bottom: 1px solid var(--border-crimson);
-}
-
-.perk-cell:nth-child(2n) { border-right: none; }
-.perk-cell:nth-last-child(-n+2) { border-bottom: none; }
-
-.perk-cell strong {
-  display: block;
-  font-size: 0.88rem;
-  color: var(--silver-chrome);
-  margin-bottom: 4px;
-}
-
-.perk-cell p {
-  font-size: 0.8rem;
-  color: var(--silver-muted);
-  line-height: 1.45;
-}
-
-.bday-summary-col {
-  padding: 32px 28px;
-  background: #080203;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 20px;
-}
-
-.summary-photo {
-  width: 100%;
-  height: 220px;
-  object-fit: cover;
-  border: 1px solid var(--border-crimson);
-}
-
-.btn-neon-action {
-  appearance: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  width: 100%;
-  border: 1px solid var(--neon-red);
-  background: var(--neon-red);
-  color: #fff;
-  font-family: var(--font-sans);
-  font-weight: 800;
-  font-size: 0.82rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  padding: 16px 24px;
-  text-decoration: none;
-  cursor: pointer;
-  box-shadow: 0 0 28px var(--neon-halo);
-  transition: all 0.22s ease;
-}
-
-.btn-neon-action:hover {
-  background: #ff3b2f;
-  transform: translateY(-2px);
-  box-shadow: 0 0 42px rgba(255, 34, 22, 0.8);
-}
-
-/* ==========================================================================
-   SECTION 03 & 04: LINEUP 13/11 & HORARIOS
-   ========================================================================== */
-.events-editorial-grid,
-.horarios-grid {
-  display: grid;
-  grid-template-columns: 0.92fr 1.08fr;
-}
-
-.event-poster-col,
-.schedule-table-col {
-  padding: 28px;
-  border-right: 1px solid var(--border-crimson);
-  background: #080203;
-}
-
-.schedule-table-col {
   padding: 0;
 }
 
-.event-poster-img {
+.q-bento-card img {
   width: 100%;
-  height: 380px;
+  height: 100%;
   object-fit: cover;
-  border: 1px solid var(--border-crimson);
-  margin-bottom: 16px;
+  filter: brightness(0.78) contrast(1.08);
+  transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1), filter 0.4s ease;
 }
 
-.lineup-table-col {
+.q-bento-card:hover img {
+  transform: scale(1.06);
+  filter: brightness(0.95) contrast(1.12);
+}
+
+/* Exact Qitchen Bottom-Right Cutout Label with Circular Arrow */
+.q-card-corner-tab {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: var(--q-bg);
+  padding: 10px 0 0 20px;
+  border-top-left-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--q-cream);
+}
+
+.q-card-corner-tab::before {
+  content: '';
+  position: absolute;
+  top: -18px;
+  right: 0;
+  width: 18px;
+  height: 18px;
+  border-bottom-right-radius: 14px;
+  box-shadow: 5px 5px 0 5px var(--q-bg);
+  pointer-events: none;
+}
+
+.q-card-corner-tab::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: -18px;
+  width: 18px;
+  height: 18px;
+  border-bottom-right-radius: 14px;
+  box-shadow: 5px 5px 0 5px var(--q-bg);
+  pointer-events: none;
+}
+
+.q-corner-label {
+  font-family: var(--font-forum);
+  font-size: 1.05rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--q-cream);
+}
+
+.q-corner-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--q-border-strong);
+  background: rgba(239, 231, 210, 0.05);
+  display: grid;
+  place-items: center;
+  font-size: 0.82rem;
+  transition: all 0.25s ease;
+}
+
+.q-bento-card:hover .q-corner-circle {
+  background: var(--q-cream);
+  color: var(--q-bg);
+  transform: translateX(2px);
+}
+
+/* --- INNER SCROLLABLE PANEL SHELL (Menu, Cumples & Lineup, Reservation) --- */
+.q-panel-bordered {
+  width: 100%;
+  height: 100%;
+  border: 1px solid var(--q-border);
+  border-radius: var(--q-radius-outer);
+  background: var(--q-bg);
+  overflow-y: auto;
+  padding: 36px 42px 44px;
   display: flex;
   flex-direction: column;
+  gap: 32px;
 }
 
-.lineup-slot-row,
-.day-row {
-  display: grid;
-  grid-template-columns: 110px 1fr auto;
-  align-items: center;
-  gap: 18px;
-  padding: 22px 28px;
-  border-bottom: 1px solid var(--border-crimson);
+/* Custom sleek scrollbar matching Qitchen */
+.q-panel-bordered::-webkit-scrollbar {
+  width: 5px;
+}
+.q-panel-bordered::-webkit-scrollbar-thumb {
+  background: var(--q-border-strong);
+  border-radius: 99px;
 }
 
-.day-row {
+/* Qitchen Category Pill Filter Bar at Top of /menu */
+.q-filter-pills {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
-.slot-time,
-.day-hours {
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  color: var(--neon-orange-glow);
+.q-pill-btn {
+  appearance: none;
+  border: 1px solid var(--q-border);
+  background: transparent;
+  color: var(--q-cream);
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.slot-dj {
-  font-family: var(--font-serif);
-  font-size: 1.9rem;
-  color: var(--silver-chrome);
-  line-height: 1;
+.q-pill-btn:hover,
+.q-pill-btn.active {
+  border-color: var(--q-cream);
+  background: rgba(239, 231, 210, 0.1);
+}
+
+/* Qitchen Diamond Ornamental Section Heading: ──◇ TITLE ◇── */
+.q-diamond-heading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin: 8px 0 4px;
+}
+
+.q-diamond-line {
+  width: 54px;
+  height: 1px;
+  background: var(--q-border);
+  position: relative;
+}
+
+.q-diamond-symbol {
+  width: 7px;
+  height: 7px;
+  border: 1px solid var(--q-border-strong);
+  transform: rotate(45deg);
+  flex-shrink: 0;
+}
+
+.q-diamond-heading h2 {
+  font-family: var(--font-forum);
+  font-weight: 400;
+  font-size: 2rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--q-cream);
+}
+
+/* Qitchen Menu Item Row: 110x78 Rounded Thumb + Title + Dotted Leader + Price + Subtext */
+.q-menu-group {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.q-dish-row {
+  display: grid;
+  grid-template-columns: 115px 1fr;
+  gap: 20px;
+  align-items: center;
+  padding: 6px;
+  border-radius: 14px;
+  transition: background 0.2s ease;
+  cursor: pointer;
+}
+
+.q-dish-row:hover {
+  background: rgba(239, 231, 210, 0.04);
+}
+
+.q-dish-thumb {
+  width: 115px;
+  height: 82px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 1px solid var(--q-border);
+}
+
+.q-dish-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.q-dish-name {
+  font-family: var(--font-forum);
+  font-weight: 400;
+  font-size: 1.35rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--q-cream);
+  white-space: nowrap;
+}
+
+.q-leaf-badge {
+  font-size: 0.72rem;
+  color: var(--q-gold);
+}
+
+/* Exact Qitchen Dotted Leader Line between Dish Name and Price */
+.q-dotted-leader {
+  flex: 1;
+  border-bottom: 1px dotted var(--q-border-strong);
+  min-width: 24px;
+  transform: translateY(-4px);
+}
+
+.q-dish-price {
+  font-family: var(--font-forum);
+  font-size: 1.3rem;
+  letter-spacing: 0.05em;
+  color: var(--q-cream);
+  white-space: nowrap;
+}
+
+.q-dish-desc {
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: var(--q-cream-muted);
+}
+
+/* --- VIEW 2: ABOUT / LA PREVIA 13/11 & CUMPLEAÑOS BENTO GRID (Matches Qitchen /about) --- */
+.q-about-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--q-gap);
+}
+
+.q-about-box {
+  border: 1px solid var(--q-border);
+  border-radius: var(--q-radius-outer);
+  padding: 28px;
+  background: rgba(24, 24, 24, 0.35);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.q-about-box h3 {
+  font-family: var(--font-forum);
+  font-weight: 400;
+  font-size: 1.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1.1;
+}
+
+.q-about-box p {
+  font-size: 0.86rem;
+  line-height: 1.55;
+  color: var(--q-cream-muted);
+}
+
+.q-award-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.q-award-card {
+  border: 1px solid var(--q-border);
+  border-radius: 14px;
+  padding: 18px 14px;
+  text-align: center;
+  background: rgba(24, 24, 24, 0.3);
+}
+
+.q-award-stars {
+  color: var(--q-cream);
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  margin-bottom: 6px;
+}
+
+.q-award-card h4 {
+  font-family: var(--font-forum);
+  font-weight: 400;
+  font-size: 1.15rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   margin-bottom: 4px;
 }
 
-.slot-style,
-.day-vibe {
-  font-size: 0.82rem;
-  color: var(--silver-muted);
-}
-
-.slot-badge {
-  padding: 5px 10px;
-  border: 1px solid rgba(255, 56, 38, 0.45);
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
+.q-award-card span {
+  font-size: 0.7rem;
   text-transform: uppercase;
-  color: var(--neon-orange-glow);
+  letter-spacing: 0.1em;
+  color: var(--q-cream-muted);
 }
 
-.corridor-col {
-  padding: 32px 28px;
+/* --- VIEW 3: RESERVATION & BIRTHDAY FORM (Exact Qitchen /reservation Form) --- */
+.q-res-form {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  gap: 24px;
-  background: var(--crimson-surface);
+  gap: 14px;
+  margin-top: 8px;
 }
 
-.zone-distance-grid {
+.q-input,
+.q-select {
+  width: 100%;
+  padding: 15px 18px;
+  border-radius: 10px;
+  border: 1px solid var(--q-border);
+  background: rgba(24, 24, 24, 0.5);
+  color: var(--q-cream);
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.q-input::placeholder {
+  color: var(--q-cream-muted);
+}
+
+.q-input:focus,
+.q-select:focus {
+  border-color: var(--q-cream);
+}
+
+.q-form-row-3 {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  border: 1px solid var(--border-crimson);
-  background: var(--pitch-black);
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
 }
 
-.zone-cell {
-  padding: 16px;
-  border-right: 1px solid var(--border-crimson);
-  border-bottom: 1px solid var(--border-crimson);
+.q-btn-submit {
+  appearance: none;
+  width: 100%;
+  padding: 16px 24px;
+  border-radius: 10px;
+  border: 1px solid var(--q-cream);
+  background: var(--q-cream);
+  color: var(--q-bg);
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.22s ease;
 }
 
-.zone-cell:nth-child(2n) { border-right: none; }
-.zone-cell:nth-last-child(-n+2) { border-bottom: none; }
-
-.zone-cell strong {
-  display: block;
-  font-family: var(--font-serif);
-  font-weight: 400;
-  font-size: 1.35rem;
-  color: var(--silver-chrome);
+.q-btn-submit:hover {
+  background: var(--q-gold);
+  border-color: var(--q-gold);
 }
 
-.zone-cell span {
-  font-size: 0.76rem;
-  color: var(--neon-orange-glow);
+/* Qitchen Footer Strip inside Scrollable Panel */
+.q-panel-footer {
+  margin-top: auto;
+  padding-top: 20px;
+  border-top: 1px solid var(--q-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.74rem;
+  color: var(--q-cream-muted);
 }
 
-@media (max-width: 920px) {
-  .cruza-night-nav {
-    grid-template-columns: repeat(2, 1fr);
+/* Responsive Tablet & Mobile */
+@media (max-width: 1024px) {
+  html, body {
+    overflow: auto;
   }
-  .page-hero-strip,
-  .carta-workspace,
-  .bday-Split-layout,
-  .events-editorial-grid,
-  .horarios-grid {
+  .qitchen-app,
+  .qitchen-app[data-view="home"] {
+    height: auto;
+    min-height: 100vh;
     grid-template-columns: 1fr;
   }
-  .page-hero-title-col,
-  .carta-plinth-col,
-  .bday-configurator,
-  .event-poster-col,
-  .schedule-table-col {
-    border-right: none;
-    border-bottom: 1px solid var(--border-crimson);
+  .qitchen-left-showcase {
+    min-height: 58vh;
   }
-  .guest-tier-btns {
-    grid-template-columns: 1fr;
+  .q-home-stack {
+    min-height: 620px;
   }
 }
 
-@media (max-width: 560px) {
-  .cruza-night-nav {
+@media (max-width: 640px) {
+  .qitchen-app {
+    padding: 12px;
+  }
+  .q-panel-bordered {
+    padding: 24px 18px;
+  }
+  .q-dish-row {
+    grid-template-columns: 84px 1fr;
+  }
+  .q-dish-thumb {
+    width: 84px;
+    height: 66px;
+  }
+  .q-dish-name {
+    white-space: normal;
+    font-size: 1.1rem;
+  }
+  .q-about-grid,
+  .q-award-row,
+  .q-form-row-3 {
     grid-template-columns: 1fr;
   }
 }
