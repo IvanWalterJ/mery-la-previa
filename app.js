@@ -1,87 +1,7 @@
-// Exact Qitchen-Structured Menu Data for Mery La Previa
-const QITCHEN_MENU_SECTIONS = [
-  {
-    id: 'cocktails',
-    title: 'Cocktails 11:11',
-    items: [
-      {
-        name: 'La Previa Crimson Coupe',
-        badge: '★',
-        price: '$12.500',
-        desc: 'Gin macerado en cerezas negras, reducción de vino Mery Jane, vermut rosso especiado y bloque de hielo cristal sellado en vivo con pinzas de plata.',
-        image: 'assets/img/ice-cube-previa.jpg'
-      },
-      {
-        name: '11:11 Smoked Velvet',
-        badge: '★',
-        price: '$11.800',
-        desc: 'Campari, gin botánico, cordial de pomelo rosado y campana de humo de romero quemado en barra cuando el neón marca las 11:11.',
-        image: 'assets/img/cocktails-neon.jpg'
-      },
-      {
-        name: 'Tutto Passa Spritz',
-        badge: '◇',
-        price: '$10.200',
-        desc: 'Aperitivo artesanal de naranjas sanguíneas, Mery Jane Torrontés seco, soda botánica de cardamomo y aceituna verde en copa balón.',
-        image: 'assets/img/brand-tutto-passa.jpg'
-      }
-    ]
-  },
-  {
-    id: 'cortes',
-    title: 'Carnes & Tapeo',
-    items: [
-      {
-        name: 'Ojo de Bife en Bandeja Imperial',
-        badge: '★',
-        price: '$44.000',
-        desc: '750g fileteados a punto rouge en fuente de plata con caracú asado a las brasas, manteca de hierbas ahumadas y papas triple cocción para compartir.',
-        image: 'assets/img/steak-flash.jpg'
-      },
-      {
-        name: 'Mollejas Crocantes & Brioche',
-        badge: '★',
-        price: '$19.800',
-        desc: 'Doradas a la plancha de hierro con miel de caña, lima asada, emulsión de ajo negro y pan brioche tostado para picar al centro.',
-        image: 'assets/img/brand-ig-grid.jpg'
-      },
-      {
-        name: 'T-Bone Madurado "La Previa"',
-        badge: '◇',
-        price: '$52.000',
-        desc: 'Corte de 900g con hueso madurado 35 días, gremolata cítrica, ajos confitados en oliva virgen y pimientos del padrón.',
-        image: 'assets/img/steak-flash.jpg'
-      }
-    ]
-  },
-  {
-    id: 'vinos',
-    title: 'Mery Jane Wines',
-    items: [
-      {
-        name: 'Mery Jane Blanc de Nuit (Frapera)',
-        badge: '★',
-        price: '$26.500',
-        desc: 'Nuestra etiqueta insignia servida bien fría en frapera de plata. Notas de durazno blanco, jazmín y acidez eléctrica ideal para toda la noche.',
-        image: 'assets/img/wine-mery.jpg'
-      },
-      {
-        name: 'Ritual "Caja La Previa x4" + Brut',
-        badge: '★',
-        price: '$92.000',
-        desc: 'Caja de 3 botellas Mery Jane a elección + 1 Espumante Extra Brut en mesa. El ritual favorito para grupos de amigos y festejos de cumpleaños.',
-        image: 'assets/img/brand-previa-zine.jpg'
-      },
-      {
-        name: 'Mery Jane Reserva Malbec Orgánico',
-        badge: '◇',
-        price: '$29.000',
-        desc: 'Tinto de perfil moderno y fluido, ciruelas negras, pimienta rosa y paso de terciopelo pensado para acompañar carnes en bandeja.',
-        image: 'assets/img/bottle-hero-isolated.jpg'
-      }
-    ]
-  }
-];
+// Exact Qitchen-Structured Menu & Real-Time Interactive Controller for Mery La Previa
+const FALLBACK_SECTIONS = window.MeryStore
+  ? window.MeryStore.DEFAULT_MENU_SECTIONS
+  : [];
 
 // Hero Title & Showcase Video per View
 const VIEW_CONFIG = {
@@ -111,6 +31,14 @@ const VIEW_CONFIG = {
   }
 };
 
+function escapeHtml(str) {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const appEl = document.getElementById('qitchenApp');
   const introCurtain = document.getElementById('neonIntroCurtain');
@@ -135,14 +63,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnIntroUnmute) btnIntroUnmute.classList.remove('visible');
   }
 
-  // Safety fallback: guaranteed reveal after 3.4s so mobile is NEVER trapped
   const enterSafetyTimer = setTimeout(revealEnterButton, 3400);
 
   function activateAudio() {
     if (!neonIntroVideo) return;
     neonIntroVideo.muted = false;
     neonIntroVideo.volume = 1;
-    // Keep playing smoothly without seeking to 0 (avoids buffer freezing on mobile)
     const p = neonIntroVideo.play();
     if (p !== undefined) {
       p.catch(() => {});
@@ -152,7 +78,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (neonIntroVideo) {
-    // When neon video reaches ignition finish (~3s or ended), show enter button
     neonIntroVideo.addEventListener('timeupdate', () => {
       if (neonIntroVideo.currentTime >= 3.0) {
         revealEnterButton();
@@ -161,7 +86,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     neonIntroVideo.addEventListener('ended', revealEnterButton);
 
-    // If mobile battery saver or browser pauses/stalls video, reveal button safely
     neonIntroVideo.addEventListener('pause', () => {
       if (!introCurtain.classList.contains('dismissed')) {
         setTimeout(revealEnterButton, 500);
@@ -170,25 +94,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     neonIntroVideo.addEventListener('error', revealEnterButton);
 
-    // Attempt unmuted autoplay immediately on entry
     neonIntroVideo.muted = false;
     neonIntroVideo.volume = 1;
     neonIntroVideo.play().then(() => {
-      // Unmuted autoplay was permitted by browser
       if (btnIntroUnmute) btnIntroUnmute.classList.remove('visible');
     }).catch(() => {
-      // Browser blocked unmuted autoplay (standard on mobile).
-      // Play muted immediately so visual video runs fluidly without stalling:
       neonIntroVideo.muted = true;
       neonIntroVideo.play().catch(() => {});
-      // Display sound pill so user can easily un-mute with 1 tap:
       if (btnIntroUnmute && !buttonRevealed) {
         btnIntroUnmute.classList.add('visible');
       }
     });
   }
 
-  // Sound pill tap handler: single clean event handler
   function handleSoundTap(e) {
     if (e) {
       e.preventDefault();
@@ -202,7 +120,6 @@ document.addEventListener('DOMContentLoaded', () => {
     btnIntroUnmute.addEventListener('touchend', handleSoundTap);
   }
 
-  // Tapping anywhere on the curtain also un-mutes smoothly
   if (introCurtain) {
     introCurtain.addEventListener('click', (e) => {
       if (btnDismissIntro && btnDismissIntro.contains(e.target)) return;
@@ -220,7 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 2. Qitchen Fullscreen Hamburger Menu Overlay Controls (Screenshot 1 Match)
+  // 2. Qitchen Fullscreen Hamburger Menu Overlay Controls
   function toggleOverlay(openState) {
     if (!menuOverlay) return;
     menuOverlay.classList.toggle('open', openState);
@@ -242,67 +159,247 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // 3. Dish Detail Modal (#qitchenDishModal)
+  const dishModal = document.getElementById('qitchenDishModal');
+  const btnCloseDishModal = document.getElementById('btnCloseDishModal');
+  const btnDishModalBack = document.getElementById('btnDishModalBack');
+  const btnDishModalReserve = document.getElementById('btnDishModalReserve');
+  const dishModalImage = document.getElementById('dishModalImage');
+  const dishModalCategory = document.getElementById('dishModalCategory');
+  const dishModalBadge = document.getElementById('dishModalBadge');
+  const dishModalTitle = document.getElementById('dishModalTitle');
+  const dishModalPrice = document.getElementById('dishModalPrice');
+  const dishModalLead = document.getElementById('dishModalLead');
+  const dishModalStory = document.getElementById('dishModalStory');
+  const dishModalPairingWrap = document.getElementById('dishModalPairingWrap');
+  const dishModalPairing = document.getElementById('dishModalPairing');
+  const dishModalTags = document.getElementById('dishModalTags');
+
+  let activeModalDish = null;
+  let selectedDishForReservation = null;
+
+  function openDishModal(item, categoryTitle) {
+    if (!dishModal || !item) return;
+    activeModalDish = { item, categoryTitle };
+
+    if (dishModalImage) {
+      dishModalImage.src = item.image || 'assets/img/ice-cube-previa.jpg';
+      dishModalImage.alt = item.name || 'Detalle del plato';
+    }
+    if (dishModalCategory) {
+      dishModalCategory.textContent = categoryTitle || 'LA CARTA';
+    }
+    if (dishModalBadge) {
+      const badgeSymbol = item.badge || '★';
+      dishModalBadge.textContent = badgeSymbol === '★'
+        ? '★ RECOMENDADO DE LA CASA'
+        : `${badgeSymbol} ESPECIALIDAD 11:11`;
+    }
+    if (dishModalTitle) dishModalTitle.textContent = item.name || '';
+    if (dishModalPrice) dishModalPrice.textContent = item.price || '';
+    if (dishModalLead) dishModalLead.textContent = item.desc || '';
+
+    const extendedCopy = item.detailCopy || item.longDesc || item.story || item.desc || '';
+    if (dishModalStory) {
+      dishModalStory.textContent = extendedCopy;
+    }
+
+    if (dishModalPairingWrap && dishModalPairing) {
+      if (item.pairing) {
+        dishModalPairing.textContent = item.pairing;
+        dishModalPairingWrap.style.display = 'flex';
+      } else {
+        dishModalPairingWrap.style.display = 'none';
+      }
+    }
+
+    if (dishModalTags) {
+      const tags = Array.isArray(item.tags) && item.tags.length > 0
+        ? item.tags
+        : ['Elaboración Propia', 'Mery La Previa'];
+      dishModalTags.innerHTML = tags
+        .map((t) => `<span class="q-dish-tag">◇ ${escapeHtml(t)}</span>`)
+        .join('');
+    }
+
+    dishModal.classList.add('open');
+    dishModal.setAttribute('aria-hidden', 'false');
+  }
+
+  function closeDishModal() {
+    if (!dishModal) return;
+    dishModal.classList.remove('open');
+    dishModal.setAttribute('aria-hidden', 'true');
+    activeModalDish = null;
+  }
+
+  if (btnCloseDishModal) btnCloseDishModal.addEventListener('click', closeDishModal);
+  if (btnDishModalBack) btnDishModalBack.addEventListener('click', closeDishModal);
+  if (dishModal) {
+    dishModal.addEventListener('click', (e) => {
+      if (e.target === dishModal) closeDishModal();
+    });
+  }
+
+  if (btnDishModalReserve) {
+    btnDishModalReserve.addEventListener('click', () => {
+      if (activeModalDish && activeModalDish.item) {
+        selectedDishForReservation = activeModalDish.item.name;
+      }
+      closeDishModal();
+      navigateView('reservation');
+    });
+  }
+
   window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && menuOverlay && menuOverlay.classList.contains('open')) {
-      toggleOverlay(false);
+    if (e.key === 'Escape') {
+      if (dishModal && dishModal.classList.contains('open')) {
+        closeDishModal();
+      } else if (menuOverlay && menuOverlay.classList.contains('open')) {
+        toggleOverlay(false);
+      }
     }
   });
 
-  // 3. Render Qitchen /menu Sections with Diamond Headings & Dotted Price Leaders
+  // 4. Render Qitchen /menu Sections + Dynamic Filter Pills + Real-Time Sync
   const menuContainer = document.getElementById('qitchenMenuContainer');
-  const filterBtns = document.querySelectorAll('.q-pill-btn');
+  const filterPillsWrap = document.querySelector('#view-menu .q-filter-pills');
+  let menuSections = window.MeryStore
+    ? window.MeryStore.getLocalSections()
+    : FALLBACK_SECTIONS;
   let currentFilter = 'all';
+
+  function renderFilterPills() {
+    if (!filterPillsWrap) return;
+    const validIds = menuSections.map((s) => s.id);
+    if (currentFilter !== 'all' && !validIds.includes(currentFilter)) {
+      currentFilter = 'all';
+    }
+
+    const pillsHtml = [
+      `<button type="button" class="q-pill-btn ${currentFilter === 'all' ? 'active' : ''}" data-filter="all">Todo</button>`,
+      ...menuSections.map((sec) => `
+        <button type="button" class="q-pill-btn ${currentFilter === sec.id ? 'active' : ''}" data-filter="${escapeHtml(sec.id)}">
+          ${escapeHtml(sec.title)}
+        </button>
+      `)
+    ].join('');
+
+    filterPillsWrap.innerHTML = pillsHtml;
+    filterPillsWrap.querySelectorAll('.q-pill-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        currentFilter = btn.dataset.filter || 'all';
+        renderFilterPills();
+        renderQitchenMenu();
+        const menuPanel = document.querySelector('#view-menu .q-panel-bordered');
+        if (menuPanel) menuPanel.scrollTop = 0;
+      });
+    });
+  }
 
   function renderQitchenMenu() {
     if (!menuContainer) return;
     const sections = currentFilter === 'all'
-      ? QITCHEN_MENU_SECTIONS
-      : QITCHEN_MENU_SECTIONS.filter((sec) => sec.id === currentFilter);
+      ? menuSections
+      : menuSections.filter((sec) => sec.id === currentFilter);
 
-    menuContainer.innerHTML = sections.map((sec) => `
-      <div class="q-menu-group">
-        <div class="q-diamond-heading">
-          <span class="q-diamond-line"></span>
-          <span class="q-diamond-symbol"></span>
-          <h2>${sec.title}</h2>
-          <span class="q-diamond-symbol"></span>
-          <span class="q-diamond-line"></span>
-        </div>
-        ${sec.items.map((item) => `
-          <article class="q-dish-row" data-goto="reservation" title="Click para reservar mesa con este plato">
-            <img class="q-dish-thumb" src="${item.image}" alt="${item.name}" loading="lazy" />
-            <div>
-              <div class="q-dish-header">
-                <h3 class="q-dish-name">${item.name}</h3>
-                <span class="q-leaf-badge">${item.badge}</span>
-                <span class="q-dotted-leader"></span>
-                <span class="q-dish-price">${item.price}</span>
+    menuContainer.innerHTML = sections.map((sec) => {
+      const visibleItems = (sec.items || []).filter((it) => it.available !== false);
+      if (visibleItems.length === 0) return '';
+      return `
+        <div class="q-menu-group" data-section-id="${escapeHtml(sec.id)}">
+          <div class="q-diamond-heading">
+            <span class="q-diamond-line"></span>
+            <span class="q-diamond-symbol"></span>
+            <h2>${escapeHtml(sec.title)}</h2>
+            <span class="q-diamond-symbol"></span>
+            <span class="q-diamond-line"></span>
+          </div>
+          ${visibleItems.map((item, idx) => `
+            <article
+              class="q-dish-row"
+              role="button"
+              tabindex="0"
+              data-sec-id="${escapeHtml(sec.id)}"
+              data-item-idx="${idx}"
+              aria-label="Ver detalle de ${escapeHtml(item.name)}"
+            >
+              <img class="q-dish-thumb" src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" loading="lazy" />
+              <div class="q-dish-body">
+                <div class="q-dish-header">
+                  <div class="q-dish-title-wrap">
+                    <h3 class="q-dish-name">${escapeHtml(item.name)}</h3>
+                    <span class="q-leaf-badge">${escapeHtml(item.badge || '★')}</span>
+                  </div>
+                  <span class="q-dotted-leader"></span>
+                  <span class="q-dish-price">${escapeHtml(item.price)}</span>
+                </div>
+                <p class="q-dish-desc">${escapeHtml(item.desc)}</p>
+                <span class="q-dish-cta-hint">Ver detalle &amp; ritual →</span>
               </div>
-              <p class="q-dish-desc">${item.desc}</p>
-            </div>
-          </article>
-        `).join('')}
-      </div>
-    `).join('');
+            </article>
+          `).join('')}
+        </div>
+      `;
+    }).join('');
 
-    menuContainer.querySelectorAll('[data-goto]').forEach((row) => {
-      row.addEventListener('click', () => navigateView('reservation'));
+    menuContainer.querySelectorAll('.q-dish-row').forEach((row) => {
+      const handleOpen = () => {
+        const secId = row.getAttribute('data-sec-id');
+        const idx = Number(row.getAttribute('data-item-idx'));
+        const sec = menuSections.find((s) => s.id === secId);
+        if (!sec) return;
+        const visibleItems = (sec.items || []).filter((it) => it.available !== false);
+        const item = visibleItems[idx];
+        if (item) openDishModal(item, sec.title);
+      };
+
+      row.addEventListener('click', handleOpen);
+      row.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleOpen();
+        }
+      });
+    });
+
+    // If the modal is currently open for a dish, refresh its content in real time too
+    if (activeModalDish && activeModalDish.item && dishModal?.classList.contains('open')) {
+      for (const sec of menuSections) {
+        const found = (sec.items || []).find(
+          (i) => (i.id && i.id === activeModalDish.item.id) || i.name === activeModalDish.item.name
+        );
+        if (found) {
+          openDishModal(found, sec.title);
+          break;
+        }
+      }
+    }
+  }
+
+  renderFilterPills();
+  renderQitchenMenu();
+
+  // Initial fetch & Real-time subscription via MeryStore (Supabase + BroadcastChannel + Storage)
+  if (window.MeryStore) {
+    window.MeryStore.fetchMenuSections().then((freshSections) => {
+      if (Array.isArray(freshSections) && freshSections.length > 0) {
+        menuSections = freshSections;
+        renderFilterPills();
+        renderQitchenMenu();
+      }
+    });
+
+    window.MeryStore.subscribeToMenuChanges((updatedSections) => {
+      if (Array.isArray(updatedSections) && updatedSections.length > 0) {
+        menuSections = updatedSections;
+        renderFilterPills();
+        renderQitchenMenu();
+      }
     });
   }
 
-  filterBtns.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      currentFilter = btn.dataset.filter;
-      filterBtns.forEach((b) => b.classList.toggle('active', b === btn));
-      renderQitchenMenu();
-      const menuPanel = document.querySelector('#view-menu .q-panel-bordered');
-      if (menuPanel) menuPanel.scrollTop = 0;
-    });
-  });
-
-  renderQitchenMenu();
-
-  // 4. Directional Slide View Transition + Left Video Swap (Bottle 360 <-> Ice Cube 13/11 with Sound)
+  // 5. Directional Slide View Transition + Left Video Swap
   let currentView = 'home';
 
   function updateDOMView(targetView) {
@@ -311,7 +408,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (appEl) appEl.setAttribute('data-view', targetView);
     if (leftHeroTitle) leftHeroTitle.innerHTML = cfg.title;
 
-    // Swap left showcase video when entering/leaving 'about' (La Previa 13/11)
     if (showcaseVideo) {
       const currentSrc = showcaseVideo.getAttribute('src');
       if (currentSrc !== cfg.video) {
@@ -322,7 +418,6 @@ document.addEventListener('DOMContentLoaded', () => {
       showcaseVideo.muted = !cfg.unmute;
       showcaseVideo.volume = cfg.unmute ? 0.85 : 0;
       showcaseVideo.play().catch(() => {
-        // Fallback if browser requires muted playback
         showcaseVideo.muted = true;
         showcaseVideo.play().catch(() => {});
       });
@@ -338,7 +433,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     currentView = targetView;
 
-    // Scroll to the absolute top of the section (fixes staying in the middle)
     const targetSection = document.getElementById(`view-${targetView}`);
     if (targetSection) {
       const panel = targetSection.querySelector('.q-panel-bordered');
@@ -370,7 +464,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // 5. Custom High-End Branded Select Dropdowns (Matches Qitchen Landing Aesthetics)
+  // 6. Custom High-End Branded Select Dropdowns
   document.querySelectorAll('.q-custom-select').forEach((wrap) => {
     const trigger = wrap.querySelector('.q-select-trigger');
     const valEl = wrap.querySelector('.q-select-value');
@@ -382,7 +476,6 @@ document.addEventListener('DOMContentLoaded', () => {
         e.stopPropagation();
         const isOpen = wrap.classList.contains('open');
 
-        // Close any other open dropdowns first
         document.querySelectorAll('.q-custom-select.open').forEach((w) => {
           if (w !== wrap) {
             w.classList.remove('open');
@@ -419,7 +512,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Light dismiss on outside click
   window.addEventListener('click', () => {
     document.querySelectorAll('.q-custom-select.open').forEach((w) => {
       w.classList.remove('open');
@@ -436,7 +528,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // 6. Qitchen Reservation & Birthday WhatsApp Form Submission
+  // 7. Qitchen Reservation & Birthday WhatsApp Form Submission
   const resForm = document.getElementById('qitchenResForm');
   if (resForm) {
     resForm.addEventListener('submit', (e) => {
@@ -447,7 +539,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const day = document.getElementById('resDay')?.value || 'Viernes';
       const time = document.getElementById('resTime')?.value || '21:00 hs';
 
-      const msg = `Hola Mery La Previa! Soy ${name}. Quiero reservar para ${guests} personas (${motivo}) el ${day} a las ${time}.`;
+      const dishNote = selectedDishForReservation
+        ? ` Me gustaría incluir en la mesa: ${selectedDishForReservation}.`
+        : '';
+      const msg = `Hola Mery La Previa! Soy ${name}. Quiero reservar para ${guests} personas (${motivo}) el ${day} a las ${time}.${dishNote}`;
       window.open(`https://wa.me/5491100000000?text=${encodeURIComponent(msg)}`, '_blank', 'noopener');
     });
   }

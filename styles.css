@@ -722,69 +722,117 @@ html, body {
 
 .q-dish-row {
   display: grid;
-  grid-template-columns: 115px 1fr;
-  gap: 22px;
+  grid-template-columns: 115px minmax(0, 1fr);
+  gap: 20px;
   align-items: center;
-  padding: 10px 10px;
+  width: 100%;
+  max-width: 100%;
+  padding: 14px 16px;
   border-radius: 14px;
-  transition: background 0.2s ease, transform 0.2s ease;
+  border: 1px solid rgba(239, 231, 210, 0.08);
+  background: rgba(18, 19, 17, 0.42);
+  transition: background 0.22s ease, border-color 0.22s ease, transform 0.22s ease;
   cursor: pointer;
 }
 
 .q-dish-row:hover {
-  background: rgba(239, 231, 210, 0.05);
-  transform: translateX(3px);
+  background: rgba(239, 231, 210, 0.055);
+  border-color: var(--q-border-strong);
+  transform: translateY(-1px);
 }
 
 .q-dish-thumb {
   width: 115px;
-  height: 82px;
+  height: 86px;
   border-radius: 10px;
   object-fit: cover;
+  object-position: center;
   border: 1px solid var(--q-border);
+  background: #0c0d0c;
+  flex-shrink: 0;
+}
+
+.q-dish-body {
+  min-width: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .q-dish-header {
   display: flex;
   align-items: baseline;
-  gap: 12px;
-  margin-bottom: 6px;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+}
+
+.q-dish-title-wrap {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  flex: 0 1 auto;
 }
 
 .q-dish-name {
   font-family: var(--font-forum);
   font-weight: 400;
-  font-size: 1.35rem;
-  letter-spacing: 0.06em;
+  font-size: clamp(1.08rem, 1.32vw, 1.32rem);
+  line-height: 1.2;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--q-cream);
-  white-space: nowrap;
+  overflow-wrap: break-word;
+  min-width: 0;
 }
 
 .q-leaf-badge {
   font-size: 0.72rem;
   color: var(--q-gold);
+  flex-shrink: 0;
 }
 
 .q-dotted-leader {
-  flex: 1;
+  flex: 1 1 18px;
   border-bottom: 1px dotted var(--q-border-strong);
-  min-width: 24px;
+  min-width: 14px;
   transform: translateY(-4px);
 }
 
 .q-dish-price {
   font-family: var(--font-forum);
-  font-size: 1.3rem;
+  font-size: 1.28rem;
   letter-spacing: 0.05em;
-  color: var(--q-cream);
+  color: var(--q-gold);
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .q-dish-desc {
   font-size: 0.84rem;
   line-height: 1.5;
   color: var(--q-cream-muted);
+}
+
+.q-dish-cta-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--q-gold);
+  opacity: 0.82;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.q-dish-row:hover .q-dish-cta-hint {
+  opacity: 1;
+  transform: translateX(3px);
 }
 
 /* --- VIEW 2: ABOUT / LA PREVIA 13/11 & CUMPLEAÑOS BENTO GRID --- */
@@ -1156,32 +1204,54 @@ select.q-select option,
   }
 
   .q-menu-container {
-    gap: 52px;
+    gap: 44px;
+  }
+
+  .q-diamond-heading {
+    gap: 12px;
+  }
+
+  .q-diamond-line {
+    width: 32px;
+  }
+
+  .q-diamond-heading h2 {
+    font-size: clamp(1.38rem, 5.4vw, 1.75rem);
   }
 
   .q-menu-group {
-    gap: 22px;
+    gap: 16px;
   }
 
   .q-dish-row {
-    grid-template-columns: 84px 1fr;
-    gap: 16px;
-    padding: 8px 4px;
+    grid-template-columns: 86px minmax(0, 1fr);
+    align-items: flex-start;
+    gap: 14px;
+    padding: 12px;
   }
 
   .q-dish-thumb {
-    width: 84px;
-    height: 66px;
+    width: 86px;
+    height: 86px;
   }
 
   .q-dish-header {
-    flex-wrap: wrap;
-    gap: 6px;
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .q-dish-title-wrap {
+    flex: 1 1 auto;
+    min-width: 0;
   }
 
   .q-dish-name {
     white-space: normal;
-    font-size: 1.12rem;
+    font-size: 1.04rem;
+    line-height: 1.2;
   }
 
   .q-dotted-leader {
@@ -1189,13 +1259,302 @@ select.q-select option,
   }
 
   .q-dish-price {
-    margin-left: auto;
-    font-size: 1.12rem;
+    margin-left: 4px;
+    font-size: 1.08rem;
+    line-height: 1.2;
+  }
+
+  .q-dish-desc {
+    font-size: 0.8rem;
+    line-height: 1.45;
   }
 
   .q-about-grid,
   .q-award-row,
   .q-form-row-3 {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ==========================================================================
+   8. QITCHEN DISH DETAIL MODAL (Rich Story, Pairing & Quick Reserve)
+   ========================================================================== */
+.q-dish-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 220;
+  background: rgba(5, 6, 5, 0.82);
+  backdrop-filter: blur(14px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.32s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.32s ease;
+}
+
+.q-dish-modal-backdrop.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.q-dish-modal-card {
+  position: relative;
+  width: 100%;
+  max-width: 580px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: #0e0f0e;
+  border: 1px solid var(--q-border-strong);
+  border-radius: 18px;
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.9);
+  transform: translateY(14px) scale(0.98);
+  transition: transform 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.q-dish-modal-backdrop.open .q-dish-modal-card {
+  transform: translateY(0) scale(1);
+}
+
+.q-dish-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 5;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid var(--q-border-strong);
+  background: rgba(10, 11, 10, 0.82);
+  backdrop-filter: blur(10px);
+  color: var(--q-cream);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.q-dish-modal-close:hover {
+  background: var(--q-cream);
+  color: var(--q-bg);
+}
+
+.q-dish-modal-media {
+  position: relative;
+  width: 100%;
+  height: 250px;
+  overflow: hidden;
+  background: #060706;
+}
+
+.q-dish-modal-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.88) contrast(1.06);
+}
+
+.q-dish-modal-media::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(14, 15, 14, 0.15) 0%, rgba(14, 15, 14, 0.96) 100%);
+  pointer-events: none;
+}
+
+.q-dish-modal-media-overlay {
+  position: absolute;
+  bottom: 14px;
+  left: 24px;
+  right: 24px;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.q-dish-modal-cat-pill,
+.q-dish-modal-badge-pill {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 5px 11px;
+  border-radius: 99px;
+}
+
+.q-dish-modal-cat-pill {
+  background: rgba(10, 11, 10, 0.85);
+  border: 1px solid var(--q-border-strong);
+  color: var(--q-cream);
+}
+
+.q-dish-modal-badge-pill {
+  background: rgba(207, 190, 145, 0.14);
+  border: 1px solid rgba(207, 190, 145, 0.4);
+  color: var(--q-gold);
+}
+
+.q-dish-modal-content {
+  padding: 20px 26px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.q-dish-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.q-dish-modal-title {
+  font-family: var(--font-forum);
+  font-weight: 400;
+  font-size: clamp(1.45rem, 3vw, 1.9rem);
+  line-height: 1.12;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--q-cream);
+}
+
+.q-dish-modal-price {
+  font-family: var(--font-forum);
+  font-size: clamp(1.4rem, 2.8vw, 1.75rem);
+  color: var(--q-gold);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.q-dish-modal-lead {
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--q-cream);
+}
+
+.q-dish-modal-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  opacity: 0.7;
+}
+
+.q-dish-modal-story-box {
+  background: rgba(239, 231, 210, 0.035);
+  border: 1px solid var(--q-border);
+  border-radius: 12px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.q-dish-modal-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--q-gold);
+}
+
+.q-dish-modal-story {
+  font-size: 0.85rem;
+  line-height: 1.62;
+  color: var(--q-cream-muted);
+}
+
+.q-dish-modal-pairing {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--q-cream-muted);
+  padding: 4px 2px;
+}
+
+.q-pairing-icon {
+  color: var(--q-gold);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.q-dish-modal-pairing strong {
+  color: var(--q-cream);
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.q-dish-modal-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.q-dish-tag {
+  font-size: 0.68rem;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--q-border);
+  background: rgba(24, 24, 24, 0.65);
+  color: var(--q-cream-muted);
+}
+
+.q-dish-modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.q-btn-secondary {
+  appearance: none;
+  width: 100%;
+  padding: 13px 20px;
+  border-radius: 10px;
+  border: 1px solid var(--q-border);
+  background: transparent;
+  color: var(--q-cream-muted);
+  font-family: var(--font-sans);
+  font-size: 0.74rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.q-btn-secondary:hover {
+  border-color: var(--q-cream);
+  color: var(--q-cream);
+  background: rgba(239, 231, 210, 0.06);
+}
+
+@media (max-width: 720px) {
+  .q-dish-modal-backdrop {
+    padding: 12px;
+    align-items: flex-end;
+  }
+
+  .q-dish-modal-card {
+    max-height: 88vh;
+    border-radius: 16px;
+  }
+
+  .q-dish-modal-media {
+    height: 200px;
+  }
+
+  .q-dish-modal-content {
+    padding: 18px 18px 22px;
   }
 }
