@@ -1,0 +1,12 @@
+# System
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# WhatsApp voice notes
+WhatsApp Ptt*.ogg
+
+# Logs & temp
+*.log
+scratch/
+.system_generated/
