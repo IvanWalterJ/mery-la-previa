@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark" />
   <title>MERY LA PREVIA — Wine Bar &amp; Nightclub</title>
   <!-- Exact Qitchen Framer Fonts: Forum (Display Serif) + Plus Jakarta Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -17,6 +18,7 @@
     <video
       id="neonIntroVideo"
       src="assets/video/neon-intro-mery.mp4"
+      autoplay
       playsinline
       preload="auto"
     ></video>
@@ -271,25 +273,107 @@
           <form id="qitchenResForm" class="q-res-form">
             <input type="text" id="resName" class="q-input" placeholder="Tu Nombre y Apellido" required />
             <input type="tel" id="resPhone" class="q-input" placeholder="Tu WhatsApp (ej. 11 5555-5555)" required />
-            <select id="resType" class="q-select" required>
-              <option value="Cumpleaños VIP">Motivo: Festejo de Cumpleaños (con beneficios)</option>
-              <option value="Mesa Cena + Previa">Motivo: Mesa Cena + Quedarse a la Previa</option>
-              <option value="Living VIP Cabina 13/11">Motivo: Living VIP / Evento 13/11</option>
-            </select>
+
+            <!-- Custom Branded Select: Motivo de Reserva -->
+            <div class="q-custom-select" data-select-id="resType">
+              <button type="button" class="q-select-trigger" aria-haspopup="listbox" aria-expanded="false">
+                <span class="q-select-value">Motivo: Festejo de Cumpleaños (con beneficios)</span>
+                <span class="q-select-arrow" aria-hidden="true">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </span>
+              </button>
+              <ul class="q-select-menu" role="listbox">
+                <li class="q-select-option selected" data-value="Cumpleaños VIP" role="option" aria-selected="true">
+                  <span>Festejo de Cumpleaños (con beneficios)</span>
+                  <span class="q-option-diamond">◇</span>
+                </li>
+                <li class="q-select-option" data-value="Mesa Cena + Previa" role="option" aria-selected="false">
+                  <span>Mesa Cena + Quedarse a la Previa</span>
+                  <span class="q-option-diamond">◇</span>
+                </li>
+                <li class="q-select-option" data-value="Living VIP Cabina 13/11" role="option" aria-selected="false">
+                  <span>Living VIP / Evento 13/11</span>
+                  <span class="q-option-diamond">◇</span>
+                </li>
+              </ul>
+              <select id="resType" class="q-select-native" tabindex="-1" aria-hidden="true" required>
+                <option value="Cumpleaños VIP" selected>Motivo: Festejo de Cumpleaños (con beneficios)</option>
+                <option value="Mesa Cena + Previa">Motivo: Mesa Cena + Quedarse a la Previa</option>
+                <option value="Living VIP Cabina 13/11">Motivo: Living VIP / Evento 13/11</option>
+              </select>
+            </div>
 
             <div class="q-form-row-3">
               <input type="number" id="resGuests" class="q-input" min="2" max="40" placeholder="Personas (ej. 10)" required />
-              <select id="resDay" class="q-select" required>
-                <option value="Viernes 13/11">Viernes 13/11</option>
-                <option value="Sábado">Sábado</option>
-                <option value="Domingo">Domingo</option>
-                <option value="Miércoles / Jueves">Mié / Jue</option>
-              </select>
-              <select id="resTime" class="q-select" required>
-                <option value="20:30 hs (Cena)">20:30 hs (Cena)</option>
-                <option value="22:00 hs (Cena Tardía)">22:00 hs</option>
-                <option value="23:30 hs (Previa &amp; Club)">23:30 hs (Previa)</option>
-              </select>
+
+              <!-- Custom Branded Select: Día -->
+              <div class="q-custom-select" data-select-id="resDay">
+                <button type="button" class="q-select-trigger" aria-haspopup="listbox" aria-expanded="false">
+                  <span class="q-select-value">Viernes 13/11</span>
+                  <span class="q-select-arrow" aria-hidden="true">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </span>
+                </button>
+                <ul class="q-select-menu" role="listbox">
+                  <li class="q-select-option selected" data-value="Viernes 13/11" role="option" aria-selected="true">
+                    <span>Viernes 13/11</span>
+                    <span class="q-option-diamond">◇</span>
+                  </li>
+                  <li class="q-select-option" data-value="Sábado" role="option" aria-selected="false">
+                    <span>Sábado</span>
+                    <span class="q-option-diamond">◇</span>
+                  </li>
+                  <li class="q-select-option" data-value="Domingo" role="option" aria-selected="false">
+                    <span>Domingo</span>
+                    <span class="q-option-diamond">◇</span>
+                  </li>
+                  <li class="q-select-option" data-value="Miércoles / Jueves" role="option" aria-selected="false">
+                    <span>Mié / Jue</span>
+                    <span class="q-option-diamond">◇</span>
+                  </li>
+                </ul>
+                <select id="resDay" class="q-select-native" tabindex="-1" aria-hidden="true" required>
+                  <option value="Viernes 13/11" selected>Viernes 13/11</option>
+                  <option value="Sábado">Sábado</option>
+                  <option value="Domingo">Domingo</option>
+                  <option value="Miércoles / Jueves">Mié / Jue</option>
+                </select>
+              </div>
+
+              <!-- Custom Branded Select: Horario -->
+              <div class="q-custom-select" data-select-id="resTime">
+                <button type="button" class="q-select-trigger" aria-haspopup="listbox" aria-expanded="false">
+                  <span class="q-select-value">20:30 hs (Cena)</span>
+                  <span class="q-select-arrow" aria-hidden="true">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </span>
+                </button>
+                <ul class="q-select-menu" role="listbox">
+                  <li class="q-select-option selected" data-value="20:30 hs (Cena)" role="option" aria-selected="true">
+                    <span>20:30 hs (Cena)</span>
+                    <span class="q-option-diamond">◇</span>
+                  </li>
+                  <li class="q-select-option" data-value="22:00 hs (Cena Tardía)" role="option" aria-selected="false">
+                    <span>22:00 hs</span>
+                    <span class="q-option-diamond">◇</span>
+                  </li>
+                  <li class="q-select-option" data-value="23:30 hs (Previa &amp; Club)" role="option" aria-selected="false">
+                    <span>23:30 hs (Previa)</span>
+                    <span class="q-option-diamond">◇</span>
+                  </li>
+                </ul>
+                <select id="resTime" class="q-select-native" tabindex="-1" aria-hidden="true" required>
+                  <option value="20:30 hs (Cena)" selected>20:30 hs (Cena)</option>
+                  <option value="22:00 hs (Cena Tardía)">22:00 hs</option>
+                  <option value="23:30 hs (Previa &amp; Club)">23:30 hs (Previa)</option>
+                </select>
+              </div>
             </div>
 
             <button type="submit" class="q-btn-submit">

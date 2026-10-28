@@ -122,63 +122,55 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnOpenOverlay = document.getElementById('btnOpenOverlay');
   const btnCloseOverlay = document.getElementById('btnCloseOverlay');
 
-  // 1. Frame-Locked Neon Intro Video + Muxed Ignition Audio (100% Synchronized)
-  let neonIgnitedWithAudio = false;
-  let dismissingAfterIgnition = false;
+  // 1. Neon Intro Video Autoplay + Delayed Fade-In of Enter Button on Finish
+  const introWrap = document.querySelector('.intro-enter-wrap');
+  let buttonRevealed = false;
 
-  async function startSynchronizedNeonVideo() {
-    if (!neonIntroVideo || neonIgnitedWithAudio) return false;
-    try {
-      neonIntroVideo.currentTime = 0;
-      neonIntroVideo.muted = false;
-      neonIntroVideo.volume = 0.9;
-      await neonIntroVideo.play();
-      neonIgnitedWithAudio = true;
-      return true;
-    } catch {
-      // Hold at frame 0 (unlit neon sign) so visuals NEVER run ahead of the audio
-      neonIntroVideo.pause();
-      neonIntroVideo.currentTime = 0;
-      return false;
-    }
+  function revealEnterButton() {
+    if (buttonRevealed || !introWrap) return;
+    buttonRevealed = true;
+    introWrap.classList.add('visible');
   }
 
-  // Try immediate unmuted playback on page load
-  startSynchronizedNeonVideo();
+  if (neonIntroVideo) {
+    // When the neon video finishes igniting (around 3.2s or on ended), fade in the enter button
+    neonIntroVideo.addEventListener('timeupdate', () => {
+      if (neonIntroVideo.currentTime >= 3.2) {
+        revealEnterButton();
+      }
+    });
 
-  // If browser blocked unmuted autoplay on a fresh tab, ignite with audio on first tap anywhere on the curtain
+    neonIntroVideo.addEventListener('ended', () => {
+      revealEnterButton();
+    });
+
+    // Attempt unmuted autoplay immediately on entry
+    neonIntroVideo.muted = false;
+    neonIntroVideo.volume = 0.95;
+    neonIntroVideo.play().catch(() => {
+      // If browser security blocks unmuted autoplay without prior gesture,
+      // fallback to playing muted immediately so the visual video NEVER gets stuck frozen!
+      neonIntroVideo.muted = true;
+      neonIntroVideo.play().catch(() => {});
+    });
+  }
+
+  // If the user touches or clicks anywhere on the curtain, unmute if the browser forced mute
   if (introCurtain) {
     introCurtain.addEventListener('pointerdown', (e) => {
       if (btnDismissIntro && btnDismissIntro.contains(e.target)) return;
-      if (!neonIgnitedWithAudio) {
-        startSynchronizedNeonVideo();
+      if (neonIntroVideo && neonIntroVideo.muted) {
+        neonIntroVideo.muted = false;
+        neonIntroVideo.volume = 0.95;
       }
     });
   }
 
   if (btnDismissIntro && introCurtain) {
-    btnDismissIntro.addEventListener('click', async (e) => {
+    btnDismissIntro.addEventListener('click', (e) => {
       e.stopPropagation();
-      if (dismissingAfterIgnition) return;
-
-      // If the neon sign already ignited with audio on load, dismiss immediately without re-triggering sound
-      if (neonIgnitedWithAudio) {
-        if (neonIntroVideo) neonIntroVideo.pause();
-        introCurtain.classList.add('dismissed');
-        return;
-      }
-
-      // If this button click is the very first gesture on a cold tab, play the synchronized video+audio ignition first (1.2s) then open
-      dismissingAfterIgnition = true;
-      const started = await startSynchronizedNeonVideo();
-      if (started) {
-        setTimeout(() => {
-          if (neonIntroVideo) neonIntroVideo.pause();
-          introCurtain.classList.add('dismissed');
-        }, 1250);
-      } else {
-        introCurtain.classList.add('dismissed');
-      }
+      if (neonIntroVideo) neonIntroVideo.pause();
+      introCurtain.classList.add('dismissed');
     });
   }
 
@@ -257,6 +249,8 @@ document.addEventListener('DOMContentLoaded', () => {
       currentFilter = btn.dataset.filter;
       filterBtns.forEach((b) => b.classList.toggle('active', b === btn));
       renderQitchenMenu();
+      const menuPanel = document.querySelector('#view-menu .q-panel-bordered');
+      if (menuPanel) menuPanel.scrollTop = 0;
     });
   });
 
@@ -297,6 +291,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     currentView = targetView;
+
+    // Scroll to the absolute top of the section (fixes staying in the middle)
+    const targetSection = document.getElementById(`view-${targetView}`);
+    if (targetSection) {
+      const panel = targetSection.querySelector('.q-panel-bordered');
+      if (panel) panel.scrollTop = 0;
+      targetSection.scrollTop = 0;
+    }
+    const rightCol = document.getElementById('qitchenRightCol');
+    if (rightCol) rightCol.scrollTop = 0;
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
   }
 
   function navigateView(targetView) {
@@ -317,7 +324,73 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // 5. Qitchen Reservation & Birthday WhatsApp Form Submission
+  // 5. Custom High-End Branded Select Dropdowns (Matches Qitchen Landing Aesthetics)
+  document.querySelectorAll('.q-custom-select').forEach((wrap) => {
+    const trigger = wrap.querySelector('.q-select-trigger');
+    const valEl = wrap.querySelector('.q-select-value');
+    const options = wrap.querySelectorAll('.q-select-option');
+    const nativeSelect = wrap.querySelector('.q-select-native');
+
+    if (trigger) {
+      trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = wrap.classList.contains('open');
+
+        // Close any other open dropdowns first
+        document.querySelectorAll('.q-custom-select.open').forEach((w) => {
+          if (w !== wrap) {
+            w.classList.remove('open');
+            w.querySelector('.q-select-trigger')?.setAttribute('aria-expanded', 'false');
+          }
+        });
+
+        wrap.classList.toggle('open', !isOpen);
+        trigger.setAttribute('aria-expanded', String(!isOpen));
+      });
+    }
+
+    options.forEach((opt) => {
+      opt.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const value = opt.dataset.value;
+        const label = opt.querySelector('span')?.textContent || value;
+
+        options.forEach((o) => {
+          const isSel = o === opt;
+          o.classList.toggle('selected', isSel);
+          o.setAttribute('aria-selected', String(isSel));
+        });
+
+        if (valEl) valEl.textContent = label;
+        if (nativeSelect) {
+          nativeSelect.value = value;
+          nativeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+
+        wrap.classList.remove('open');
+        trigger?.setAttribute('aria-expanded', 'false');
+      });
+    });
+  });
+
+  // Light dismiss on outside click
+  window.addEventListener('click', () => {
+    document.querySelectorAll('.q-custom-select.open').forEach((w) => {
+      w.classList.remove('open');
+      w.querySelector('.q-select-trigger')?.setAttribute('aria-expanded', 'false');
+    });
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.q-custom-select.open').forEach((w) => {
+        w.classList.remove('open');
+        w.querySelector('.q-select-trigger')?.setAttribute('aria-expanded', 'false');
+      });
+    }
+  });
+
+  // 6. Qitchen Reservation & Birthday WhatsApp Form Submission
   const resForm = document.getElementById('qitchenResForm');
   if (resForm) {
     resForm.addEventListener('submit', (e) => {
