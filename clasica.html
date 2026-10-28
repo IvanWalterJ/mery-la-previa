@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mery La Previa — Wine Bar, Previa & Nightclub</title>
+  <meta name="description" content="La previa arranca acá. Cena, tapeo de fuegos, coctelería de autor, vinos Mery Jane y fiesta hasta el amanecer en Zona Sur.">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍷</text></svg>">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Syne:wght@600;700;800&family=Forum&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="clasica.css">
+</head>
+<body class="classic-body">
+
+  <!-- ================= TOP STICKY NAVBAR ================= -->
+  <header class="classic-nav-wrapper">
+    <nav class="classic-nav" id="mainNav">
+      <div class="nav-container">
+        <!-- Brand Logo -->
+        <a href="#hero" class="brand-logo">
+          <span class="brand-title">MERY LA PREVIA</span>
+          <span class="brand-sub">WINE & FRIENDS</span>
+        </a>
+
+        <!-- Desktop Navigation Links -->
+        <ul class="nav-links" id="desktopNavLinks">
+          <li><a href="#hero" class="nav-link active">Inicio</a></li>
+          <li><a href="#experiencia" class="nav-link">Experiencia</a></li>
+          <li><a href="#carta" class="nav-link">La Carta</a></li>
+          <li><a href="#cumples" class="nav-link">Cumples & VIP</a></li>
+          <li><a href="#lineup" class="nav-link">Lineup 13/11</a></li>
+          <li><a href="#ubicacion" class="nav-link">Ubicación</a></li>
+        </ul>
+
+        <!-- Action & Prototype Switcher -->
+        <div class="nav-actions">
+          <a href="#cumples" class="btn-nav-reserve">Reservar Mesa</a>
+          <button class="mobile-menu-toggle" id="menuToggle" aria-label="Abrir menú" aria-expanded="false">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
+          </button>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Mobile Drawer Menu -->
+  <div class="mobile-drawer" id="mobileDrawer" aria-hidden="true">
+    <div class="drawer-backdrop" id="drawerBackdrop"></div>
+    <div class="drawer-content">
+      <div class="drawer-header">
+        <span class="drawer-brand">MERY LA PREVIA</span>
+        <button class="drawer-close" id="drawerClose" aria-label="Cerrar menú">&times;</button>
+      </div>
+      <ul class="drawer-links">
+        <li><a href="#hero" class="drawer-link">Inicio</a></li>
+        <li><a href="#experiencia" class="drawer-link">Experiencia</a></li>
+        <li><a href="#carta" class="drawer-link">La Carta</a></li>
+        <li><a href="#cumples" class="drawer-link">Cumples & VIP</a></li>
+        <li><a href="#lineup" class="drawer-link">Lineup 13/11</a></li>
+        <li><a href="#ubicacion" class="drawer-link">Ubicación</a></li>
+      </ul>
+      <div class="drawer-footer">
+        <a href="#cumples" class="btn-drawer-cta">Reservar Mesa VIP</a>
+        <a href="index.html" class="drawer-alt-link">Ver versión Split Bento &rarr;</a>
+      </div>
+    </div>
+  </div>
+
+  <main>
+    <!-- ================= HERO SECTION ================= -->
+    <section class="hero-section" id="hero">
+      <div class="hero-media-wrapper">
+        <video class="hero-video" autoplay muted loop playsinline src="assets/video/bottle-360-loop.mp4"></video>
+        <div class="hero-overlay"></div>
+      </div>
+
+      <div class="hero-content">
+        <div class="hero-badge">
+          <span class="badge-dot"></span>
+          <span>ZONA SUR • MIÉ A DOM DESDE LAS 20:00 HS • +21</span>
+        </div>
+
+        <h1 class="hero-headline">
+          La previa arranca acá.<br>
+          <span class="hero-subheadline">Disfrutá que la noche vuela.</span>
+        </h1>
+
+        <p class="hero-lead">
+          Wine bar de alta gama, fuegos encendidos, coctelería de autor y DJs en vivo.
+          El nuevo punto de encuentro donde cenar rico y salir de fiesta pasan en el mismo lugar.
+        </p>
+
+        <div class="hero-cta-group">
+          <a href="#carta" class="btn-hero-primary">Explorar La Carta</a>
+          <a href="#cumples" class="btn-hero-secondary">Festejá tu Cumple / Mesas VIP</a>
+        </div>
+
+        <div class="hero-highlights">
+          <div class="highlight-item">
+            <span class="highlight-num">20:00</span>
+            <span class="highlight-lbl">Cena & Fuegos</span>
+          </div>
+          <div class="highlight-sep">◇</div>
+          <div class="highlight-item">
+            <span class="highlight-num">23:00</span>
+            <span class="highlight-lbl">Previa & Cocktails</span>
+          </div>
+          <div class="highlight-sep">◇</div>
+          <div class="highlight-item">
+            <span class="highlight-num">01:30</span>
+            <span class="highlight-lbl">Cachengue & Club</span>
+          </div>
+        </div>
+      </div>
+
+      <a href="#experiencia" class="scroll-down-indicator" aria-label="Desplazar hacia abajo">
+        <span class="scroll-arrow">&darr;</span>
+      </a>
+    </section>
+
+    <!-- ================= SECCIÓN EXPERIENCIA ================= -->
+    <section class="experience-section" id="experiencia">
+      <div class="container">
+        <div class="section-header text-center">
+          <span class="section-tag">EL CONCEPTO</span>
+          <h2 class="section-title">El Vibe de La Previa</h2>
+          <p class="section-subtitle">
+            No somos un restó tradicional ni un boliche cerrado. Somos la previa perfecta: comida de nivel, vinos que te encantan y la música que sube sin pedir permiso.
+          </p>
+        </div>
+
+        <div class="experience-grid">
+          <!-- Tarjeta 1 -->
+          <article class="exp-card">
+            <div class="exp-card-media">
+              <img src="assets/img/steak-flash.jpg" alt="Cena y Fuegos Nocturnos" loading="lazy">
+              <span class="exp-phase-badge">Fase 01 • 20:00 hs</span>
+            </div>
+            <div class="exp-card-body">
+              <h3 class="exp-card-title">Cena & Tapeo de Fuegos</h3>
+              <p class="exp-card-text">
+                Cortes a punto, mollejas crocantes con lima, tablas de quesos artesanales y platos para compartir entre amigos mientras arranca la noche.
+              </p>
+              <ul class="exp-card-list">
+                <li>Ojo de bife al quebracho</li>
+                <li>Tapeo gourmet para compartir</li>
+                <li>Maridajes sugeridos Mery Jane</li>
+              </ul>
+            </div>
+          </article>
+
+          <!-- Tarjeta 2 -->
+          <article class="exp-card highlight-card">
+            <div class="exp-card-media">
+              <img src="assets/img/cocktails-neon.jpg" alt="Coctelería 11:11 y Vinos" loading="lazy">
+              <span class="exp-phase-badge">Fase 02 • 23:00 hs</span>
+            </div>
+            <div class="exp-card-body">
+              <h3 class="exp-card-title">Previa & Cocktails 11:11</h3>
+              <p class="exp-card-text">
+                Baja la luz del salón, suben los graves y las barras se activan con coctelería de autor, botellas en hielo y la energía que empieza a encenderse.
+              </p>
+              <ul class="exp-card-list">
+                <li>Cocktails ahumados y de autor</li>
+                <li>Etiquetas de vino Mery Jane en frapera</li>
+                <li>Warm-up DJ sets en vivo</li>
+              </ul>
+            </div>
+          </article>
+
+          <!-- Tarjeta 3 -->
+          <article class="exp-card">
+            <div class="exp-card-media">
+              <img src="assets/img/dj-previa.jpg" alt="DJ Set y Cachengue" loading="lazy">
+              <span class="exp-phase-badge">Fase 03 • 01:30 hs</span>
+            </div>
+            <div class="exp-card-body">
+              <h3 class="exp-card-title">Cachengue & Club</h3>
+              <p class="exp-card-text">
+                Las mesas se corren, la cabina explota de hits y el salón se convierte en pista hasta que salga el sol. Si estás adentro, ya no te vas a ningún otro lado.
+              </p>
+              <ul class="exp-card-list">
+                <li>DJs residentes e invitados de Zona Sur</li>
+                <li>Servicio VIP en mesas con botellas</li>
+                <li>Sonido e iluminación envolvente</li>
+              </ul>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SECCIÓN LA CARTA ================= -->
+    <section class="menu-section" id="carta">
+      <div class="container">
+        <div class="section-header text-center">
+          <span class="section-tag">GASTRONOMÍA & TRAGOS</span>
+          <h2 class="section-title">La Carta Nocturna</h2>
+          <p class="section-subtitle">
+            Hecho para picar, compartir y brindar. Ingredientes frescos, preparaciones al fuego y tragos calibrados para que la noche no baje el ritmo.
+          </p>
+        </div>
+
+        <!-- Category Filter Tabs -->
+        <div class="menu-tabs-wrapper">
+          <div class="menu-tabs" role="tablist">
+            <button class="menu-tab active" data-category="fuegos" role="tab" aria-selected="true">Cortes & Fuegos</button>
+            <button class="menu-tab" data-category="tapeo" role="tab" aria-selected="false">Tapeo de Previa</button>
+            <button class="menu-tab" data-category="cocktails" role="tab" aria-selected="false">Cocktails 11:11</button>
+            <button class="menu-tab" data-category="vinos" role="tab" aria-selected="false">Vinos & Mery Jane</button>
+          </div>
+        </div>
+
+        <!-- Menu Grid Container -->
+        <div class="menu-grid" id="classicMenuGrid">
+          <!-- Cortes & Fuegos (Default visible) -->
+          <div class="menu-item-card" data-category="fuegos">
+            <div class="menu-item-media">
+              <img src="assets/img/steak-flash.jpg" alt="Ojo de Bife Mery" loading="lazy">
+              <span class="menu-item-badge">Recomendado</span>
+            </div>
+            <div class="menu-item-content">
+              <div class="menu-item-header">
+                <h4 class="menu-item-title">Ojo de Bife al Quebracho</h4>
+                <span class="menu-item-price">$16.800</span>
+              </div>
+              <p class="menu-item-desc">Corte madurado 450g sellado a fuego vivo, manteca de chimichurri ahumado, sal marina en escamas y papas rústicas al romero.</p>
+              <div class="menu-item-footer">
+                <span class="item-tag">Fuego Vivo</span>
+                <span class="item-pairing">Marida con: Mery Jane Red Blend</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="menu-item-card" data-category="fuegos">
+            <div class="menu-item-media">
+              <img src="assets/img/steak-flash.jpg" alt="Entraña Fina" loading="lazy">
+            </div>
+            <div class="menu-item-content">
+              <div class="menu-item-header">
+                <h4 class="menu-item-title">Entraña Fina de Pastura</h4>
+                <span class="menu-item-price">$15.200</span>
+              </div>
+              <p class="menu-item-desc">Tierna, jugosa y en su punto justo. Servida sobre tabla de madera con emulsión de criolla quemada y provoleta crocante.</p>
+              <div class="menu-item-footer">
+                <span class="item-tag">Favorito de Previa</span>
+                <span class="item-pairing">Marida con: Malbec Reserva</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="menu-item-card" data-category="fuegos">
+            <div class="menu-item-media">
+              <img src="assets/img/steak-flash.jpg" alt="Mollejas Crocantes" loading="lazy">
+            </div>
+            <div class="menu-item-content">
+              <div class="menu-item-header">
+                <h4 class="menu-item-title">Mollejitas Crocantes a la Lima</h4>
+                <span class="menu-item-price">$13.900</span>
+              </div>
+              <p class="menu-item-desc">Doradas por fuera, cremosas por dentro. Glaseado suave de reducción de miel de caña, lima rallada y puerros asados.</p>
+              <div class="menu-item-footer">
+                <span class="item-tag">Clásico Nocturno</span>
+                <span class="item-pairing">Marida con: Pinot Noir Fresco</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tapeo de Previa -->
+          <div class="menu-item-card" data-category="tapeo" style="display: none;">
+            <div class="menu-item-media">
+              <img src="assets/img/cocktails-neon.jpg" alt="Bandeja VIP Mery" loading="lazy">
+              <span class="menu-item-badge">Para 4 Personas</span>
+            </div>
+            <div class="menu-item-content">
+              <div class="menu-item-header">
+                <h4 class="menu-item-title">Bandeja VIP Mery Jane</h4>
+                <span class="menu-item-price">$22.500</span>
+              </div>
+              <p class="menu-item-desc">Provoleta fundida al horno de barro con pesto de albahaca fresca, bastones de entraña, tequeños artesanales y dips de la casa.</p>
+              <div class="menu-item-footer">
+                <span class="item-tag">Compartir</span>
+                <span class="item-pairing">Ideal para mesa de amigos</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="menu-item-card" data-category="tapeo" style="display: none;">
+            <div class="menu-item-media">
+              <img src="assets/img/cocktails-neon.jpg" alt="Tacos de Asado Ahumado" loading="lazy">
+            </div>
+            <div class="menu-item-content">
+              <div class="menu-item-header">
+                <h4 class="menu-item-title">Trío de Tacos de Asado Ahumado</h4>
+                <span class="menu-item-price">$12.400</span>
+              </div>
+              <p class="menu-item-desc">Carne cocinada a baja temperatura 8 horas desmechada con cebolla morada encurtida, cilantro y emulsión de palta tatemada.</p>
+              <div class="menu-item-footer">
+                <span class="item-tag">Street Gourmet</span>
+                <span class="item-pairing">Marida con: Gin Tonic 11:11</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cocktails 11:11 -->
+          <div class="menu-item-card" data-category="cocktails" style="display: none;">
+            <div class="menu-item-media">
+              <img src="assets/img/cocktails-neon.jpg" alt="Cocktail 11:11 Signature" loading="lazy">
+              <span class="menu-item-badge">Signature</span>
+            </div>
+            <div class="menu-item-content">
+              <div class="menu-item-header">
+                <h4 class="menu-item-title">11:11 Red Neon</h4>
+                <span class="menu-item-price">$7.200</span>
+              </div>
+              <p class="menu-item-desc">Gin infusionado con frutos rojos de la Patagonia, reducción de Campari artesanal, cordial de pomelo rosado y golpe de espumante.</p>
+              <div class="menu-item-footer">
+                <span class="item-tag">Cítrico & Amargo</span>
+                <span class="item-pairing">El más pedido de la barra</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="menu-item-card" data-category="cocktails" style="display: none;">
+            <div class="menu-item-media">
+              <img src="assets/img/cocktails-neon.jpg" alt="Smoked Old Fashioned" loading="lazy">
+            </div>
+            <div class="menu-item-content">
+              <div class="menu-item-header">
+                <h4 class="menu-item-title">Smoked Bourbon & Hielo Cristal</h4>
+                <span class="menu-item-price">$7.600</span>
+              </div>
+              <p class="menu-item-desc">Bourbon premium, bitter de cacao amazónico, piel de naranja quemada al fuego y cubo de hielo puro grabado con sello 11:11.</p>
+              <div class="menu-item-footer">
+                <span class="item-tag">Intenso & Ahumado</span>
+                <span class="item-pairing">Para amantes de coctelería</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Vinos & Mery Jane -->
+          <div class="menu-item-card" data-category="vinos" style="display: none;">
+            <div class="menu-item-media">
+              <img src="assets/img/wine-mery.jpg" alt="Mery Jane Red Blend" loading="lazy">
+              <span class="menu-item-badge">De la Casa</span>
+            </div>
+            <div class="menu-item-content">
+              <div class="menu-item-header">
+                <h4 class="menu-item-title">Mery Jane Special Blend</h4>
+                <span class="menu-item-price">$14.900</span>
+              </div>
+              <p class="menu-item-desc">Malbec + Cabernet Franc de Valle de Uco. Notas a moras silvestres, vainilla de roble y un final redondo que acompaña toda la noche.</p>
+              <div class="menu-item-footer">
+                <span class="item-tag">Botella en Frapera</span>
+                <span class="item-pairing">El alma de la previa</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="menu-item-card" data-category="vinos" style="display: none;">
+            <div class="menu-item-media">
+              <img src="assets/img/wine-mery.jpg" alt="Espumante Extra Brut Rosé" loading="lazy">
+            </div>
+            <div class="menu-item-content">
+              <div class="menu-item-header">
+                <h4 class="menu-item-title">Mery Jane Brut Rosé en Hielo</h4>
+                <span class="menu-item-price">$16.200</span>
+              </div>
+              <p class="menu-item-desc">Burbujas finas, fresco, frutal y vibrante. Se sirve a 6°C en balde metálico con luces LED para festejar entre amigos.</p>
+              <div class="menu-item-footer">
+                <span class="item-tag">Celebración</span>
+                <span class="item-pairing">Incluido en combos de cumple</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="menu-cta-banner">
+          <div class="banner-text">
+            <h3>¿Tenés un grupo grande o festejo?</h3>
+            <p>Armamos combos cerrados de cena + bebidas + botellas para que no te preocupes por nada.</p>
+          </div>
+          <a href="#cumples" class="btn-banner-action">Ver Combos de Cumple</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SECCIÓN CUMPLEAÑOS & MESAS VIP ================= -->
+    <section class="vip-section" id="cumples">
+      <div class="container">
+        <div class="section-header text-center">
+          <span class="section-tag">FESTEJOS & RESERVAS</span>
+          <h2 class="section-title">Festejá tu Cumple & Mesas VIP</h2>
+          <p class="section-subtitle">
+            Si cumplís años, la casa invita. Reservá para vos y tus amigos con beneficios exclusivos, brindis bonificado y acceso directo sin hacer fila.
+          </p>
+        </div>
+
+        <div class="vip-grid">
+          <!-- Combo Cumple -->
+          <div class="vip-card featured-vip">
+            <div class="vip-card-badge">MÁS ELEGIDO</div>
+            <h3 class="vip-plan-title">Combo Cumpleañero</h3>
+            <div class="vip-price-box">
+              <span class="vip-price-note">El cumpleañero NO paga cena</span>
+            </div>
+            <ul class="vip-perks">
+              <li>✓ Mesa reservada en ubicación preferencial desde las 21:00 hs</li>
+              <li>✓ Menú de 3 pasos (Entrada, Plato principal a elección y Postre)</li>
+              <li>✓ <strong>Brindis con Espumante Mery Jane de regalo</strong></li>
+              <li>✓ Free Pass para todos los invitados al club nocturno sin fila</li>
+              <li>✓ Torta o postre de cortesía con bengala y show de luces</li>
+            </ul>
+            <a href="https://wa.me/5491100000000?text=Hola%20Mery%20La%20Previa!%20Quiero%20consultar%20por%20el%20Combo%20Cumplea%C3%B1ero" target="_blank" rel="noopener" class="btn-vip-action primary">
+              Reservar Cumple por WhatsApp &rarr;
+            </a>
+          </div>
+
+          <!-- Mesa VIP Living -->
+          <div class="vip-card">
+            <div class="vip-card-badge">EXPERIENCIA CLUB</div>
+            <h3 class="vip-plan-title">Mesa VIP Living</h3>
+            <div class="vip-price-box">
+              <span class="vip-price-note">Living exclusivo para 8 a 12 personas</span>
+            </div>
+            <ul class="vip-perks">
+              <li>✓ Living privado pegado a la cabina del DJ y la pista</li>
+              <li>✓ 100% del valor consumible en carta de tragos y botellas premium</li>
+              <li>✓ Balde de champagne o destilado con hielo cristal y speed</li>
+              <li>✓ Camarero y seguridad dedicada para tu mesa</li>
+              <li>✓ Ingreso VIP rápido por puerta exclusiva</li>
+            </ul>
+            <a href="https://wa.me/5491100000000?text=Hola%20Mery%20La%20Previa!%20Quiero%20reservar%20un%20Living%20VIP" target="_blank" rel="noopener" class="btn-vip-action secondary">
+              Consultar Living VIP &rarr;
+            </a>
+          </div>
+
+          <!-- Mesa Cena Parejas / Grupos Chicos -->
+          <div class="vip-card">
+            <div class="vip-card-badge">SALÓN PRINCIPAL</div>
+            <h3 class="vip-plan-title">Reserva Tradicional</h3>
+            <div class="vip-price-box">
+              <span class="vip-price-note">Para 2 a 6 personas • Sin mínimo</span>
+            </div>
+            <ul class="vip-perks">
+              <li>✓ Mesa asegurada en salón interior o patio climatizado</li>
+              <li>✓ Consumo libre a la carta sin menú fijo obligatorio</li>
+              <li>✓ Posibilidad de quedarse al club después de la cena sin costo</li>
+              <li>✓ Tolerancia de espera: 20 minutos</li>
+            </ul>
+            <a href="https://wa.me/5491100000000?text=Hola%20Mery%20La%20Previa!%20Quiero%20reservar%20una%20mesa%20para%20cenar" target="_blank" rel="noopener" class="btn-vip-action secondary">
+              Reservar Mesa de Cena &rarr;
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SECCIÓN LINEUP 13/11 ================= -->
+    <section class="lineup-section" id="lineup">
+      <div class="container">
+        <div class="lineup-bento">
+          <!-- Video Box -->
+          <div class="lineup-video-card">
+            <video class="lineup-video" id="lineupVideo" loop playsinline src="assets/video/ice-cube-1311.mp4" poster="assets/img/ice-cube-previa.jpg"></video>
+            <div class="video-controls-overlay">
+              <button class="btn-video-toggle" id="toggleLineupSound" aria-label="Reproducir con sonido">
+                <span class="icon-sound">🔊</span>
+                <span class="lbl-sound">Tocar para video con sonido</span>
+              </button>
+            </div>
+            <div class="video-floating-tag">13.11 • OPENING PREVIA</div>
+          </div>
+
+          <!-- Info Box -->
+          <div class="lineup-info-card">
+            <span class="lineup-date-tag">JUEVES 13 DE NOVIEMBRE • 20:00 HS</span>
+            <h2 class="lineup-title">Tenemos Previa.<br>Apertura Oficial.</h2>
+            <p class="lineup-text">
+              La noche que estábamos esperando en Zona Sur. Grabamos los hielos, enfriamos las botellas y armamos una cabina que no va a parar un solo segundo.
+            </p>
+
+            <div class="lineup-djs-list">
+              <div class="dj-row">
+                <span class="dj-time">22:00 hs</span>
+                <span class="dj-name">DJ Warm Up • Deep House & Afro Melodic</span>
+              </div>
+              <div class="dj-row highlight">
+                <span class="dj-time">00:30 hs</span>
+                <span class="dj-name">DJ Guest Special Set • Cachengue & Hitmakers</span>
+              </div>
+              <div class="dj-row">
+                <span class="dj-time">03:00 hs</span>
+                <span class="dj-name">DJ Residente • Retro & Party Explosive</span>
+              </div>
+            </div>
+
+            <div class="lineup-cta-box">
+              <a href="https://wa.me/5491100000000?text=Hola%20Mery%20La%20Previa!%20Quiero%20anotarme%20en%20Lista%20VIP%20para%20el%2013/11" target="_blank" rel="noopener" class="btn-lineup-action">
+                Anotarse en Lista VIP 13/11 &rarr;
+              </a>
+              <span class="lineup-dresscode">Dress Code: Elegante Sport Nocturno • +21 con DNI</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SECCIÓN UBICACIÓN & HORARIOS ================= -->
+    <section class="location-section" id="ubicacion">
+      <div class="container">
+        <div class="location-wrapper">
+          <div class="location-details">
+            <span class="section-tag">DÓNDE ESTAMOS</span>
+            <h2 class="location-title">Zona Sur, Buenos Aires</h2>
+            <p class="location-desc">
+              Punto de encuentro estratégico para Canning, San Vicente, Guernica y Longchamps. Estacionamiento privado con seguridad en el predio.
+            </p>
+
+            <div class="info-blocks-grid">
+              <div class="info-card">
+                <div class="info-icon">📍</div>
+                <div class="info-text">
+                  <strong>Dirección</strong>
+                  <span>Av. Principal Zona Sur, Buenos Aires</span>
+                </div>
+              </div>
+
+              <div class="info-card">
+                <div class="info-icon">🕒</div>
+                <div class="info-text">
+                  <strong>Días & Horarios</strong>
+                  <span>Miércoles a Domingos: 20:00 hs al cierre</span>
+                </div>
+              </div>
+
+              <div class="info-card">
+                <div class="info-icon">🚗</div>
+                <div class="info-text">
+                  <strong>Valet & Parking</strong>
+                  <span>Estacionamiento privado vigilado 24 hs</span>
+                </div>
+              </div>
+
+              <div class="info-card">
+                <div class="info-icon">📲</div>
+                <div class="info-text">
+                  <strong>Instagram</strong>
+                  <span><a href="https://www.instagram.com/meryjane.laprevia/" target="_blank" rel="noopener">@meryjane.laprevia</a></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="location-actions">
+              <a href="https://maps.google.com" target="_blank" rel="noopener" class="btn-location-map">
+                Abrir en Google Maps &rarr;
+              </a>
+              <a href="#cumples" class="btn-location-res">
+                Reservar Mesa Ahora
+              </a>
+            </div>
+          </div>
+
+          <div class="location-map-visual">
+            <div class="map-card-inner">
+              <img src="assets/img/neon-wall-mery.jpg" alt="Pared de Neón Mery La Previa" class="map-bg-photo">
+              <div class="map-marker-pin">
+                <span class="pin-pulse"></span>
+                <span class="pin-label">🍷 MERY LA PREVIA</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="classic-footer">
+    <div class="container">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <span class="f-logo">MERY LA PREVIA</span>
+          <span class="f-tagline">WINE BAR & FRIENDS • LA PREVIA ARRANCA ACÁ</span>
+          <p class="f-copy-short">El nuevo ritual nocturno de Zona Sur. Gastronomía, vinos de autor y club.</p>
+        </div>
+
+        <div class="footer-nav">
+          <span class="f-col-title">Navegación</span>
+          <ul>
+            <li><a href="#hero">Inicio</a></li>
+            <li><a href="#experiencia">Experiencia</a></li>
+            <li><a href="#carta">La Carta</a></li>
+            <li><a href="#cumples">Cumples & VIP</a></li>
+            <li><a href="#lineup">Lineup 13/11</a></li>
+            <li><a href="#ubicacion">Ubicación</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-contact">
+          <span class="f-col-title">Contacto & Redes</span>
+          <ul>
+            <li><a href="https://www.instagram.com/meryjane.laprevia/" target="_blank" rel="noopener">Instagram: @meryjane.laprevia</a></li>
+            <li><a href="https://wa.me/5491100000000" target="_blank" rel="noopener">WhatsApp Reservas</a></li>
+            <li><span>Zona Sur, Buenos Aires</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p class="f-cr">&copy; 2026 Mery La Previa. Todos los derechos reservados.</p>
+        <div class="f-switcher">
+          <span class="f-hint">Prototipo Alternativo:</span>
+          <a href="index.html" class="f-switch-btn">Ver versión Split Bento &rarr;</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="clasica.js"></script>
+</body>
+</html>

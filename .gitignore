@@ -10,3 +10,5 @@ WhatsApp Ptt*.ogg
 *.log
 scratch/
 .system_generated/
+
+.vercel
