@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark" />
+  <title>MERY LA PREVIA — Panel Autoadministrable</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Forum&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+
+  <!-- ======================================================================
+       1. LOGIN SCREEN: Static Final Frame of Neon Sign on Top + Login Grid Below
+          (No video playback, never covers the neon sign, no user sign-up)
+       ====================================================================== -->
+  <section id="adminLoginScreen" class="admin-login-screen" aria-label="Acceso Administrativo Mery La Previa">
+    <!-- Top Final Neon Frame Stage (Never covered by the form) -->
+    <div class="admin-neon-stage">
+      <img
+        src="assets/img/neon-wall-mery.jpg"
+        alt="Cartel Luminoso MERY LA PREVIA"
+        class="admin-neon-frame-img"
+      />
+      <div class="admin-neon-vignette" aria-hidden="true"></div>
+    </div>
+
+    <!-- Bottom Login Grid Container (Positioned cleanly below the neon sign) -->
+    <div class="admin-login-grid-wrap">
+      <div class="admin-login-card">
+        <div class="admin-diamond-header">
+          <span class="diamond-line"></span>
+          <span class="diamond-dot"></span>
+          <h1>ACCESO STAFF • LA CARTA</h1>
+          <span class="diamond-dot"></span>
+          <span class="diamond-line"></span>
+        </div>
+
+        <p class="admin-login-subtitle">
+          Ingresá con tu usuario asignado para actualizar precios, platos, fotos y categorías en tiempo real.
+        </p>
+
+        <form id="adminLoginForm" class="admin-login-form" autocomplete="on">
+          <div class="admin-login-inputs-grid">
+            <div class="admin-field">
+              <label for="loginEmail">Email del Staff</label>
+              <input
+                type="email"
+                id="loginEmail"
+                class="admin-input"
+                placeholder="staff@merylaprevia.com"
+                required
+                autocomplete="username"
+              />
+            </div>
+
+            <div class="admin-field">
+              <label for="loginPassword">Contraseña</label>
+              <input
+                type="password"
+                id="loginPassword"
+                class="admin-input"
+                placeholder="••••••••"
+                required
+                autocomplete="current-password"
+              />
+            </div>
+          </div>
+
+          <div id="loginErrorMsg" class="admin-login-error" role="alert" hidden></div>
+
+          <button type="submit" id="btnLoginSubmit" class="admin-enter-btn">
+            <span class="intro-diamond"></span>
+            <span>INGRESAR AL PANEL</span>
+            <span class="intro-diamond"></span>
+          </button>
+        </form>
+
+        <div class="admin-login-footer">
+          <button type="button" id="btnToggleSupaSetup" class="admin-link-subtle">
+            ⚙ Configurar conexión Supabase
+          </button>
+          <a href="index.html" class="admin-link-subtle">← Volver a la Carta Pública</a>
+        </div>
+
+        <!-- Collapsible Supabase Project Credentials Panel -->
+        <div id="supaSetupDrawer" class="admin-supa-drawer" hidden>
+          <p class="admin-supa-help">
+            Pegá la <strong>Project URL</strong> y <strong>anon public key</strong> de tu proyecto Supabase de Mery La Previa (o dejalas fijas en <code>supabase-config.js</code>).
+          </p>
+          <div class="admin-login-inputs-grid">
+            <input type="url" id="cfgSupaUrl" class="admin-input" placeholder="https://tu-proyecto.supabase.co" />
+            <input type="text" id="cfgSupaKey" class="admin-input" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI..." />
+          </div>
+          <div class="admin-supa-actions">
+            <button type="button" id="btnSaveSupaCfg" class="admin-btn-gold">Guardar Conexión</button>
+            <span id="supaCfgStatus" class="admin-supa-status"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================================================================
+       2. SELF-MANAGED ADMIN PANEL (Real-Time Menu, Prices, Categories & Photos)
+       ====================================================================== -->
+  <main id="adminDashboardScreen" class="admin-dashboard" hidden>
+    <header class="admin-topbar">
+      <div class="admin-topbar-brand">
+        <span class="admin-logo">MERY LA PREVIA</span>
+        <span id="realtimeBadge" class="admin-live-pill">
+          <span class="live-dot"></span>
+          <span id="realtimeStatusText">EN VIVO • TIEMPO REAL</span>
+        </span>
+      </div>
+
+      <div class="admin-topbar-actions">
+        <a href="index.html" target="_blank" rel="noopener" class="admin-btn-outline">
+          Ver Carta en Vivo ↗
+        </a>
+        <button type="button" id="btnOpenSupaModal" class="admin-btn-outline">
+          Base de Datos
+        </button>
+        <button type="button" id="btnLogout" class="admin-btn-outline admin-btn-danger">
+          Cerrar Sesión
+        </button>
+      </div>
+    </header>
+
+    <!-- Toolbar: Category Filter + Quick Actions -->
+    <section class="admin-toolbar">
+      <div class="admin-category-bar">
+        <div id="adminCategoryPills" class="admin-pills-wrap" role="tablist"></div>
+        <button type="button" id="btnNewCategory" class="admin-pill-add">
+          + Nueva Categoría
+        </button>
+      </div>
+
+      <div class="admin-primary-actions">
+        <button type="button" id="btnNewDish" class="admin-btn-gold">
+          + Agregar Plato / Trago / Vino
+        </button>
+      </div>
+    </section>
+
+    <!-- Toast Notification Banner for Instant Feedback -->
+    <div id="adminToast" class="admin-toast" role="status" aria-live="polite" hidden></div>
+
+    <!-- Menu Sections & Items Grid -->
+    <section id="adminSectionsContainer" class="admin-sections-container"></section>
+  </main>
+
+  <!-- ======================================================================
+       3. MODAL: CREATE / EDIT DISH OR DRINK (With Photo Upload & Rich Copy)
+       ====================================================================== -->
+  <div id="adminItemModal" class="admin-modal-backdrop" hidden role="dialog" aria-modal="true" aria-labelledby="itemModalHeading">
+    <div class="admin-modal-card">
+      <div class="admin-modal-header">
+        <h2 id="itemModalHeading">Agregar Ítem a la Carta</h2>
+        <button type="button" id="btnCloseItemModal" class="admin-modal-close" aria-label="Cerrar">✕</button>
+      </div>
+
+      <form id="adminItemForm" class="admin-modal-form">
+        <input type="hidden" id="itemFormId" />
+
+        <div class="admin-form-grid-2">
+          <div class="admin-field">
+            <label for="itemFormCategory">Categoría</label>
+            <select id="itemFormCategory" class="admin-input" required></select>
+          </div>
+
+          <div class="admin-field">
+            <label for="itemFormPrice">Precio (ej. $14.500)</label>
+            <input type="text" id="itemFormPrice" class="admin-input" placeholder="$14.500" required />
+          </div>
+        </div>
+
+        <div class="admin-form-grid-2">
+          <div class="admin-field">
+            <label for="itemFormName">Nombre del Plato / Trago / Vino</label>
+            <input type="text" id="itemFormName" class="admin-input" placeholder="Ej. Ojo de Bife en Bandeja Imperial" required />
+          </div>
+
+          <div class="admin-field">
+            <label for="itemFormBadge">Insignia Destacada</label>
+            <select id="itemFormBadge" class="admin-input">
+              <option value="★">★ Recomendado de la Casa</option>
+              <option value="◇">◇ Especialidad 11:11</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Photo Upload + Gallery Selector -->
+        <div class="admin-field">
+          <label>Foto del Plato / Trago</label>
+          <div class="admin-photo-uploader">
+            <img id="itemFormPreview" src="assets/img/ice-cube-previa.jpg" alt="Vista previa" class="admin-photo-preview" />
+            <div class="admin-photo-controls">
+              <label for="itemFormFile" class="admin-btn-outline admin-upload-label">
+                📷 Subir Foto desde el Celu o PC
+              </label>
+              <input type="file" id="itemFormFile" accept="image/*" hidden />
+              <input type="text" id="itemFormImageUrl" class="admin-input" placeholder="Ruta o URL de foto (ej. assets/img/steak-flash.jpg)" />
+              <div class="admin-preset-photos">
+                <span>Fotos rápidas:</span>
+                <button type="button" class="admin-preset-chip" data-img="assets/img/ice-cube-previa.jpg">Cocktail Hielo</button>
+                <button type="button" class="admin-preset-chip" data-img="assets/img/cocktails-neon.jpg">Barra Neón</button>
+                <button type="button" class="admin-preset-chip" data-img="assets/img/brand-tutto-passa.jpg">Spritz</button>
+                <button type="button" class="admin-preset-chip" data-img="assets/img/steak-flash.jpg">Carnes</button>
+                <button type="button" class="admin-preset-chip" data-img="assets/img/wine-mery.jpg">Blanc de Nuit</button>
+                <button type="button" class="admin-preset-chip" data-img="assets/img/bottle-hero-isolated.jpg">Malbec</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="admin-field">
+          <label for="itemFormShortDesc">Descripción Corta (Se ve en la lista general de la carta)</label>
+          <textarea id="itemFormShortDesc" class="admin-input admin-textarea" rows="2" placeholder="Ingredientes principales y presentación..." required></textarea>
+        </div>
+
+        <div class="admin-field">
+          <label for="itemFormDetailCopy">Copy Extendido &amp; Historia (Se abre al hacer clic en el plato)</label>
+          <textarea id="itemFormDetailCopy" class="admin-input admin-textarea" rows="3" placeholder="Contá el ritual de servicio, notas de cata, cocción o por qué es especial..."></textarea>
+        </div>
+
+        <div class="admin-form-grid-2">
+          <div class="admin-field">
+            <label for="itemFormPairing">Sugerencia de Maridaje / Momento</label>
+            <input type="text" id="itemFormPairing" class="admin-input" placeholder="Ej. Ideal para compartir entre 2 o 3 personas con un Malbec." />
+          </div>
+
+          <div class="admin-field">
+            <label for="itemFormTags">Etiquetas (separadas por coma)</label>
+            <input type="text" id="itemFormTags" class="admin-input" placeholder="Para Compartir, Brasas, Autor 11:11" />
+          </div>
+        </div>
+
+        <div class="admin-modal-footer">
+          <button type="button" id="btnCancelItemModal" class="admin-btn-outline">Cancelar</button>
+          <button type="submit" id="btnSaveItemModal" class="admin-btn-gold">Guardar y Publicar en Vivo</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================================
+       4. MODAL: CREATE / RENAME CATEGORY
+       ====================================================================== -->
+  <div id="adminCategoryModal" class="admin-modal-backdrop" hidden role="dialog" aria-modal="true" aria-labelledby="catModalHeading">
+    <div class="admin-modal-card admin-modal-sm">
+      <div class="admin-modal-header">
+        <h2 id="catModalHeading">Nueva Categoría</h2>
+        <button type="button" id="btnCloseCatModal" class="admin-modal-close" aria-label="Cerrar">✕</button>
+      </div>
+
+      <form id="adminCategoryForm" class="admin-modal-form">
+        <input type="hidden" id="catFormSlug" />
+        <div class="admin-field">
+          <label for="catFormTitle">Nombre de la Categoría</label>
+          <input type="text" id="catFormTitle" class="admin-input" placeholder="Ej. Tapeo & Entradas" required />
+        </div>
+        <div class="admin-modal-footer">
+          <button type="button" id="btnCancelCatModal" class="admin-btn-outline">Cancelar</button>
+          <button type="submit" class="admin-btn-gold">Guardar Categoría</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
