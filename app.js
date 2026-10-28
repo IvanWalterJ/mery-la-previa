@@ -83,12 +83,32 @@ const QITCHEN_MENU_SECTIONS = [
   }
 ];
 
-// Hero Title per View (Matches Qitchen Left Showcase Bottom Heading)
-const VIEW_HERO_TITLES = {
-  home: 'MERY<br />LA PREVIA',
-  menu: 'LA CARTA<br />NOCTURNA',
-  about: 'TENEMOS<br />PREVIA 13/11',
-  reservation: 'CUMPLES<br />&amp; RESERVAS'
+// Hero Title & Showcase Video per View
+const VIEW_CONFIG = {
+  home: {
+    title: 'MERY<br />LA PREVIA',
+    video: 'assets/video/bottle-360-loop.mp4',
+    poster: 'assets/img/bottle-hero-isolated.jpg',
+    unmute: false
+  },
+  menu: {
+    title: 'LA CARTA<br />NOCTURNA',
+    video: 'assets/video/bottle-360-loop.mp4',
+    poster: 'assets/img/bottle-hero-isolated.jpg',
+    unmute: false
+  },
+  about: {
+    title: 'TENEMOS<br />PREVIA 13/11',
+    video: 'assets/video/ice-cube-1311.mp4',
+    poster: 'assets/img/ice-cube-previa.jpg',
+    unmute: true
+  },
+  reservation: {
+    title: 'CUMPLES<br />&amp; RESERVAS',
+    video: 'assets/video/bottle-360-loop.mp4',
+    poster: 'assets/img/bottle-hero-isolated.jpg',
+    unmute: false
+  }
 };
 
 // Web Audio API Synthesizer for Realistic Glass Neon Tube Ignition (Sparks + Transformer Hum)
@@ -98,70 +118,80 @@ function playNeonIgnitionSound() {
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
     if (!AudioContextClass) return false;
     if (!audioCtx) audioCtx = new AudioContextClass();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
 
-    const now = audioCtx.currentTime;
+    const triggerSequence = () => {
+      const now = audioCtx.currentTime;
 
-    function triggerSpark(offsetSec, durationSec, gainLevel) {
-      const bufferSize = Math.floor(audioCtx.sampleRate * durationSec);
-      const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-      const data = noiseBuffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) {
-        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.45));
+      function triggerSpark(offsetSec, durationSec, gainLevel) {
+        const bufferSize = Math.floor(audioCtx.sampleRate * durationSec);
+        const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const data = noiseBuffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.45));
+        }
+
+        const noise = audioCtx.createBufferSource();
+        noise.buffer = noiseBuffer;
+
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(2400, now + offsetSec);
+        filter.Q.setValueAtTime(3.2, now + offsetSec);
+
+        const sparkGain = audioCtx.createGain();
+        sparkGain.gain.setValueAtTime(gainLevel, now + offsetSec);
+        sparkGain.gain.exponentialRampToValueAtTime(0.001, now + offsetSec + durationSec);
+
+        noise.connect(filter);
+        filter.connect(sparkGain);
+        sparkGain.connect(audioCtx.destination);
+        noise.start(now + offsetSec);
       }
 
-      const noise = audioCtx.createBufferSource();
-      noise.buffer = noiseBuffer;
+      triggerSpark(0.05, 0.09, 0.32);
+      triggerSpark(0.32, 0.08, 0.25);
+      triggerSpark(0.68, 0.14, 0.38);
 
-      const filter = audioCtx.createBiquadFilter();
-      filter.type = 'bandpass';
-      filter.frequency.setValueAtTime(2400, now + offsetSec);
-      filter.Q.setValueAtTime(3.2, now + offsetSec);
+      const osc60 = audioCtx.createOscillator();
+      const osc120 = audioCtx.createOscillator();
+      osc60.type = 'sawtooth';
+      osc120.type = 'sine';
+      osc60.frequency.setValueAtTime(60, now);
+      osc120.frequency.setValueAtTime(120, now);
 
-      const sparkGain = audioCtx.createGain();
-      sparkGain.gain.setValueAtTime(gainLevel, now + offsetSec);
-      sparkGain.gain.exponentialRampToValueAtTime(0.001, now + offsetSec + durationSec);
+      const humFilter = audioCtx.createBiquadFilter();
+      humFilter.type = 'lowpass';
+      humFilter.frequency.setValueAtTime(340, now);
 
-      noise.connect(filter);
-      filter.connect(sparkGain);
-      sparkGain.connect(audioCtx.destination);
-      noise.start(now + offsetSec);
+      const humGain = audioCtx.createGain();
+      humGain.gain.setValueAtTime(0.0001, now);
+      humGain.gain.setValueAtTime(0.06, now + 0.08);
+      humGain.gain.setValueAtTime(0.006, now + 0.20);
+      humGain.gain.setValueAtTime(0.05, now + 0.35);
+      humGain.gain.setValueAtTime(0.008, now + 0.48);
+      humGain.gain.linearRampToValueAtTime(0.09, now + 0.75);
+      humGain.gain.exponentialRampToValueAtTime(0.015, now + 2.2);
+      humGain.gain.exponentialRampToValueAtTime(0.0001, now + 3.2);
+
+      osc60.connect(humFilter);
+      osc120.connect(humFilter);
+      humFilter.connect(humGain);
+      humGain.connect(audioCtx.destination);
+
+      osc60.start(now);
+      osc120.start(now);
+      osc60.stop(now + 3.25);
+      osc120.stop(now + 3.25);
+    };
+
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume().then(() => {
+        if (audioCtx.state === 'running') triggerSequence();
+      }).catch(() => {});
+      return false;
     }
 
-    triggerSpark(0.08, 0.09, 0.28);
-    triggerSpark(0.36, 0.07, 0.22);
-    triggerSpark(0.72, 0.14, 0.34);
-
-    const osc60 = audioCtx.createOscillator();
-    const osc120 = audioCtx.createOscillator();
-    osc60.type = 'sawtooth';
-    osc120.type = 'sine';
-    osc60.frequency.setValueAtTime(60, now);
-    osc120.frequency.setValueAtTime(120, now);
-
-    const humFilter = audioCtx.createBiquadFilter();
-    humFilter.type = 'lowpass';
-    humFilter.frequency.setValueAtTime(340, now);
-
-    const humGain = audioCtx.createGain();
-    humGain.gain.setValueAtTime(0.0001, now);
-    humGain.gain.setValueAtTime(0.05, now + 0.1);
-    humGain.gain.setValueAtTime(0.005, now + 0.22);
-    humGain.gain.setValueAtTime(0.04, now + 0.38);
-    humGain.gain.setValueAtTime(0.008, now + 0.50);
-    humGain.gain.linearRampToValueAtTime(0.085, now + 0.78);
-    humGain.gain.exponentialRampToValueAtTime(0.012, now + 2.2);
-    humGain.gain.exponentialRampToValueAtTime(0.0001, now + 3.1);
-
-    osc60.connect(humFilter);
-    osc120.connect(humFilter);
-    humFilter.connect(humGain);
-    humGain.connect(audioCtx.destination);
-
-    osc60.start(now);
-    osc120.start(now);
-    osc60.stop(now + 3.15);
-    osc120.stop(now + 3.15);
+    triggerSequence();
     return true;
   } catch {
     return false;
@@ -172,41 +202,66 @@ document.addEventListener('DOMContentLoaded', () => {
   const appEl = document.getElementById('qitchenApp');
   const introCurtain = document.getElementById('neonIntroCurtain');
   const btnDismissIntro = document.getElementById('btnDismissIntro');
-  const btnReplayNeon = document.getElementById('btnReplayNeon');
   const leftHeroTitle = document.getElementById('leftHeroTitle');
+  const showcaseVideo = document.getElementById('bottleShowcaseVideo');
+  const menuOverlay = document.getElementById('qitchenMenuOverlay');
+  const btnOpenOverlay = document.getElementById('btnOpenOverlay');
+  const btnCloseOverlay = document.getElementById('btnCloseOverlay');
 
-  // 1. Neon Intro Curtain: Auto-reveals Qitchen Split-Screen after 2.4s OR on click with Neon Sound
-  let introTimer = setTimeout(() => {
-    if (introCurtain) introCurtain.classList.add('dismissed');
-  }, 2400);
+  // 1. Attempt Neon Ignition Sound Immediately on Load; if browser blocks until first gesture, fire on first movement/touch
+  let neonSoundPlayed = playNeonIgnitionSound();
 
-  function dismissIntroWithSound() {
-    clearTimeout(introTimer);
-    playNeonIgnitionSound();
-    if (introCurtain) introCurtain.classList.add('dismissed');
-  }
-
-  if (btnDismissIntro) {
-    btnDismissIntro.addEventListener('click', dismissIntroWithSound);
-  }
-  if (introCurtain) {
-    introCurtain.addEventListener('click', dismissIntroWithSound);
-  }
-
-  if (btnReplayNeon && introCurtain) {
-    btnReplayNeon.addEventListener('click', () => {
-      introCurtain.classList.remove('dismissed', 'igniting');
-      void introCurtain.offsetWidth;
-      introCurtain.classList.add('igniting');
+  function unlockNeonSoundOnce() {
+    if (!neonSoundPlayed && introCurtain && !introCurtain.classList.contains('dismissed')) {
+      neonSoundPlayed = true;
       playNeonIgnitionSound();
-      clearTimeout(introTimer);
-      introTimer = setTimeout(() => {
-        introCurtain.classList.add('dismissed');
-      }, 2500);
+    }
+  }
+
+  window.addEventListener('pointerdown', unlockNeonSoundOnce, { once: true });
+  window.addEventListener('keydown', unlockNeonSoundOnce, { once: true });
+
+  // No auto-redirect! The Neon Intro stays open until the user clicks the Enter button
+  if (btnDismissIntro && introCurtain) {
+    btnDismissIntro.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (!neonSoundPlayed) {
+        neonSoundPlayed = true;
+        playNeonIgnitionSound();
+      }
+      introCurtain.classList.add('dismissed');
     });
   }
 
-  // 2. Render Qitchen /menu Sections with Diamond Headings & Dotted Price Leaders
+  // 2. Qitchen Fullscreen Hamburger Menu Overlay Controls (Screenshot 1 Match)
+  function toggleOverlay(openState) {
+    if (!menuOverlay) return;
+    menuOverlay.classList.toggle('open', openState);
+    menuOverlay.setAttribute('aria-hidden', String(!openState));
+  }
+
+  if (btnOpenOverlay) {
+    btnOpenOverlay.addEventListener('click', () => toggleOverlay(true));
+  }
+  if (btnCloseOverlay) {
+    btnCloseOverlay.addEventListener('click', () => toggleOverlay(false));
+  }
+
+  document.querySelectorAll('[data-overlay-goto]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const target = btn.getAttribute('data-overlay-goto');
+      toggleOverlay(false);
+      if (target) navigateView(target);
+    });
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && menuOverlay && menuOverlay.classList.contains('open')) {
+      toggleOverlay(false);
+    }
+  });
+
+  // 3. Render Qitchen /menu Sections with Diamond Headings & Dotted Price Leaders
   const menuContainer = document.getElementById('qitchenMenuContainer');
   const filterBtns = document.querySelectorAll('.q-pill-btn');
   let currentFilter = 'all';
@@ -243,7 +298,6 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
     `).join('');
 
-    // Allow clicking any dish row to jump to reservation
     menuContainer.querySelectorAll('[data-goto]').forEach((row) => {
       row.addEventListener('click', () => navigateView('reservation'));
     });
@@ -259,13 +313,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
   renderQitchenMenu();
 
-  // 3. Directional Slide View Transition between Qitchen Views (home, menu, about, reservation)
+  // 4. Directional Slide View Transition + Left Video Swap (Bottle 360 <-> Ice Cube 13/11 with Sound)
   let currentView = 'home';
 
   function updateDOMView(targetView) {
+    const cfg = VIEW_CONFIG[targetView] || VIEW_CONFIG.home;
+
     if (appEl) appEl.setAttribute('data-view', targetView);
-    if (leftHeroTitle && VIEW_HERO_TITLES[targetView]) {
-      leftHeroTitle.innerHTML = VIEW_HERO_TITLES[targetView];
+    if (leftHeroTitle) leftHeroTitle.innerHTML = cfg.title;
+
+    // Swap left showcase video when entering/leaving 'about' (La Previa 13/11)
+    if (showcaseVideo) {
+      const currentSrc = showcaseVideo.getAttribute('src');
+      if (currentSrc !== cfg.video) {
+        showcaseVideo.setAttribute('src', cfg.video);
+        showcaseVideo.setAttribute('poster', cfg.poster);
+        showcaseVideo.load();
+      }
+      showcaseVideo.muted = !cfg.unmute;
+      showcaseVideo.volume = cfg.unmute ? 0.85 : 0;
+      showcaseVideo.play().catch(() => {
+        // Fallback if browser requires muted playback
+        showcaseVideo.muted = true;
+        showcaseVideo.play().catch(() => {});
+      });
     }
 
     document.querySelectorAll('.q-view').forEach((sec) => {
@@ -305,7 +376,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // 4. Qitchen Reservation & Birthday WhatsApp Form Submission
+  // 5. Qitchen Reservation & Birthday WhatsApp Form Submission
   const resForm = document.getElementById('qitchenResForm');
   if (resForm) {
     resForm.addEventListener('submit', (e) => {

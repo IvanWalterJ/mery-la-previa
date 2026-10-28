@@ -1,5 +1,5 @@
 :root {
-  /* Official Qitchen Framer Template Color Tokens + Mery La Previa Neon Accent */
+  /* Official Qitchen Framer Template Color Tokens */
   --q-bg: #0a0b0a;
   --q-surface: #111210;
   --q-card: rgba(24, 24, 24, 0.55);
@@ -8,9 +8,8 @@
   --q-gold: #cfbe91;
   --q-border: rgba(239, 231, 210, 0.15);
   --q-border-strong: rgba(239, 231, 210, 0.28);
-  --q-neon-red: #ff2519;
 
-  /* Official Qitchen Typography: Forum (Display Serif) + Plus Jakarta / Geist (Clean Sans) */
+  /* Official Qitchen Typography: Forum (Display Serif) + Plus Jakarta Sans */
   --font-forum: 'Forum', Georgia, serif;
   --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
 
@@ -36,18 +35,18 @@ html, body {
 }
 
 /* ==========================================================================
-   1. NEON INTRO OVERLAY (KEEPING THE USER'S FAVORITE 11:11 / MERY NEON INTRO)
+   1. NEON INTRO CURTAIN (STAYS UNTIL USER CLICKS ENTER + MOBILE RESPONSIVE)
    ========================================================================== */
 .neon-intro-curtain {
   position: fixed;
   inset: 0;
-  z-index: 200;
-  background: #040202;
+  z-index: 250;
+  background: #030101;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
   align-items: center;
-  padding-bottom: 48px;
+  padding: 32px 20px 56px;
   transition: opacity 0.85s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.85s ease;
 }
 
@@ -57,12 +56,25 @@ html, body {
   pointer-events: none;
 }
 
+/* radial fluted texture behind image so mobile 'contain' never looks cut off */
+.neon-intro-curtain::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(160, 16, 10, 0.22) 0%, rgba(3, 1, 1, 0.96) 75%),
+    repeating-linear-gradient(90deg, #060202 0px, #060202 14px, #0d0404 15px, #060202 28px);
+  z-index: 0;
+}
+
 .neon-intro-curtain img {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
+  z-index: 1;
   filter: brightness(0.12) contrast(1.2) saturate(0.3);
 }
 
@@ -73,46 +85,173 @@ html, body {
   32%  { filter: brightness(0.95) contrast(1.15) saturate(1.1); }
   38%  { filter: brightness(0.22) contrast(1.2) saturate(0.5); }
   56%  { filter: brightness(1.35) contrast(1.22) saturate(1.35); }
-  64%  { filter: brightness(0.75) contrast(1.15) saturate(1); }
+  64%  { filter: brightness(0.78) contrast(1.15) saturate(1); }
   100% { filter: brightness(1.06) contrast(1.16) saturate(1.18); }
 }
 
 .neon-intro-curtain.igniting img {
-  animation: neonTubeIgnite 1.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: neonTubeIgnite 1.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-.intro-enter-pill {
+/* Qitchen-styled Enter Control (No Emoji, Forum Serif + Ornamental Diamonds) */
+.intro-enter-wrap {
   position: relative;
-  z-index: 2;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.intro-enter-btn {
   appearance: none;
   border: 1px solid var(--q-border-strong);
-  background: rgba(10, 11, 10, 0.85);
-  backdrop-filter: blur(12px);
+  background: rgba(10, 11, 10, 0.88);
+  backdrop-filter: blur(14px);
   color: var(--q-cream);
-  font-family: var(--font-sans);
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.18em;
+  font-family: var(--font-forum);
+  font-size: 1.05rem;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-  padding: 12px 24px;
-  border-radius: 999px;
+  padding: 15px 34px;
+  border-radius: 10px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  transition: all 0.25s ease;
+  gap: 16px;
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.intro-enter-pill:hover {
+.intro-enter-btn:hover {
   background: var(--q-cream);
   color: var(--q-bg);
+  border-color: var(--q-cream);
+  transform: translateY(-2px);
+}
+
+.intro-diamond {
+  width: 6px;
+  height: 6px;
+  border: 1px solid currentColor;
+  transform: rotate(45deg);
+  display: inline-block;
 }
 
 /* ==========================================================================
-   2. DIRECTIONAL LATERAL SLIDE VIEW TRANSITIONS (CLEAN FRAMER SLIDE)
+   2. FULLSCREEN QITCHEN HAMBURGER MENU OVERLAY (Screenshot 1 Exact Match)
+   ========================================================================== */
+.qitchen-menu-overlay {
+  position: fixed;
+  inset: 16px;
+  z-index: 180;
+  background: #0d0e0d;
+  border: 1px solid var(--q-border);
+  border-radius: var(--q-radius-outer);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: scale(0.985);
+  transition:
+    opacity 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0.38s ease;
+}
+
+.qitchen-menu-overlay.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: scale(1);
+}
+
+.q-overlay-close-btn {
+  position: absolute;
+  top: 28px;
+  left: 28px;
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  border: 1px solid var(--q-border);
+  background: rgba(239, 231, 210, 0.03);
+  color: var(--q-cream);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.q-overlay-close-btn:hover {
+  background: rgba(239, 231, 210, 0.12);
+  border-color: var(--q-cream);
+}
+
+.q-overlay-nav {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.q-overlay-ornament {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin: 12px 0;
+  opacity: 0.65;
+}
+
+.q-overlay-ornament .diamond {
+  width: 6px;
+  height: 6px;
+  border: 1px solid var(--q-border-strong);
+  transform: rotate(45deg);
+}
+
+.q-overlay-ornament .line {
+  width: 24px;
+  height: 1px;
+  background: var(--q-border-strong);
+}
+
+.q-overlay-link {
+  appearance: none;
+  background: none;
+  border: none;
+  font-family: var(--font-forum);
+  font-weight: 400;
+  font-size: clamp(2.4rem, 5vw, 4rem);
+  line-height: 1.12;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--q-cream);
+  cursor: pointer;
+  padding: 2px 20px;
+  transition:
+    color 0.3s ease,
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    letter-spacing 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Hover dim siblings & highlight hovered item just like Qitchen Framer */
+.q-overlay-nav:hover .q-overlay-link {
+  color: rgba(239, 231, 210, 0.38);
+}
+
+.q-overlay-nav .q-overlay-link:hover {
+  color: var(--q-gold);
+  transform: scale(1.05);
+  letter-spacing: 0.14em;
+}
+
+/* ==========================================================================
+   3. DIRECTIONAL LATERAL SLIDE VIEW TRANSITIONS
    ========================================================================== */
 ::view-transition-group(root) {
-  animation-duration: 0.52s;
+  animation-duration: 0.5s;
   animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
   @media (prefers-reduced-motion: reduce) {
     animation: none !important;
@@ -120,16 +259,16 @@ html, body {
 }
 
 @keyframes slide-to-left {
-  to { transform: translateX(-40%); opacity: 0; }
+  to { transform: translateX(-36%); opacity: 0; }
 }
 @keyframes slide-from-right {
-  from { transform: translateX(40%); opacity: 0; }
+  from { transform: translateX(36%); opacity: 0; }
 }
 @keyframes slide-to-right {
-  to { transform: translateX(40%); opacity: 0; }
+  to { transform: translateX(36%); opacity: 0; }
 }
 @keyframes slide-from-left {
-  from { transform: translateX(-40%); opacity: 0; }
+  from { transform: translateX(-36%); opacity: 0; }
 }
 
 html:active-view-transition-type(forward)::view-transition-old(root) {
@@ -146,7 +285,7 @@ html:active-view-transition-type(backward)::view-transition-new(root) {
 }
 
 /* ==========================================================================
-   3. QITCHEN BENTO MASTER SHELL (24PX OUTER PADDING, SPLIT LEFT/RIGHT)
+   4. QITCHEN BENTO MASTER SHELL (24PX OUTER PADDING, SPLIT LEFT/RIGHT)
    ========================================================================== */
 .qitchen-app {
   width: 100vw;
@@ -157,13 +296,12 @@ html:active-view-transition-type(backward)::view-transition-new(root) {
   gap: var(--q-gap);
 }
 
-/* On Home View: Left 68% Video Showcase + Right 32% 3-Card Stack (Exact Qitchen Home Ratio) */
 .qitchen-app[data-view="home"] {
   grid-template-columns: 1.85fr 1fr;
 }
 
 /* ==========================================================================
-   4. LEFT BENTO COLUMN: STICKY 360° BOTTLE VIDEO + FLOATING PILL NAVBAR
+   5. LEFT BENTO COLUMN: STICKY VIDEO (BOTTLE 360 OR ICE CUBE 13/11) + NAVBAR
    ========================================================================== */
 .qitchen-left-showcase {
   position: relative;
@@ -176,7 +314,7 @@ html:active-view-transition-type(backward)::view-transition-new(root) {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 40px 44px;
+  padding: 36px 40px;
 }
 
 .qitchen-left-showcase video {
@@ -187,7 +325,7 @@ html:active-view-transition-type(backward)::view-transition-new(root) {
   object-fit: cover;
   z-index: 0;
   filter: brightness(0.84) contrast(1.08);
-  transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1), filter 0.6s ease;
+  transition: opacity 0.45s ease, transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .qitchen-left-showcase::after {
@@ -213,15 +351,17 @@ html:active-view-transition-type(backward)::view-transition-new(root) {
   align-items: center;
   gap: 6px;
   padding: 8px 10px;
-  background: rgba(10, 11, 10, 0.86);
+  background: rgba(10, 11, 10, 0.88);
   backdrop-filter: blur(14px);
   border: 1px solid var(--q-border);
   border-radius: 12px;
+  max-width: 100%;
 }
 
 .q-Menu-icon-btn {
   width: 38px;
   height: 38px;
+  flex-shrink: 0;
   border-radius: 8px;
   border: 1px solid var(--q-border);
   background: rgba(239, 231, 210, 0.04);
@@ -234,6 +374,7 @@ html:active-view-transition-type(backward)::view-transition-new(root) {
 
 .q-Menu-icon-btn:hover {
   background: rgba(239, 231, 210, 0.14);
+  border-color: var(--q-cream);
 }
 
 .q-brand-logo {
@@ -242,7 +383,7 @@ html:active-view-transition-type(backward)::view-transition-new(root) {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--q-cream);
-  padding: 0 12px 0 8px;
+  padding: 0 10px 0 6px;
   cursor: pointer;
   background: none;
   border: none;
@@ -254,13 +395,14 @@ html:active-view-transition-type(backward)::view-transition-new(root) {
   border: 1px solid transparent;
   color: var(--q-cream);
   font-family: var(--font-sans);
-  font-size: 0.74rem;
+  font-size: 0.73rem;
   font-weight: 500;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   padding: 9px 13px;
   border-radius: 8px;
   cursor: pointer;
+  white-space: nowrap;
   transition: all 0.2s ease;
 }
 
@@ -293,78 +435,15 @@ html:active-view-transition-type(backward)::view-transition-new(root) {
 .qitchen-giant-title {
   font-family: var(--font-forum);
   font-weight: 400;
-  font-size: clamp(3.6rem, 6.8vw, 6.6rem);
-  line-height: 0.92;
+  font-size: clamp(3rem, 6.2vw, 6.4rem);
+  line-height: 0.94;
   letter-spacing: 0.03em;
   text-transform: uppercase;
   color: var(--q-cream);
 }
 
-/* Qitchen Bottom-Right Inverted Cutout Social Badges inside Left Showcase */
-.qitchen-social-dock {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  z-index: 6;
-  background: var(--q-bg);
-  padding: 12px 0 0 16px;
-  border-top-left-radius: 20px;
-  display: flex;
-  gap: 8px;
-}
-
-/* Smooth inverted curve ears matching Framer Qitchen template */
-.qitchen-social-dock::before {
-  content: '';
-  position: absolute;
-  top: -20px;
-  right: 0;
-  width: 20px;
-  height: 20px;
-  border-bottom-right-radius: 16px;
-  box-shadow: 6px 6px 0 6px var(--q-bg);
-  pointer-events: none;
-}
-
-.qitchen-social-dock::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: -20px;
-  width: 20px;
-  height: 20px;
-  border-bottom-right-radius: 16px;
-  box-shadow: 6px 6px 0 6px var(--q-bg);
-  pointer-events: none;
-}
-
-.q-social-pill {
-  appearance: none;
-  height: 36px;
-  padding: 0 14px;
-  border-radius: 999px;
-  border: 1px solid var(--q-border);
-  background: rgba(239, 231, 210, 0.04);
-  color: var(--q-cream);
-  font-family: var(--font-sans);
-  font-size: 0.68rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  text-decoration: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.q-social-pill:hover {
-  background: var(--q-cream);
-  color: var(--q-bg);
-}
-
 /* ==========================================================================
-   5. RIGHT BENTO COLUMN: SWITCHABLE VIEWS (HOME STACK, MENU, CUMPLES, RESERVATION)
+   6. RIGHT BENTO COLUMN: SWITCHABLE VIEWS
    ========================================================================== */
 .qitchen-right-column {
   width: 100%;
@@ -383,7 +462,7 @@ html:active-view-transition-type(backward)::view-transition-new(root) {
   display: flex;
 }
 
-/* --- VIEW 0: HOME 3-CARD STACK (Exact Qitchen Right Sidebar) --- */
+/* --- VIEW 0: HOME 3-CARD STACK --- */
 .q-home-stack {
   flex-direction: column;
   gap: var(--q-gap);
@@ -415,7 +494,6 @@ html:active-view-transition-type(backward)::view-transition-new(root) {
   filter: brightness(0.95) contrast(1.12);
 }
 
-/* Exact Qitchen Bottom-Right Cutout Label with Circular Arrow */
 .q-card-corner-tab {
   position: absolute;
   bottom: 0;
@@ -479,7 +557,7 @@ html:active-view-transition-type(backward)::view-transition-new(root) {
   transform: translateX(2px);
 }
 
-/* --- INNER SCROLLABLE PANEL SHELL (Menu, Cumples & Lineup, Reservation) --- */
+/* --- INNER SCROLLABLE PANEL SHELL --- */
 .q-panel-bordered {
   width: 100%;
   height: 100%;
@@ -493,7 +571,6 @@ html:active-view-transition-type(backward)::view-transition-new(root) {
   gap: 32px;
 }
 
-/* Custom sleek scrollbar matching Qitchen */
 .q-panel-bordered::-webkit-scrollbar {
   width: 5px;
 }
@@ -502,7 +579,6 @@ html:active-view-transition-type(backward)::view-transition-new(root) {
   border-radius: 99px;
 }
 
-/* Qitchen Category Pill Filter Bar at Top of /menu */
 .q-filter-pills {
   display: flex;
   justify-content: center;
@@ -531,7 +607,6 @@ html:active-view-transition-type(backward)::view-transition-new(root) {
   background: rgba(239, 231, 210, 0.1);
 }
 
-/* Qitchen Diamond Ornamental Section Heading: ──◇ TITLE ◇── */
 .q-diamond-heading {
   display: flex;
   align-items: center;
@@ -544,7 +619,6 @@ html:active-view-transition-type(backward)::view-transition-new(root) {
   width: 54px;
   height: 1px;
   background: var(--q-border);
-  position: relative;
 }
 
 .q-diamond-symbol {
@@ -562,9 +636,9 @@ html:active-view-transition-type(backward)::view-transition-new(root) {
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--q-cream);
+  text-align: center;
 }
 
-/* Qitchen Menu Item Row: 110x78 Rounded Thumb + Title + Dotted Leader + Price + Subtext */
 .q-menu-group {
   display: flex;
   flex-direction: column;
@@ -616,7 +690,6 @@ html:active-view-transition-type(backward)::view-transition-new(root) {
   color: var(--q-gold);
 }
 
-/* Exact Qitchen Dotted Leader Line between Dish Name and Price */
 .q-dotted-leader {
   flex: 1;
   border-bottom: 1px dotted var(--q-border-strong);
@@ -638,7 +711,7 @@ html:active-view-transition-type(backward)::view-transition-new(root) {
   color: var(--q-cream-muted);
 }
 
-/* --- VIEW 2: ABOUT / LA PREVIA 13/11 & CUMPLEAÑOS BENTO GRID (Matches Qitchen /about) --- */
+/* --- VIEW 2: ABOUT / LA PREVIA 13/11 & CUMPLEAÑOS BENTO GRID --- */
 .q-about-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -708,7 +781,7 @@ html:active-view-transition-type(backward)::view-transition-new(root) {
   color: var(--q-cream-muted);
 }
 
-/* --- VIEW 3: RESERVATION & BIRTHDAY FORM (Exact Qitchen /reservation Form) --- */
+/* --- VIEW 3: RESERVATION & BIRTHDAY FORM --- */
 .q-res-form {
   display: flex;
   flex-direction: column;
@@ -767,7 +840,6 @@ html:active-view-transition-type(backward)::view-transition-new(root) {
   border-color: var(--q-gold);
 }
 
-/* Qitchen Footer Strip inside Scrollable Panel */
 .q-panel-footer {
   margin-top: auto;
   padding-top: 20px;
@@ -779,43 +851,106 @@ html:active-view-transition-type(backward)::view-transition-new(root) {
   color: var(--q-cream-muted);
 }
 
-/* Responsive Tablet & Mobile */
+/* ==========================================================================
+   7. MOBILE & TABLET RESPONSIVE PERFECTION (Fixes Mobile Crop & Overflow)
+   ========================================================================== */
 @media (max-width: 1024px) {
   html, body {
-    overflow: auto;
+    height: auto;
+    min-height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
   }
+
   .qitchen-app,
   .qitchen-app[data-view="home"] {
     height: auto;
     min-height: 100vh;
     grid-template-columns: 1fr;
+    padding: 16px;
   }
+
   .qitchen-left-showcase {
-    min-height: 58vh;
+    min-height: 52vh;
+    padding: 24px;
   }
+
   .q-home-stack {
     min-height: 620px;
   }
+
+  .q-panel-bordered {
+    height: auto;
+    overflow-y: visible;
+    padding: 28px 24px;
+  }
 }
 
-@media (max-width: 640px) {
-  .qitchen-app {
-    padding: 12px;
+@media (max-width: 720px) {
+  /* Prevent the 16:9 'MERY LA PREVIA' neon sign from cropping horizontally on vertical phones */
+  .neon-intro-curtain img {
+    object-fit: contain;
+    padding: 0 8px;
   }
-  .q-panel-bordered {
-    padding: 24px 18px;
+
+  .intro-enter-btn {
+    padding: 14px 22px;
+    font-size: 0.9rem;
+    letter-spacing: 0.16em;
   }
+
+  .qitchen-menu-overlay {
+    inset: 10px;
+  }
+
+  /* Compact Navbar on Mobile: Hamburger + MERY + Primary Action (Other links in Hamburger Overlay) */
+  .qitchen-pill-navbar {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .q-nav-link:not(.q-nav-book) {
+    display: none;
+  }
+
+  .qitchen-left-showcase {
+    min-height: 46vh;
+    padding: 18px;
+  }
+
+  .qitchen-giant-title {
+    font-size: clamp(2.35rem, 10vw, 3.4rem);
+  }
+
   .q-dish-row {
     grid-template-columns: 84px 1fr;
+    gap: 14px;
   }
+
   .q-dish-thumb {
     width: 84px;
     height: 66px;
   }
+
+  .q-dish-header {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
   .q-dish-name {
     white-space: normal;
-    font-size: 1.1rem;
+    font-size: 1.12rem;
   }
+
+  .q-dotted-leader {
+    display: none;
+  }
+
+  .q-dish-price {
+    margin-left: auto;
+    font-size: 1.12rem;
+  }
+
   .q-about-grid,
   .q-award-row,
   .q-form-row-3 {

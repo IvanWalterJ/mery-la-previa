@@ -12,19 +12,53 @@
 </head>
 <body>
 
-  <!-- 1. NEON INTRO CURTAIN (Your Favorite Intro: 11:11 Style Neon Sign "MERY LA PREVIA" + Ignition Sound) -->
+  <!-- 1. NEON INTRO CURTAIN (No auto-redirect: stays until user clicks the Qitchen-styled Enter button) -->
   <div id="neonIntroCurtain" class="neon-intro-curtain igniting" aria-label="Intro Cartel Luminoso Mery La Previa">
     <img src="assets/img/neon-wall-mery.jpg" alt="Cartel de neón MERY LA PREVIA" />
-    <button type="button" id="btnDismissIntro" class="intro-enter-pill">
-      <span>⚡ ENTRAR A MERY LA PREVIA</span>
-    </button>
+    <div class="intro-enter-wrap">
+      <button type="button" id="btnDismissIntro" class="intro-enter-btn">
+        <span class="intro-diamond"></span>
+        <span>ENTRAR A MERY LA PREVIA</span>
+        <span class="intro-diamond"></span>
+      </button>
+    </div>
   </div>
 
-  <!-- 2. QITCHEN FRAMER SPLIT-SCREEN BENTO SHELL -->
+  <!-- 2. FULLSCREEN QITCHEN HAMBURGER MENU OVERLAY (Screenshot 1 Exact Match) -->
+  <div id="qitchenMenuOverlay" class="qitchen-menu-overlay" aria-hidden="true" role="dialog" aria-label="Menú Principal">
+    <button type="button" id="btnCloseOverlay" class="q-overlay-close-btn" aria-label="Cerrar menú">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+        <line x1="6" y1="6" x2="18" y2="18" />
+        <line x1="18" y1="6" x2="6" y2="18" />
+      </svg>
+    </button>
+
+    <nav class="q-overlay-nav" aria-label="Secciones de Mery La Previa">
+      <div class="q-overlay-ornament" aria-hidden="true">
+        <span class="diamond"></span>
+        <span class="line"></span>
+        <span class="diamond"></span>
+      </div>
+
+      <button type="button" class="q-overlay-link" data-overlay-goto="home">INICIO</button>
+      <button type="button" class="q-overlay-link" data-overlay-goto="menu">LA CARTA</button>
+      <button type="button" class="q-overlay-link" data-overlay-goto="reservation">CUMPLES &amp; VIP</button>
+      <button type="button" class="q-overlay-link" data-overlay-goto="about">LA PREVIA 13/11</button>
+      <a class="q-overlay-link" href="https://www.instagram.com/meryjane.laprevia/" target="_blank" rel="noopener" style="text-decoration: none;">INSTAGRAM</a>
+
+      <div class="q-overlay-ornament" aria-hidden="true">
+        <span class="diamond"></span>
+        <span class="line"></span>
+        <span class="diamond"></span>
+      </div>
+    </nav>
+  </div>
+
+  <!-- 3. QITCHEN FRAMER SPLIT-SCREEN BENTO SHELL -->
   <div id="qitchenApp" class="qitchen-app" data-view="home">
 
     <!-- ======================================================================
-         LEFT BENTO SHOWCASE (Sticky 360° Bottle Video + Floating Pill Navbar)
+         LEFT BENTO SHOWCASE (Swaps between 360° Bottle Video and Ice Cube 13/11 Video with Sound)
          ====================================================================== -->
     <aside class="qitchen-left-showcase">
       <video
@@ -39,10 +73,10 @@
 
       <!-- Exact Qitchen Floating Top-Left Pill Navbar -->
       <nav class="qitchen-pill-navbar" aria-label="Navegación Principal">
-        <button type="button" class="q-Menu-icon-btn" data-goto="home" title="Inicio">
+        <button type="button" id="btnOpenOverlay" class="q-Menu-icon-btn" title="Abrir Menú">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-            <line x1="4" y1="8" x2="20" y2="8" />
-            <line x1="4" y1="16" x2="20" y2="16" />
+            <line x1="4" y1="9" x2="20" y2="9" />
+            <line x1="4" y1="15" x2="20" y2="15" />
           </svg>
         </button>
         <button type="button" class="q-brand-logo" data-goto="home">MERY</button>
@@ -51,21 +85,11 @@
         <button type="button" class="q-nav-link q-nav-book" data-goto="reservation">Cumples &amp; Reservas</button>
       </nav>
 
-      <!-- Bottom-Left Giant Forum Display Title (Changes dynamically per section like Qitchen) -->
+      <!-- Bottom-Left Giant Forum Display Title (Clean, without the ugly bottom-right buttons) -->
       <div class="qitchen-hero-bottom">
         <h1 id="leftHeroTitle" class="qitchen-giant-title">
           MERY<br />LA PREVIA
         </h1>
-      </div>
-
-      <!-- Exact Qitchen Bottom-Right Inverted Cutout Social & Sound Dock -->
-      <div class="qitchen-social-dock">
-        <button type="button" id="btnReplayNeon" class="q-social-pill" title="Ver intro de neón con sonido">
-          ⚡ Intro Neón
-        </button>
-        <a class="q-social-pill" href="https://www.instagram.com/meryjane.laprevia/" target="_blank" rel="noopener">
-          IG @meryjane.laprevia ↗
-        </a>
       </div>
     </aside>
 
@@ -95,7 +119,7 @@
         <button type="button" class="q-bento-card" data-goto="about">
           <img src="assets/img/dj-previa.jpg" alt="La Previa 13/11 y Lineup DJs" />
           <div class="q-card-corner-tab">
-            <span class="q-corner-label">Eventos &amp; DJs</span>
+            <span class="q-corner-label">La Previa 13/11</span>
             <span class="q-corner-circle">→</span>
           </div>
         </button>
@@ -104,7 +128,6 @@
       <!-- VIEW 01: /MENU (Exact Qitchen Menu Template with Diamond Headers & Dotted Leaders) -->
       <section id="view-menu" class="q-view" aria-label="La Carta">
         <div class="q-panel-bordered">
-          <!-- Category Filter Pills at Top -->
           <div class="q-filter-pills" role="tablist">
             <button type="button" class="q-pill-btn active" data-filter="all">Todo</button>
             <button type="button" class="q-pill-btn" data-filter="cocktails">Cocktails 11:11</button>
@@ -112,7 +135,6 @@
             <button type="button" class="q-pill-btn" data-filter="vinos">Mery Jane Wines</button>
           </div>
 
-          <!-- Dynamic Qitchen Menu Sections Container -->
           <div id="qitchenMenuContainer" style="display: flex; flex-direction: column; gap: 36px;"></div>
 
           <footer class="q-panel-footer">
@@ -122,7 +144,7 @@
         </div>
       </section>
 
-      <!-- VIEW 02: /ABOUT — LA PREVIA 13/11, LINEUP DJS & HORARIOS (Exact Qitchen About Bento Grid) -->
+      <!-- VIEW 02: /ABOUT — LA PREVIA 13/11, LINEUP DJS & HORARIOS -->
       <section id="view-about" class="q-view" aria-label="Eventos, DJs y Horarios">
         <div class="q-panel-bordered">
           <div class="q-diamond-heading">
@@ -156,7 +178,7 @@
             </div>
           </div>
 
-          <!-- Middle 3-Column Feature Cards (Exact Qitchen Award Row) -->
+          <!-- Middle 3-Column Feature Cards -->
           <div class="q-award-row">
             <div class="q-award-card">
               <div class="q-award-stars">★ ★ ★ ★ ★</div>
@@ -208,7 +230,7 @@
         </div>
       </section>
 
-      <!-- VIEW 03: /RESERVATION — CUMPLEAÑOS & RESERVA DE MESAS (Exact Qitchen Reservation Page) -->
+      <!-- VIEW 03: /RESERVATION — CUMPLEAÑOS & RESERVA DE MESAS -->
       <section id="view-reservation" class="q-view" aria-label="Cumpleaños y Reservas">
         <div class="q-panel-bordered">
           <div class="q-diamond-heading">
@@ -223,7 +245,6 @@
             Asegurá tu mesa imperial, sector barra o festejo de cumpleaños con cajas Mery Jane, brindis de regalo para el anfitrión y acceso QR sin fila al set de DJ.
           </p>
 
-          <!-- Quick Birthday Pack Highlights in Qitchen 3-Card Row -->
           <div class="q-award-row">
             <div class="q-award-card">
               <div class="q-award-stars">◇ PACK 01 ◇</div>
@@ -242,7 +263,6 @@
             </div>
           </div>
 
-          <!-- Exact Qitchen Reservation Form -->
           <form id="qitchenResForm" class="q-res-form">
             <input type="text" id="resName" class="q-input" placeholder="Tu Nombre y Apellido" required />
             <input type="tel" id="resPhone" class="q-input" placeholder="Tu WhatsApp (ej. 11 5555-5555)" required />
