@@ -3,550 +3,236 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LA PREVIA DE MERY — Mery Jane Wine &amp; Friends | 3 Prototipos Nocturnos</title>
+  <title>Mery La Previa — Wine &amp; Friends</title>
+  <!-- Britney Regular (Fontshare) + Quicksand Medium/Bold (Google Fonts) -->
+  <link rel="preconnect" href="https://api.fontshare.com" />
+  <link href="https://api.fontshare.com/v2/css?f[]=britney@400&display=swap" rel="stylesheet" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body data-theme="cruza">
-  <!-- Ambient 35mm Film Grain & Dynamic Spotlight -->
-  <div class="film-grain" aria-hidden="true"></div>
-  <div id="cursorSpotlight" class="cursor-spotlight" aria-hidden="true"></div>
+<body>
+  <!-- 1. FULLSCREEN SEAMLESS 360° BOTTLE PRODUCT VIDEO (0s–2.5s Pure Bottle, then UI fades up) -->
+  <div class="bottle-video-stage" aria-hidden="true">
+    <video
+      id="bottleHeroVideo"
+      src="assets/video/bottle-360-loop.mp4"
+      poster="assets/img/bottle-hero-isolated.jpg"
+      autoplay
+      loop
+      muted
+      playsinline
+    ></video>
+  </div>
+  <div class="ambient-vignette" aria-hidden="true"></div>
 
-  <!-- FLOATING PROTOTYPE SWITCHER (Compare the 3 Dark Concepts Live) -->
-  <nav class="prototype-switcher" aria-label="Selector de Propuestas de Diseño">
-    <div class="switcher-label">
-      <span class="switcher-dot"></span>
-      <span>LA PREVIA • 3 DISEÑOS</span>
+  <!-- 2. TIME-WARP / DIMENSIONAL TUNNEL CANVAS -->
+  <canvas id="warpCanvas" aria-hidden="true"></canvas>
+
+  <!-- 3. CRUZA POLO TOP & BOTTOM ARCHITECTURAL HORIZON LINES -->
+  <header class="cruza-horizon-top">
+    <div class="horizon-crest">
+      <svg class="horizon-star" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M12 0L13.8 7.5L19.5 2.5L16.2 9.5L23.5 8.5L17.5 13L23.5 17.5L16.2 16.5L19.5 23.5L13.8 18.5L12 24L10.2 18.5L4.5 23.5L7.8 16.5L0.5 17.5L6.5 13L0.5 8.5L7.8 9.5L4.5 2.5L10.2 7.5L12 0Z"/>
+      </svg>
+      <span>MERY JANE • WINE &amp; FRIENDS</span>
     </div>
-    <button type="button" class="proto-tab active" data-proto="cruza" aria-selected="true">
-      <span class="tab-badge">01</span> Cruza VIP Hub (Linktree Lujo)
-    </button>
-    <button type="button" class="proto-tab" data-proto="neon" aria-selected="false">
-      <span class="tab-badge">02</span> 11:11 Flash &amp; Red Neon
-    </button>
-    <button type="button" class="proto-tab" data-proto="zine" aria-selected="false">
-      <span class="tab-badge">03</span> Nocturnal Wine Zine
-    </button>
-    <button type="button" class="proto-cta-jump" data-scroll-menu>
-      ★ Ver La Carta Interactiva
-    </button>
-  </nav>
+    <div class="horizon-line"></div>
+  </header>
 
-  <!-- ========================================================================
-       PROTOTIPO 01: CRUZA POLO / BAGATELLE VIP HUB (LINKTREE DE ALTA GAMA)
-       ======================================================================== -->
-  <section id="view-cruza" class="proto-view active" aria-label="Propuesta 1: Cruza VIP Hub">
-    <div class="cruza-portal">
-      <!-- Nocturnal Moving Collage Backdrop -->
-      <div class="cruza-bg-collage" aria-hidden="true">
-        <img src="assets/img/steak-flash.jpg" alt="" />
-        <img src="assets/img/dj-previa.jpg" alt="" />
-        <img src="assets/img/cocktails-neon.jpg" alt="" />
-      </div>
-      <div class="cruza-bg-overlay" aria-hidden="true"></div>
+  <!-- 4. SINGLE-SCREEN VIEWPORT STAGE -->
+  <main id="dimensionStage" class="dimension-stage">
 
-      <!-- Central VIP Portal Card -->
-      <div class="cruza-shell">
-        <div class="cruza-top-meta">
-          <span>MERY JANE • EST. 2024</span>
-          <span class="cruza-live-pill">● MIÉ A DOM • DESDE 19:30 HS</span>
+    <!-- ======================================================================
+         SCREEN 0: PORTAL PRINCIPAL (Estilo Cruza Polo — 1 sola pantalla limpia)
+         ====================================================================== -->
+    <section id="screen-home" class="screen-view active home-portal" aria-label="Portal Principal">
+      <p class="brand-kicker reveal-up delay-1">CANNING • SAN VICENTE • GUERNICA • LONGCHAMPS</p>
+      <h1 class="brand-main-title reveal-up delay-2">Mery La Previa</h1>
+
+      <ul class="cruza-menu-list">
+        <li class="reveal-up delay-3">
+          <button type="button" class="cruza-nav-btn" data-goto="carta">LA CARTA</button>
+        </li>
+        <li class="reveal-up delay-4">
+          <button type="button" class="cruza-nav-btn" data-goto="cumples">CUMPLEAÑOS &amp; VIP</button>
+        </li>
+        <li class="reveal-up delay-5">
+          <button type="button" class="cruza-nav-btn" data-goto="lineup">EVENTOS &amp; DJS</button>
+        </li>
+        <li class="reveal-up delay-6">
+          <button type="button" class="cruza-nav-btn" data-goto="horarios">HORARIOS &amp; RESERVAS</button>
+        </li>
+      </ul>
+    </section>
+
+    <!-- ======================================================================
+         SCREEN 1: LA CARTA INTERACTIVA (Estilo Tarjeta Verde Mery Jane)
+         ====================================================================== -->
+    <section id="screen-carta" class="screen-view" aria-label="La Carta">
+      <div class="dimension-panel">
+        <div class="dimension-top-bar">
+          <h2 class="dimension-heading">La Carta Nocturna</h2>
+          <button type="button" class="btn-back-portal" data-goto="home">← Volver al Portal</button>
         </div>
 
-        <header class="cruza-brand-header">
-          <div class="mery-star-crest" aria-hidden="true">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 0L13.8 7.5L19.5 2.5L16.2 9.5L23.5 8.5L17.5 13L23.5 17.5L16.2 16.5L19.5 23.5L13.8 18.5L12 24L10.2 18.5L4.5 23.5L7.8 16.5L0.5 17.5L6.5 13L0.5 8.5L7.8 9.5L4.5 2.5L10.2 7.5L12 0Z"/>
-            </svg>
+        <div class="carta-controls">
+          <div class="carta-pills" role="tablist">
+            <button type="button" class="carta-pill active" data-cat="all">Destacados</button>
+            <button type="button" class="carta-pill" data-cat="vinos">Mery Jane Wines</button>
+            <button type="button" class="carta-pill" data-cat="cortes">Bandejas &amp; Brasas</button>
+            <button type="button" class="carta-pill" data-cat="cocktails">Cocktails 11:11</button>
           </div>
-          <span class="cruza-kicker">WINE BAR • DINNER SHOW • PREVIA CLUB</span>
-          <h1 class="cruza-title">LA PREVIA <em>de Mery</em></h1>
-          <p class="cruza-subtitle">
-            Gastronomía nocturna en bandeja de plata, vinos de baja intervención, electrónica &amp; reggaetón old school para el público más selecto de Zona Sur.
-          </p>
-          <div class="cruza-Zone-tags">
-            <span class="zone-chip">Canning</span>
-            <span class="zone-chip">San Vicente</span>
-            <span class="zone-chip">Guernica</span>
-            <span class="zone-chip">Longchamps</span>
-          </div>
-        </header>
+        </div>
 
-        <!-- High-Conversion Interactive Linktree Stack (Cruza Style) -->
-        <div class="cruza-links">
-          <button type="button" class="cruza-link-card featured-bday" data-open-modal="modalCumple">
-            <div class="cruza-link-left">
-              <img class="cruza-thumb" src="assets/img/wine-mery.jpg" alt="Festejos de Cumpleaños" />
+        <div class="carta-showcase-grid">
+          <!-- Featured Green Velvet Card (Exact match to uploaded reference) -->
+          <article class="mery-product-card" aria-live="polite">
+            <div class="mery-card-media">
+              <img id="cartaHeroImg" src="assets/img/wine-mery.jpg" alt="Mery Jane Blanc de Nuit" />
+              <span id="cartaHeroTag" class="mery-pill-tag">MERY JANE WINE &amp; FRIENDS</span>
+              <span id="cartaHeroPrice" class="mery-price-pill">$26.500</span>
+            </div>
+            <div class="mery-card-content">
               <div>
-                <span class="cruza-link-tag">★ Beneficios Anfitrión &amp; VIP</span>
-                <div class="cruza-link-title">Festejá tu Cumpleaños en La Previa</div>
-                <div class="cruza-link-desc">Mesas exclusivas, cajas Mery Jane, espumante y lista de invitados.</div>
+                <h3 id="cartaHeroTitle" class="mery-card-title">Mery Jane Blanc de Nuit (Botella + Frapera)</h3>
+                <p id="cartaHeroDesc" class="mery-card-desc">
+                  Nuestra etiqueta insignia servida en frapera de plata. Fresco, eléctrico y diseñado para transitar desde la cena hasta el set de electrónica.
+                </p>
+              </div>
+              <div class="mery-card-footer">
+                <span id="cartaHeroPairing">★ Maridaje: Ojo de Bife o Burrata Trufada</span>
+                <button type="button" class="btn-back-portal" data-goto="horarios">Pedir en Mesa →</button>
               </div>
             </div>
-            <span class="cruza-arrow">↗</span>
-          </button>
+          </article>
 
-          <button type="button" class="cruza-link-card" data-scroll-menu>
-            <div class="cruza-link-left">
-              <img class="cruza-thumb" src="assets/img/steak-flash.jpg" alt="La Carta Nocturna" />
-              <div>
-                <span class="cruza-link-tag">Experiencia Sensorial • Interactiva</span>
-                <div class="cruza-link-title">La Carta: Carnes, Vinos &amp; Cocktails 11:11</div>
-                <div class="cruza-link-desc">Explorá cortes en bandeja de plata, maridajes e intensidad en vivo.</div>
-              </div>
-            </div>
-            <span class="cruza-arrow">↓</span>
-          </button>
-
-          <button type="button" class="cruza-link-card featured-event" data-open-modal="modalLineup">
-            <div class="cruza-link-left">
-              <img class="cruza-thumb" src="assets/img/brand-previa-zine.jpg" alt="Tenemos Previa 13/11" />
-              <div>
-                <span class="cruza-link-tag">Próximo Evento • Opening 13/11</span>
-                <div class="cruza-link-title">Lineup DJs &amp; Eventos Especiales</div>
-                <div class="cruza-link-desc">House, Tech-Groove &amp; Reggaetón Old School • Reservá tu acceso.</div>
-              </div>
-            </div>
-            <span class="cruza-arrow">↗</span>
-          </button>
-
-          <button type="button" class="cruza-link-card" data-open-modal="modalReserva">
-            <div class="cruza-link-left">
-              <img class="cruza-thumb" src="assets/img/cocktails-neon.jpg" alt="Reserva de Mesas y Barra" />
-              <div>
-                <span class="cruza-link-tag">Sectores Salón • Barra • Living VIP</span>
-                <div class="cruza-link-title">Reservar Mesa Cena o Previa</div>
-                <div class="cruza-link-desc">Confirmación inmediata por Concierge WhatsApp.</div>
-              </div>
-            </div>
-            <span class="cruza-arrow">↗</span>
-          </button>
-
-          <button type="button" class="cruza-link-card" data-open-modal="modalHorarios">
-            <div class="cruza-link-left">
-              <img class="cruza-thumb" src="assets/img/dj-previa.jpg" alt="Horarios y Ubicación" />
-              <div>
-                <span class="cruza-link-tag">Miércoles a Domingo • Corredor Sur</span>
-                <div class="cruza-link-title">Horarios, Dress Code &amp; Cómo Llegar</div>
-                <div class="cruza-link-desc">Valet Parking privado y seguridad toda la noche.</div>
-              </div>
-            </div>
-            <span class="cruza-arrow">↗</span>
-          </button>
-        </div>
-
-        <footer class="cruza-footer-rules">
-          <div class="rule-box">
-            <strong>DRESS CODE</strong>
-            <span>Elegante Sexy / Night</span>
-          </div>
-          <div class="rule-box">
-            <strong>ADMISIÓN</strong>
-            <span>Mujeres +21 / Hombres +23</span>
-          </div>
-          <div class="rule-box">
-            <strong>HORARIO</strong>
-            <span>Mié a Dom • 19:30 a 04:30</span>
-          </div>
-        </footer>
-      </div>
-    </div>
-  </section>
-
-  <!-- ========================================================================
-       PROTOTIPO 02: 11:11 FLASH CLUB & RED NEON (PAPARAZZI NIGHTLIFE)
-       ======================================================================== -->
-  <section id="view-neon" class="proto-view" aria-label="Propuesta 2: 11:11 Flash Club">
-    <div class="neon-hero">
-      <div>
-        <div class="neon-clock-badge">
-          <span class="neon-1111">11:11</span>
-          <span style="font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase;">
-            CUANDO LA CENA SE CONVIERTE EN PREVIA
-          </span>
-        </div>
-
-        <h1 class="neon-headline">
-          COMER FINO.<br />
-          <span class="stroke-word">TOMAR RICO.</span><br />
-          <span class="red-script">Bailar hasta tarde.</span>
-        </h1>
-
-        <p class="neon-lead">
-          El punto de encuentro nocturno para la gente linda de <strong>Canning, San Vicente, Guernica y Longchamps</strong>. Bandejas de plata al centro, botellas de <em>Mery Jane</em> en hielo y cabina con DJ en vivo de miércoles a domingo.
-        </p>
-
-        <div class="neon-cta-row">
-          <button type="button" class="btn-neon-primary" data-open-modal="modalCumple">
-            ★ Armar Cumpleaños VIP
-          </button>
-          <button type="button" class="btn-neon-ghost" data-scroll-menu>
-            Explorar La Carta ↓
-          </button>
-          <button type="button" class="btn-neon-ghost" data-open-modal="modalLineup">
-            Lineup 13/11
-          </button>
+          <!-- Clean Interactive Selector List -->
+          <div id="cartaSelectorList" class="carta-selector-stack"></div>
         </div>
       </div>
+    </section>
 
-      <!-- Interactive Paparazzi Flash Collage using Real Brand & AI Photos -->
-      <div class="paparazzi-stage">
-        <div class="flash-card" data-scroll-menu>
-          <img src="assets/img/steak-flash.jpg" alt="Ojo de bife en bandeja de plata" />
-          <div class="flash-caption">
-            <span>01 / COCINA</span>
-            <span style="color: var(--gold-champagne);">FLASH 35MM</span>
-          </div>
-        </div>
-        <div class="flash-card" data-open-modal="modalLineup">
-          <img src="assets/img/brand-ig-grid.jpg" alt="Identidad 11:11 Mery Jane Instagram" />
-          <div class="flash-caption">
-            <span>02 / ACTITUD</span>
-            <span style="color: var(--red-neon);">11:11 VIBE</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Kinetic Marquee -->
-    <div class="kinetic-marquee" aria-hidden="true">
-      <div class="marquee-track">
-        <span>★ TENEMOS PREVIA 13/11 • WINE AND FRIENDS X MERY JANE</span>
-        <span>★ ELECTRÓNICA &amp; REGGAETÓN OLD SCHOOL</span>
-        <span>★ MIÉRCOLES A DOMINGO • CANNING • SAN VICENTE • GUERNICA • LONGCHAMPS</span>
-        <span>★ FESTEJOS DE CUMPLEAÑOS &amp; MESAS VIP</span>
-        <span>★ TENEMOS PREVIA 13/11 • WINE AND FRIENDS X MERY JANE</span>
-        <span>★ ELECTRÓNICA &amp; REGGAETÓN OLD SCHOOL</span>
-      </div>
-    </div>
-
-    <!-- DJ Lineup & Next Events Block -->
-    <div class="lineup-section">
-      <div class="section-header-split">
-        <div>
-          <span class="eyebrow-tag">● AGENDA DE CABINA • MIÉ A DOM</span>
-          <h2 class="section-title-lg">PRÓXIMOS EVENTOS &amp; DJ LINEUP</h2>
-        </div>
-        <button type="button" class="btn-neon-ghost" data-open-modal="modalReserva">
-          Reservar Mesa en Pista ↗
-        </button>
-      </div>
-
-      <div class="dj-grid">
-        <article class="dj-card">
-          <div class="dj-date-row">
-            <span class="dj-date-pill">VIE 13/11 • OPENING</span>
-            <div class="eq-bars" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
-          </div>
-          <div>
-            <span class="dj-genre">PROGRESSIVE HOUSE &amp; GROOVE</span>
-            <h3 class="dj-name">TENEMOS PREVIA: MERY JANE LAUNCH</h3>
-            <p class="dj-vibe">Warm-up con degustación en cajas Mery Jane desde las 20:30 hs. A las 23:30 hs se apaga el salón y arranca cabina extendida.</p>
-          </div>
-          <button type="button" class="btn-neon-ghost" data-open-modal="modalLineup">Solicitar QR Invitado</button>
-        </article>
-
-        <article class="dj-card">
-          <div class="dj-date-row">
-            <span class="dj-date-pill">SÁBADOS • 23:59 HS</span>
-            <div class="eq-bars" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
-          </div>
-          <div>
-            <span class="dj-genre">REGGAETÓN OLD SCHOOL &amp; PERREO FINO</span>
-            <h3 class="dj-name">NOCHE 11:11 — CLÁSICOS 2005–2016</h3>
-            <p class="dj-vibe">Tego, Don Omar, Plan B y Daddy Yankee mezclados en vivo post-cena. Ideal para mesas de cumpleaños y grupos grandes.</p>
-          </div>
-          <button type="button" class="btn-neon-ghost" data-open-modal="modalCumple">Reservar Cumpleaños</button>
-        </article>
-
-        <article class="dj-card">
-          <div class="dj-date-row">
-            <span class="dj-date-pill">DOMINGOS • SUNSET &amp; NIGHT</span>
-            <div class="eq-bars" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
-          </div>
-          <div>
-            <span class="dj-genre">AFRO HOUSE &amp; WINE FRIENDS</span>
-            <h3 class="dj-name">TUTTO PASSA SUNDAY SESSION</h3>
-            <p class="dj-vibe">Descorche libre de etiquetas seleccionadas, tapeo al centro y sonidos orgánicos para cerrar el fin de semana arriba.</p>
-          </div>
-          <button type="button" class="btn-neon-ghost" data-open-modal="modalReserva">Asegurar Living</button>
-        </article>
-      </div>
-    </div>
-  </section>
-
-  <!-- ========================================================================
-       PROTOTIPO 03: NOCTURNAL WINE ZINE (DARK EMERALD & CREAM EDITORIAL)
-       ======================================================================== -->
-  <section id="view-zine" class="proto-view" aria-label="Propuesta 3: Nocturnal Wine Zine">
-    <div class="zine-wrapper">
-      <div class="zine-newspaper-frame">
-        <header class="zine-masthead">
-          <div class="zine-masthead-meta">
-            <span>EDICIÓN NOCTURNA N° 01 • EST. 2024</span>
-            <span>CORREDOR SUR: SAN VICENTE • CANNING • GUERNICA • LONGCHAMPS</span>
-            <span>MIÉRCOLES A DOMINGO</span>
-          </div>
-          <h1 class="zine-brand-giant">MERY JANE</h1>
-          <div class="zine-sub-banner">★ WINE AND FRIENDS • LA PREVIA SOCIAL CLUB ★</div>
-        </header>
-
-        <div class="checkerboard-strip" aria-hidden="true"></div>
-
-        <div class="zine-editorial-grid">
-          <div class="zine-col-main">
-            <div class="zine-poster-highlight">
-              TENEMOS PREVIA 13/11<br />
-              <span style="font-size: 0.55em; letter-spacing: 0.12em;">WINE &amp; FRIENDS × LA PREVIA</span>
-            </div>
-
-            <p class="zine-story-copy">
-              “No queríamos otro bar igual al resto. Armamos un refugio nocturno donde la sobremesa con vino de verdad, carnes en fuente de plata y buena coctelería se fusiona con música electrónica fina y esos reggaetones viejos que te levantan de la silla.”
-            </p>
-
-            <div class="zine-photo-frame">
-              <img src="assets/img/brand-previa-zine.jpg" alt="Tenemos Previa 13/11 Mery Jane" />
-              <span class="zine-stamp">EDICIÓN LIMITADA • 13/11</span>
-            </div>
-          </div>
-
-          <aside class="zine-col-side">
-            <div class="zine-box-widget">
-              <h3>Festejos de Cumpleaños</h3>
-              <p style="font-size: 0.9rem; color: var(--cream-muted); line-height: 1.5; margin-bottom: 14px;">
-                Armamos tu mesa imperial o sector living para grupos de 8 a 30 personas. Cajas de <strong>Mery Jane</strong> en mesa, menú de tapeo en pasos y pulseras VIP para el DJ set.
-              </p>
-              <button type="button" class="btn-Order-table" data-open-modal="modalCumple">
-                Solicitar Propuesta de Cumple ↗
-              </button>
-            </div>
-
-            <div class="zine-box-widget">
-              <h3>Horarios de Apertura</h3>
-              <ul class="zine-schedule-list">
-                <li><span>MIÉRCOLES (Wine &amp; Vinyl)</span> <strong>19:30 – 02:00</strong></li>
-                <li><span>JUEVES (After &amp; Previa)</span> <strong>19:30 – 03:00</strong></li>
-                <li><span>VIERNES (Cena + Club DJ)</span> <strong>20:00 – 04:30</strong></li>
-                <li><span>SÁBADO (11:11 Full Night)</span> <strong>20:00 – 05:00</strong></li>
-                <li><span>DOMINGO (Tutto Passa)</span> <strong>19:00 – 02:00</strong></li>
-              </ul>
-            </div>
-
-            <div class="zine-box-widget" style="background: rgba(216, 180, 103, 0.1);">
-              <h3>La Carta en Vivo</h3>
-              <p style="font-size: 0.85rem; color: var(--cream-muted); margin-bottom: 12px;">
-                Mirá más abajo nuestro explorador interactivo de platos, vinos y tragos de autor.
-              </p>
-              <button type="button" class="btn-neon-ghost" style="width: 100%;" data-scroll-menu>
-                Bajar a La Carta Interactiva ↓
-              </button>
-            </div>
-          </aside>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ========================================================================
-       LA CARTA INTERACTIVA ("SENSORY FLASH MENU" — COMÚN A LAS 3 VERSIONES)
-       ======================================================================== -->
-  <section id="cartaInteractiva" class="interactive-menu-section" aria-labelledby="menuHeading">
-    <div class="menu-top-bar">
-      <div class="menu-title-block">
-        <span class="eyebrow-tag">★ EXPERIENCIA GASTRONÓMICA INTERACTIVA (NO ES UN PDF ESTÁTICO)</span>
-        <h2 id="menuHeading">LA CARTA <em>de La Previa</em></h2>
-        <p style="color: var(--cream-muted); margin-top: 8px; max-width: 620px; font-size: 0.95rem;">
-          Tocá o pasá el cursor por cada plato, botella o cocktail para disparar el flash de cámara, ver su perfil sensorial de intensidad/ahumado y su maridaje ideal.
-        </p>
-      </div>
-
-      <div class="menu-filter-pills" role="tablist" aria-label="Categorías de La Carta">
-        <button type="button" class="menu-filter-btn active" data-cat="all">Todo el Menú</button>
-        <button type="button" class="menu-filter-btn" data-cat="cortes">Cortes &amp; Bandejas</button>
-        <button type="button" class="menu-filter-btn" data-cat="vinos">Wine &amp; Friends</button>
-        <button type="button" class="menu-filter-btn" data-cat="cocktails">Cocktails 11:11</button>
-        <button type="button" class="menu-filter-btn" data-cat="tapeo">Tapeo de Previa</button>
-      </div>
-    </div>
-
-    <div class="menu-interactive-stage">
-      <!-- Left: Interactive Dish Rows -->
-      <div id="menuCardsList" class="menu-cards-list"></div>
-
-      <!-- Right: Live 3D Sensory Dish Spotlight Inspector -->
-      <aside id="dishSpotlightPanel" class="dish-spotlight-panel" aria-live="polite">
-        <div class="spotlight-media-box">
-          <img id="spotlightImg" src="assets/img/steak-flash.jpg" alt="Plato seleccionado" />
-          <div id="spotlightFlash" class="spotlight-flash-burst"></div>
-          <div class="spotlight-overlay-badges">
-            <span id="spotlightCat" class="spotlight-cat-tag">Cortes &amp; Bandejas</span>
-            <span id="spotlightPrice" class="spotlight-price-tag">$44.000</span>
-          </div>
+    <!-- ======================================================================
+         SCREEN 2: CUMPLEAÑOS & MESAS VIP
+         ====================================================================== -->
+    <section id="screen-cumples" class="screen-view" aria-label="Cumpleaños y Mesas VIP">
+      <div class="dimension-panel">
+        <div class="dimension-top-bar">
+          <h2 class="dimension-heading">Festejos &amp; Mesas VIP</h2>
+          <button type="button" class="btn-back-portal" data-goto="home">← Volver al Portal</button>
         </div>
 
-        <div class="spotlight-body">
-          <h3 id="spotlightTitle" class="spotlight-title">Ojo de Bife en Bandeja Imperial (750g)</h3>
-          <p id="spotlightStory" class="spotlight-story">
-            Inspirado en las cenas largas que se transforman en pista. Sale en bandeja de plata para picar directo al centro de la mesa antes de que suba el BPM del DJ.
-          </p>
-
-          <!-- Dynamic Sensory Meters -->
-          <div class="sensory-meters">
-            <div class="meter-item">
-              <span>Intensidad</span>
-              <div class="meter-bar"><div id="meterIntensidad" class="meter-fill" style="width: 92%;"></div></div>
-            </div>
-            <div class="meter-item">
-              <span>Toque Brasas / Humo</span>
-              <div class="meter-bar"><div id="meterAhumado" class="meter-fill" style="width: 85%;"></div></div>
-            </div>
-            <div class="meter-item">
-              <span>Modo Compartir</span>
-              <div class="meter-bar"><div id="meterSharing" class="meter-fill" style="width: 100%;"></div></div>
-            </div>
-          </div>
-
-          <div class="pairing-box">
+        <div class="clean-cards-row">
+          <article class="emerald-glass-card">
             <div>
-              <strong>★ MARIDAJE RECOMENDADO POR SOMMELIER</strong>
-              <span id="spotlightPairing">Mery Jane Reserva Malbec Orgánico o Negroni 11:11 Ahumado</span>
+              <span class="tag-upper">★ 8 A 15 INVITADOS</span>
+              <h3>Mesa Imperial Wine &amp; Friends</h3>
+              <p>Bandejas de plata al centro, caja de botellas Mery Jane en frapera, espumante de brindis para el anfitrión y acceso directo sin fila.</p>
             </div>
-          </div>
+            <a class="btn-emerald-action" href="https://wa.me/5491100000000?text=Hola!%20Quiero%20armar%20mi%20cumple%20en%20Mery%20La%20Previa" target="_blank" rel="noopener">
+              Reservar Cumple por WhatsApp
+            </a>
+          </article>
 
-          <div class="spotlight-actions">
-            <button type="button" class="btn-Order-table" data-open-modal="modalReserva">
-              Reservar Mesa con este Plato ↗
+          <article class="emerald-glass-card">
+            <div>
+              <span class="tag-upper">★ 15 A 30 INVITADOS • JUNTO AL DJ</span>
+              <h3>Living VIP 11:11</h3>
+              <p>Sector exclusivo frente a cabina, servicio de botellas y coctelería de autor toda la noche con pulseras VIP para tu grupo.</p>
+            </div>
+            <a class="btn-emerald-action" href="https://wa.me/5491100000000?text=Hola!%20Quiero%20consultar%20por%20un%20Living%20VIP%20en%20Mery%20La%20Previa" target="_blank" rel="noopener">
+              Consultar Living VIP
+            </a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         SCREEN 3: PRÓXIMOS EVENTOS & DJS (13/11)
+         ====================================================================== -->
+    <section id="screen-lineup" class="screen-view" aria-label="Eventos y DJs">
+      <div class="dimension-panel">
+        <div class="dimension-top-bar">
+          <h2 class="dimension-heading">Lineup &amp; Eventos</h2>
+          <button type="button" class="btn-back-portal" data-goto="home">← Volver al Portal</button>
+        </div>
+
+        <div class="clean-cards-row">
+          <article class="emerald-glass-card">
+            <div>
+              <span class="tag-upper">● VIERNES 13/11 • OPENING</span>
+              <h3>Tenemos Previa 13/11</h3>
+              <p>Warm-up de vinos &amp; vinilos desde las 20:30 hs. A las 23:30 hs cabina extendida de Melodic House &amp; Tech Groove.</p>
+            </div>
+            <a class="btn-emerald-action" href="https://wa.me/5491100000000?text=Hola!%20Quiero%20lista%20para%20el%20Opening%2013/11" target="_blank" rel="noopener">
+              Anotarse en Lista 13/11
+            </a>
+          </article>
+
+          <article class="emerald-glass-card">
+            <div>
+              <span class="tag-upper">● SÁBADOS &amp; DOMINGOS</span>
+              <h3>Ciclo 11:11 &amp; Reggaetón Old School</h3>
+              <p>Electrónica fina y reggaetón clásico (2005–2016) para levantar las mesas después de cenar.</p>
+            </div>
+            <a class="btn-emerald-action" href="https://wa.me/5491100000000?text=Hola!%20Quiero%20reservar%20para%20el%20fin%20de%20semana" target="_blank" rel="noopener">
+              Asegurar Acceso
+            </a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         SCREEN 4: HORARIOS & RESERVAS (MIÉ A DOM)
+         ====================================================================== -->
+    <section id="screen-horarios" class="screen-view" aria-label="Horarios y Reservas">
+      <div class="dimension-panel">
+        <div class="dimension-top-bar">
+          <h2 class="dimension-heading">Horarios &amp; Mesas</h2>
+          <button type="button" class="btn-back-portal" data-goto="home">← Volver al Portal</button>
+        </div>
+
+        <div class="clean-cards-row">
+          <article class="emerald-glass-card">
+            <div>
+              <span class="tag-upper">● APERTURA SEMANAL</span>
+              <h3>Miércoles a Domingo</h3>
+              <p>
+                <strong>Mié &amp; Jue:</strong> 19:30 a 02:30 hs<br />
+                <strong>Vie &amp; Sáb:</strong> 20:00 a 04:30 hs<br />
+                <strong>Domingos:</strong> 19:00 a 02:00 hs<br />
+                <em>Dress Code: Elegante Night (+21)</em>
+              </p>
+            </div>
+            <a class="btn-emerald-action" href="https://wa.me/5491100000000?text=Hola!%20Quiero%20reservar%20una%20mesa%20en%20Mery%20La%20Previa" target="_blank" rel="noopener">
+              Reservar Mesa Directo
+            </a>
+          </article>
+
+          <article class="emerald-glass-card">
+            <div>
+              <span class="tag-upper">● UBICACIÓN ZONA SUR</span>
+              <h3>Punto de Encuentro</h3>
+              <p>Corredor exclusivo para clientes de Canning, San Vicente, Guernica y Longchamps. Estacionamiento privado vigilado en puerta.</p>
+            </div>
+            <button type="button" class="btn-back-portal" data-goto="carta">
+              Ver La Carta Antes de Ir →
             </button>
-            <button type="button" class="btn-neon-ghost" data-open-modal="modalCumple">
-              Incluir en Cumple
-            </button>
-          </div>
+          </article>
         </div>
-      </aside>
-    </div>
-  </section>
+      </div>
+    </section>
 
-  <!-- ========================================================================
-       NATIVE <dialog closedby="any"> MODALS (Cumpleaños, Lineup, Reservas, Horarios)
-       ======================================================================== -->
-  <dialog id="modalCumple" class="luxury-modal" closedby="any" aria-labelledby="titleCumple">
-    <div class="modal-inner">
-      <div class="modal-top">
-        <div>
-          <span class="eyebrow-tag">★ FESTEJOS &amp; EVENTOS ESPECIALES</span>
-          <h3 id="titleCumple" style="font-family: var(--font-serif); font-size: 2rem;">Festejá tu Cumple en La Previa</h3>
-        </div>
-        <button type="button" class="modal-close-btn" data-close-modal aria-label="Cerrar">✕</button>
-      </div>
-      <p style="font-size: 0.9rem; color: var(--cream-muted);">
-        Elegí tu formato de festejo para miércoles a domingo. Todos incluyen lista de acceso sin fila para tus invitados al bloque de DJ.
-      </p>
-      <div class="bday-pack-grid">
-        <div class="bday-pack-item">
-          <h4>1. Pack "Wine &amp; Friends" (8 a 12 personas)</h4>
-          <p>Tapeo de Previa + Bandeja de Ojo de Bife + Caja de 4 Vinos Mery Jane + Espumante de brindis sin cargo para el cumpleañero/a.</p>
-        </div>
-        <div class="bday-pack-item">
-          <h4>2. Pack "11:11 VIP Booth" (12 a 25 personas)</h4>
-          <p>Living exclusivo frente a cabina de DJ + Finger food caliente + 2 Cajas Mery Jane + Barra de Cocktails de Autor y fotógrafo flash.</p>
-        </div>
-      </div>
-      <form class="modal-form vip-booking-form">
-        <input type="text" placeholder="Tu Nombre y Apellido" required />
-        <input type="tel" placeholder="WhatsApp (ej. 11 5555-5555)" required />
-        <select required>
-          <option value="">Elegí Día y Cantidad de Invitados...</option>
-          <option value="viernes-10">Viernes • 8 a 15 invitados</option>
-          <option value="sabado-15">Sábado • 15 a 25 invitados (VIP Booth)</option>
-          <option value="privado">Evento Privado / +30 personas</option>
-        </select>
-        <button type="submit" class="btn-Order-table">Coordinar Beneficios por WhatsApp ↗</button>
-        <p class="form-feedback" style="font-size: 0.8rem; text-align: center;"></p>
-      </form>
-    </div>
-  </dialog>
+  </main>
 
-  <dialog id="modalLineup" class="luxury-modal" closedby="any" aria-labelledby="titleLineup">
-    <div class="modal-inner">
-      <div class="modal-top">
-        <div>
-          <span class="eyebrow-tag">● CABINA EN VIVO • 13/11 &amp; SEMANAL</span>
-          <h3 id="titleLineup" style="font-family: var(--font-serif); font-size: 2rem;">Lineup DJs &amp; Guestlist</h3>
-        </div>
-        <button type="button" class="modal-close-btn" data-close-modal aria-label="Cerrar">✕</button>
-      </div>
-      <div class="bday-pack-grid">
-        <div class="bday-pack-item">
-          <h4>VIERNES 13/11 — "TENEMOS PREVIA" OPENING</h4>
-          <p><strong>20:30 hs:</strong> Wine &amp; Vinyl Sunset • <strong>23:30 hs:</strong> Mati V. (Melodic House) • <strong>01:30 hs:</strong> Bauti R. (Reggaetón Old School Set).</p>
-        </div>
-        <div class="bday-pack-item">
-          <h4>SÁBADOS — CICLO 11:11</h4>
-          <p>Tech House &amp; Clásicos de Reggaetón. Mesas con consumo integrable en botellas y coctelería.</p>
-        </div>
-      </div>
-      <form class="modal-form vip-booking-form">
-        <input type="text" placeholder="Nombre completo para Lista / QR" required />
-        <input type="number" min="1" max="15" placeholder="Cantidad de acompañantes" required />
-        <button type="submit" class="btn-neon-primary" style="width: 100%;">Solicitar QR de Acceso</button>
-        <p class="form-feedback" style="font-size: 0.8rem; text-align: center;"></p>
-      </form>
-    </div>
-  </dialog>
-
-  <dialog id="modalReserva" class="luxury-modal" closedby="any" aria-labelledby="titleReserva">
-    <div class="modal-inner">
-      <div class="modal-top">
-        <div>
-          <span class="eyebrow-tag">★ CONCIERGE DE MESAS</span>
-          <h3 id="titleReserva" style="font-family: var(--font-serif); font-size: 2rem;">Reservar Mesa o Living</h3>
-        </div>
-        <button type="button" class="modal-close-modal modal-close-btn" data-close-modal aria-label="Cerrar">✕</button>
-      </div>
-      <form class="modal-form vip-booking-form">
-        <input type="text" placeholder="Nombre de la Reserva" required />
-        <select required>
-          <option value="">Elegí tu Zona de Origen (para beneficios zonales)...</option>
-          <option value="canning">Canning</option>
-          <option value="san-vicente">San Vicente</option>
-          <option value="guernica">Guernica</option>
-          <option value="longchamps">Longchamps / Alrededores</option>
-        </select>
-        <select required>
-          <option value="">Sector Preferido...</option>
-          <option value="salon">Salón Principal (Cena + Previa)</option>
-          <option value="barra">Barra Central 11:11 (Cocktails &amp; Tapas)</option>
-          <option value="living">Living VIP junto al DJ</option>
-        </select>
-        <button type="submit" class="btn-Order-table">Confirmar Mesa Ahora ↗</button>
-        <p class="form-feedback" style="font-size: 0.8rem; text-align: center;"></p>
-      </form>
-    </div>
-  </dialog>
-
-  <dialog id="modalHorarios" class="luxury-modal" closedby="any" aria-labelledby="titleHorarios">
-    <div class="modal-inner">
-      <div class="modal-top">
-        <div>
-          <span class="eyebrow-tag">● INFORMACIÓN ÚTIL</span>
-          <h3 id="titleHorarios" style="font-family: var(--font-serif); font-size: 2rem;">Horarios, Ubicación &amp; Reglas</h3>
-        </div>
-        <button type="button" class="modal-close-btn" data-close-modal aria-label="Cerrar">✕</button>
-      </div>
-      <div class="bday-pack-grid">
-        <div class="bday-pack-item">
-          <h4>Días y Horarios</h4>
-          <p>Abierto de <strong>Miércoles a Domingo desde las 19:30 hs hasta el cierre (02:00 a 05:00 hs según noche)</strong>. Cocina abierta hasta las 00:30 hs; barra y tapeo toda la noche.</p>
-        </div>
-        <div class="bday-pack-item">
-          <h4>Corredor Zona Sur</h4>
-          <p>Ubicación estratégica a minutos de Canning, San Vicente, Guernica y Longchamps. Estacionamiento vigilado en puerta.</p>
-        </div>
-      </div>
-      <button type="button" class="btn-Order-table" style="width: 100%;" data-close-modal>Entendido</button>
-    </div>
-  </dialog>
+  <footer class="cruza-horizon-bottom">
+    <div class="horizon-line"></div>
+    <div class="horizon-monogram">Mery Jane</div>
+  </footer>
 
   <script src="app.js"></script>
 </body>

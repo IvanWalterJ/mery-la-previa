@@ -25,9 +25,11 @@ The client needs to choose a visual and experiential direction for their new res
 ## Actionable Checklist
 - [x] **Task 1 (`T1`):** Prepare local brand assets (`assets/img/`) from user uploads and AI-generated nocturnal photography, and scaffold the HTML/CSS/JS showcase architecture with modern `<dialog closedby="any">` + fallback support.
 - [x] **Task 2 (`T2`):** Implement the 3 switchable Dark Landing Prototypes (Cruza VIP Hub, 11:11 Flash Club, Nocturnal Wine Zine) + the Interactive Sensory Menu & Birthday/Event modals, and verify zero console/syntax errors.
+- [x] **Task 3 (`T3`):** Generate isolated dark studio bottle keyframe + seamless 360° loop video (`first_frame` = `last_frame`) via Flow MCP (`assets/video/bottle-360-loop.mp4`), and build the dedicated V1 Dark Emerald Single-Screen Portal (Cruza Polo structure, **Britney Regular** + **Quicksand Medium** typography, 0–3s pure bottle loop reveal, and Time-Warp / Dimensional Jump transitions between views).
 
 ## Progress & Verification Evidence
 - `T1` & `T2` completed and verified via `node --check app.js` (exit code 0) and asset presence check in `assets/img/` (3 user reference images + 4 AI-generated nocturnal flash images).
-- Work-unit commit recorded on branch `feat/la-previa-landing-prototypes`: `6d94906`.
+- Work-unit commit recorded on branch `feat/la-previa-landing-prototypes`: `88f73c1`.
+- `T3` completed: Flow MCP generated `scene-01.jpeg` (0 credits) and seamless 360° loop `scene-02.mp4` (12 credits, `first_frame` + `last_frame` locked to `scene-01.jpeg`), copied to `assets/img/bottle-hero-isolated.jpg` and `assets/video/bottle-360-loop.mp4`. V1 Dark Emerald Cruza-style portal verified with `node --check app.js`.
 - Native RDD switch: `disabled/unmanaged` (default).
 - Engram mirror status: `pending` (no Engram MCP server registered in current runtime; local `odd/tasks/la-previa-landing-prototypes.md` is authoritative).
