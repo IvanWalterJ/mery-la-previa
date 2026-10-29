@@ -12,7 +12,7 @@ Branch: `feat/carta-modal-admin-supabase`
 - [x] **T1** (`S1`, `S2`, `S3`) — Eliminar enlace/archivos de versión clásica, corregir desborde de ítems de la carta en desktop y mobile, e implementar modal de detalle con copy rico al clickear cada plato — route: `inline` — commit: `d0e272f`
 - [x] **T2** (`S4`, `S5`) — Crear capa de datos y tiempo real con Supabase (`supabase-config.js`, `supabase/schema.sql`), pantalla de login con frame final del neón sin tapar el cartel y panel autoadministrable en `/admin.html` (`admin.css`, `admin.js`) — route: `inline` — commit: `db3ca9f`
 - [x] **T3** (`S1`–`S5`) — Ejecutar pruebas automatizadas de verificación sobre DOM, responsive, modal, login y sincronización en tiempo real del panel hacia la carta — route: `inline` — commit: `db3ca9f`
-- [ ] **T4** (`S5`) — Rediseñar `/admin.html`, `admin.css`, `admin.js` y `supabase-config.js` con tipografía Inter, capitalización normal, barra lateral izquierda por categoría, popups de confirmación con el mismo estilo visual, eliminación de referencias a Supabase y de "Fotos rápidas", y optimización de velocidad instantánea (0ms optimistic UI) — route: `inline` — commit: `pending`
+- [x] **T4** (`S5`) — Rediseñar `/admin.html`, `admin.css`, `admin.js` y `supabase-config.js` con tipografía Inter, capitalización normal, barra lateral izquierda por categoría, popups de confirmación con el mismo estilo visual, eliminación de referencias a Supabase y de "Fotos rápidas", y optimización de velocidad instantánea (0ms optimistic UI) — route: `inline` — commit: `9937128`
 
 ## Log
 - **L1**: "Buenas buenas, bueno ahi a mi primo le gusto la pagina que le hicimos asi que vamos a meterle para mejorarla. En primer lugar saquemos esto [Image#1] nos quedamos con esta version.
