@@ -5,8 +5,8 @@
  * 1. Ejecutá el archivo `supabase/schema.sql` en el SQL Editor de tu proyecto Supabase.
  * 2. Pegá tu SUPABASE_URL y SUPABASE_ANON_KEY abajo (o configuralos desde /admin.html -> Conexión Supabase).
  */
-const DEFAULT_SUPABASE_URL = 'https://auuwueojsqpyukfzmgcj.supabase.co';
-const DEFAULT_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF1dXd1ZW9qc3FweXVrZnptZ2NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMyMjg3NDcsImV4cCI6MjEwODgwNDc0N30.xKBbM5wjhJ3sdHGDH3Q_2O4Rr2xm-vDrCT5Ssmoq0wo';
+const DEFAULT_SUPABASE_URL = '';
+const DEFAULT_SUPABASE_ANON_KEY = '';
 
 const STORAGE_KEY_MENU = 'mery_menu_sections_v2';
 const STORAGE_KEY_SUPA_CFG = 'mery_supabase_config_v1';
@@ -23,8 +23,8 @@ const DEFAULT_RESERVATION_SETTINGS = {
   depositHolder: 'Mery La Previa S.R.L.',
   depositAmount: '$15.000',
   depositPaymentLink: 'https://mpago.la/mery-la-previa',
-  evolutionServerUrl: '',
-  evolutionApiKey: '',
+  evolutionServerUrl: 'https://n8n-hotdetailing-evolution-api.rsssbm.easypanel.host',
+  evolutionApiKey: '429683C4C977415CAAFCCE10F7D57E11',
   evolutionInstanceName: 'mery-la-previa',
   whatsappConnected: false
 };
@@ -1142,7 +1142,13 @@ const DEFAULT_MENU_SECTIONS = [
       const raw = localStorage.getItem(STORAGE_KEY_RES_SETTINGS);
       if (raw) {
         const parsed = JSON.parse(raw);
-        return { ...DEFAULT_RESERVATION_SETTINGS, ...parsed };
+        return {
+          ...DEFAULT_RESERVATION_SETTINGS,
+          ...parsed,
+          evolutionServerUrl: parsed.evolutionServerUrl || DEFAULT_RESERVATION_SETTINGS.evolutionServerUrl,
+          evolutionApiKey: parsed.evolutionApiKey || DEFAULT_RESERVATION_SETTINGS.evolutionApiKey,
+          evolutionInstanceName: parsed.evolutionInstanceName || DEFAULT_RESERVATION_SETTINGS.evolutionInstanceName
+        };
       }
     } catch (_) {}
     return { ...DEFAULT_RESERVATION_SETTINGS };
