@@ -1168,53 +1168,107 @@ body:has(.admin-modal-backdrop:not([hidden])) {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 24px 16px 28px;
+  padding: 26px 16px 28px;
   gap: 16px;
   text-align: center;
 }
 
 .admin-check-anim-circle {
-  width: 64px;
-  height: 64px;
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: rgba(74, 222, 128, 0.1);
+  border: 1.5px solid rgba(74, 222, 128, 0.25);
+  box-shadow: 0 0 28px rgba(74, 222, 128, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: scale(0.5);
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.admin-confirm-success-state.is-animating .admin-check-anim-circle {
+  animation: admin-pop-circle 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes admin-pop-circle {
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  65% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .admin-check-svg {
-  width: 64px;
-  height: 64px;
-  stroke: var(--q-success);
-  stroke-width: 3.5;
+  width: 52px;
+  height: 52px;
+  stroke: #4ade80;
+  stroke-width: 4;
   stroke-linecap: round;
   stroke-linejoin: round;
   display: block;
+  overflow: visible;
 }
 
 .admin-check-circle {
-  stroke-dasharray: 166;
-  stroke-dashoffset: 166;
-  stroke: var(--q-success);
-  animation: stroke-circle 0.5s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+  stroke-dasharray: 146;
+  stroke-dashoffset: 146;
+  stroke: #4ade80;
+}
+
+.admin-confirm-success-state.is-animating .admin-check-circle {
+  animation: admin-stroke-circle 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
 }
 
 .admin-check-path {
-  stroke-dasharray: 48;
-  stroke-dashoffset: 48;
-  stroke: var(--q-success);
-  animation: stroke-check 0.4s cubic-bezier(0.65, 0, 0.45, 1) 0.35s forwards;
+  stroke-dasharray: 36;
+  stroke-dashoffset: 36;
+  stroke: #4ade80;
 }
 
-@keyframes stroke-circle {
-  100% { stroke-dashoffset: 0; }
+.admin-confirm-success-state.is-animating .admin-check-path {
+  animation: admin-stroke-check 0.45s cubic-bezier(0.65, 0, 0.45, 1) 0.35s forwards;
 }
 
-@keyframes stroke-check {
-  100% { stroke-dashoffset: 0; }
+@keyframes admin-stroke-circle {
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes admin-stroke-check {
+  100% {
+    stroke-dashoffset: 0;
+  }
 }
 
 .admin-confirm-success-text {
   font-size: 1.05rem;
   font-weight: 600;
-  color: var(--q-cream);
+  color: #f3efe6;
   letter-spacing: -0.01em;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: all 0.3s ease;
+}
+
+.admin-confirm-success-state.is-animating .admin-confirm-success-text {
+  animation: admin-text-fade-up 0.4s ease 0.4s forwards;
+}
+
+@keyframes admin-text-fade-up {
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .admin-btn-confirm-danger {

@@ -555,15 +555,17 @@ document.addEventListener('DOMContentLoaded', () => {
         promptState.hidden = true;
         promptState.style.display = 'none';
         if (successTextEl) successTextEl.textContent = successText;
+
+        // Reset and trigger animation via requestAnimationFrame
+        successState.classList.remove('is-animating');
         successState.hidden = false;
         successState.style.display = 'flex';
 
-        // Replay SVG stroke animation
-        const svg = successState.querySelector('.admin-check-svg');
-        if (svg) {
-          const clone = svg.cloneNode(true);
-          svg.replaceWith(clone);
-        }
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            successState.classList.add('is-animating');
+          });
+        });
 
         try {
           await onConfirm();
@@ -571,7 +573,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         confirmSuccessTimer = setTimeout(() => {
           closeConfirmModal();
-        }, 1000);
+        }, 1400);
       } else {
         closeConfirmModal();
         try {
@@ -586,6 +588,8 @@ document.addEventListener('DOMContentLoaded', () => {
   function closeConfirmModal() {
     if (!confirmModal) return;
     clearTimeout(confirmSuccessTimer);
+    const successState = document.getElementById('confirmSuccessState');
+    if (successState) successState.classList.remove('is-animating');
     confirmModal.hidden = true;
     pendingConfirmCallback = null;
   }
