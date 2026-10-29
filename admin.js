@@ -2068,7 +2068,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 Generar / Actualizar QR de WhatsApp
               </button>
               <a
-                href="https://n8n-hotdetailing-evolution-api.rsssbm.easypanel.host/manager"
+                href="https://mery-la-previa-evolution-api.rsssbm.easypanel.host/manager"
                 target="_blank"
                 rel="noopener"
                 class="admin-btn-outline"
@@ -2213,7 +2213,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadRealEvolutionQr(forceReset = false) {
       if (!qrPreviewBox) return;
       qrPreviewBox.hidden = false;
-      const serverUrl = (sectionsContainer.querySelector('#cfgEvolutionServerUrl')?.value.trim() || 'https://n8n-hotdetailing-evolution-api.rsssbm.easypanel.host').replace(/\/+$/, '');
+      const serverUrl = (sectionsContainer.querySelector('#cfgEvolutionServerUrl')?.value.trim() || 'https://mery-la-previa-evolution-api.rsssbm.easypanel.host').replace(/\/+$/, '');
       const apiKey = sectionsContainer.querySelector('#cfgEvolutionApiKey')?.value.trim() || '429683C4C977415CAAFCCE10F7D57E11';
       const instanceName = sectionsContainer.querySelector('#cfgEvolutionInstanceName')?.value.trim() || 'mery-la-previa';
 

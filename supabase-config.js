@@ -23,7 +23,7 @@ const DEFAULT_RESERVATION_SETTINGS = {
   depositHolder: 'Mery La Previa S.R.L.',
   depositAmount: '$15.000',
   depositPaymentLink: 'https://mpago.la/mery-la-previa',
-  evolutionServerUrl: 'https://n8n-hotdetailing-evolution-api.rsssbm.easypanel.host',
+  evolutionServerUrl: 'https://mery-la-previa-evolution-api.rsssbm.easypanel.host',
   evolutionApiKey: '429683C4C977415CAAFCCE10F7D57E11',
   evolutionInstanceName: 'mery-la-previa',
   whatsappConnected: false
