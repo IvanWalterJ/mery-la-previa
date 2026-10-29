@@ -185,6 +185,23 @@ document.addEventListener('DOMContentLoaded', () => {
   let toastTimer = null;
   let pendingConfirmCallback = null;
 
+  // Global operational & reservation state declarations (avoids TDZ on early render)
+  let activeResFilter = 'Todas';
+  let resSearchQuery = '';
+  let activeProofRes = null;
+  let activeScannedRes = null;
+  let qrCameraStream = null;
+  let scanAudioCtx = null;
+  let qrScanAnimId = null;
+  let qrCanvasEl = null;
+  let qrCanvasCtx = null;
+  let isScanningActive = false;
+  let currentFacingMode = 'environment';
+  let isTorchOn = false;
+  let qrVideoPreviewEl = null;
+  let waPollTimer = null;
+  let activeManualCreatedRes = null;
+
   // --- Tab & Workspace State Persistence ---
   const STORAGE_KEY_ADMIN_TAB = 'mery_admin_active_tab_v2';
 
@@ -751,48 +768,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 2. AUTHENTICATION FLOW (Instant entry + custom logout confirmation)
   function enterDashboard() {
-    loginScreen.hidden = true;
-    dashboardScreen.hidden = false;
+    try {
+      loginScreen.hidden = true;
+      dashboardScreen.hidden = false;
 
-    restorePersistedTab();
-    renderAdminSidebar();
+      restorePersistedTab();
+      renderAdminSidebar();
 
-    if (activeTab === 'reservations') {
-      renderReservationsWorkspace();
-    } else if (activeTab === 'whatsapp') {
-      renderWhatsappWorkspace();
-    } else if (activeTab === 'videos') {
-      renderVideosWorkspace();
-    } else {
-      renderActiveCategoryWorkspace();
-    }
-
-    persistActiveTabState();
-    syncReservationsBackground();
-
-    // Background non-blocking sync if remote backend is configured
-    window.MeryStore.fetchMenuSections().then((fresh) => {
-      if (Array.isArray(fresh) && fresh.length > 0) {
-        menuSections = fresh;
-        if (!menuSections.some((s) => s.id === activeCategoryId)) {
-          activeCategoryId = menuSections[0].id;
-        }
-        renderAdminSidebar();
-        if (activeTab === 'category') {
-          renderActiveCategoryWorkspace();
-        }
+      if (activeTab === 'reservations') {
+        renderReservationsWorkspace();
+      } else if (activeTab === 'whatsapp') {
+        renderWhatsappWorkspace();
+      } else if (activeTab === 'videos') {
+        renderVideosWorkspace();
+      } else {
+        renderActiveCategoryWorkspace();
       }
-    }).catch(() => {});
-  }
 
-  if (sessionStorage.getItem(SESSION_AUTH_KEY) === 'true') {
-    enterDashboard();
-  } else {
-    const client = window.MeryStore.getClient();
-    if (client) {
-      client.auth.getSession().then(({ data }) => {
-        if (data && data.session) enterDashboard();
+      persistActiveTabState();
+      syncReservationsBackground();
+
+      // Background non-blocking sync if remote backend is configured
+      window.MeryStore.fetchMenuSections().then((fresh) => {
+        if (Array.isArray(fresh) && fresh.length > 0) {
+          menuSections = fresh;
+          if (!menuSections.some((s) => s.id === activeCategoryId)) {
+            activeCategoryId = menuSections[0].id;
+          }
+          renderAdminSidebar();
+          if (activeTab === 'category') {
+            renderActiveCategoryWorkspace();
+          }
+        }
       }).catch(() => {});
+    } catch (err) {
+      console.error('Error entering dashboard:', err);
     }
   }
 
@@ -1645,12 +1655,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // ===========================================================================
   // 7. S9: RESERVATIONS, DEPOSIT PROOFS, DOOR QR SCANNER & EVOLUTION API
   // ===========================================================================
-  let activeResFilter = 'Todas';
-  let resSearchQuery = '';
-  let activeProofRes = null;
-  let activeScannedRes = null;
-  let qrCameraStream = null;
-
   function updateReservationsBadge() {
     if (!adminReservationsBadge || !window.MeryStore) return;
     const reservations = window.MeryStore.getReservations();
@@ -2092,8 +2096,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- Audio & Haptic Feedback for QR Scanner ---
-  let scanAudioCtx = null;
-
   function initScanAudio() {
     try {
       if (!scanAudioCtx) {
@@ -2130,15 +2132,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (_) {}
   }
-
-  // Camera & jsQR state
-  let qrScanAnimId = null;
-  let qrCanvasEl = null;
-  let qrCanvasCtx = null;
-  let isScanningActive = false;
-  let currentFacingMode = 'environment'; // 'environment' | 'user'
-  let isTorchOn = false;
-  let qrVideoPreviewEl = null;
 
   // --- Door QR Scanner / Check-in Modal Logic ---
   function openQrScannerModal(prefillCode = null) {
@@ -2546,8 +2539,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // ===========================================================================
   // 8. S9: WHATSAPP (EVOLUTION API) & DEPOSIT SETTINGS WORKSPACE
   // ===========================================================================
-  let waPollTimer = null;
-
   function stopWaPolling() {
     if (waPollTimer) {
       clearInterval(waPollTimer);
@@ -3044,7 +3035,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnCopyManualPassText = document.getElementById('btnCopyManualPassText');
   const btnOpenManualPassDirect = document.getElementById('btnOpenManualPassDirect');
   const btnFinishNewResModal = document.getElementById('btnFinishNewResModal');
-  let activeManualCreatedRes = null;
 
   function updateManualBirthdayRow() {
     if (!manualResBirthdayRow) return;
@@ -3215,5 +3205,17 @@ document.addEventListener('DOMContentLoaded', () => {
         prompt('Copiá el enlace del Pase VIP:', passUrl);
       }
     });
+  }
+
+  // --- Initial Auth Check & Dashboard Entry (Executed at end after all handlers are bound) ---
+  if (sessionStorage.getItem(SESSION_AUTH_KEY) === 'true') {
+    enterDashboard();
+  } else {
+    const client = window.MeryStore ? window.MeryStore.getClient() : null;
+    if (client) {
+      client.auth.getSession().then(({ data }) => {
+        if (data && data.session) enterDashboard();
+      }).catch(() => {});
+    }
   }
 });
