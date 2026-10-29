@@ -361,3 +361,66 @@ INSERT INTO public.table_reservations (
   )
 ON CONFLICT (id) DO NOTHING;
 
+-- =============================================================================
+-- 8. TABLA DE CONFIGURACIONES GENERALES, DISPONIBILIDAD Y CUPOS (site_settings)
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS public.site_settings (
+  key TEXT PRIMARY KEY,
+  value JSONB NOT NULL DEFAULT '{}'::jsonb,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.site_settings ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Lectura publica de configuraciones" ON public.site_settings;
+CREATE POLICY "Lectura publica de configuraciones"
+  ON public.site_settings FOR SELECT
+  TO anon, authenticated
+  USING (true);
+
+DROP POLICY IF EXISTS "Escritura de configuraciones para anon y authenticated" ON public.site_settings;
+CREATE POLICY "Escritura de configuraciones para anon y authenticated"
+  ON public.site_settings FOR ALL
+  TO anon, authenticated
+  USING (true)
+  WITH CHECK (true);
+
+-- Agregar tabla de configuraciones a la publicación en tiempo real
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'site_settings'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.site_settings;
+  END IF;
+END $$;
+
+-- Datos iniciales de configuración de reservas, cupos máximos y datos de seña
+INSERT INTO public.site_settings (key, value) VALUES
+  (
+    'reservation_settings',
+    jsonb_build_object(
+      'depositAlias', 'MERY.LAPREVIA.MP',
+      'depositCbu', '0000003100098765432100',
+      'depositHolder', 'Mery La Previa S.R.L.',
+      'depositAmount', '$15.000',
+      'depositPaymentLink', 'https://mpago.la/mery-la-previa',
+      'evolutionServerUrl', 'https://mery-la-previa-evolution-api.rsssbm.easypanel.host',
+      'evolutionApiKey', '429683C4C977415CAAFCCE10F7D57E11',
+      'evolutionInstanceName', 'mery-la-previa',
+      'whatsappConnected', false,
+      'maxCapacityPerDay', jsonb_build_object(
+        'Viernes 13/11', 60,
+        'Sábado', 80,
+        'Domingo', 50,
+        'Miércoles / Jueves', 40
+      ),
+      'closedDays', '[]'::jsonb
+    )
+  )
+ON CONFLICT (key) DO UPDATE
+  SET value = EXCLUDED.value,
+      updated_at = now();
+
+

@@ -1178,7 +1178,38 @@ const DEFAULT_MENU_SECTIONS = [
         timestamp: Date.now()
       });
     }
+
+    const client = getClient();
+    if (client) {
+      client.from('site_settings').upsert({
+        key: 'reservation_settings',
+        value: merged,
+        updated_at: new Date().toISOString()
+      }).then(() => {}).catch((err) => {
+        console.warn('Supabase site_settings upsert fallback:', err.message || err);
+      });
+    }
     return merged;
+  }
+
+  async function fetchSiteSettingsFromSupabase() {
+    const client = getClient();
+    if (!client) return getReservationSettings();
+    try {
+      const { data, error } = await client.from('site_settings').select('*');
+      if (!error && Array.isArray(data)) {
+        const row = data.find((r) => r.key === 'reservation_settings');
+        if (row && row.value && typeof row.value === 'object') {
+          const current = getReservationSettings();
+          const merged = { ...current, ...row.value };
+          try {
+            localStorage.setItem(STORAGE_KEY_RES_SETTINGS, JSON.stringify(merged));
+          } catch (_) {}
+          return merged;
+        }
+      }
+    } catch (_) {}
+    return getReservationSettings();
   }
 
   function getReservations() {
@@ -1528,6 +1559,14 @@ const DEFAULT_MENU_SECTIONS = [
               }
             }
           )
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'site_settings' },
+            async () => {
+              await fetchSiteSettingsFromSupabase();
+              onUpdate(getReservations(), { type: 'SETTINGS_UPDATED' });
+            }
+          )
           .subscribe();
       } catch (err) {
         console.warn('Realtime Supabase subscription error for table_reservations:', err.message || err);
@@ -1642,6 +1681,7 @@ const DEFAULT_MENU_SECTIONS = [
     subscribeToReservationChanges,
     getReservationSettings,
     saveReservationSettings,
+    fetchSiteSettingsFromSupabase,
     sendReservationNotifications,
     renderQrCode
   };
