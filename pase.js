@@ -162,6 +162,23 @@ document.addEventListener('DOMContentLoaded', () => {
     renderReservationData(initialRes);
   }
 
+  // Asynchronous remote fetch to ensure fresh data from Supabase
+  if (window.MeryStore) {
+    if (targetId && typeof window.MeryStore.fetchReservationById === 'function') {
+      window.MeryStore.fetchReservationById(targetId).then((remoteRes) => {
+        if (remoteRes) {
+          renderReservationData(remoteRes);
+        }
+      }).catch(() => {});
+    } else if (typeof window.MeryStore.fetchReservationsFromSupabase === 'function') {
+      window.MeryStore.fetchReservationsFromSupabase().then((list) => {
+        if (Array.isArray(list) && list.length > 0 && !activeReservation) {
+          renderReservationData(loadReservation());
+        }
+      }).catch(() => {});
+    }
+  }
+
   // Real-time updates subscription
   if (window.MeryStore && typeof window.MeryStore.subscribeToReservationChanges === 'function') {
     window.MeryStore.subscribeToReservationChanges((event) => {

@@ -57,6 +57,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const qrScannerCodeInput = document.getElementById('qrScannerCodeInput');
   const btnSearchQrCode = document.getElementById('btnSearchQrCode');
   const btnToggleQrCamera = document.getElementById('btnToggleQrCamera');
+  const btnToggleQrTorch = document.getElementById('btnToggleQrTorch');
+  const btnFlipQrCamera = document.getElementById('btnFlipQrCamera');
+  const btnScanAnotherQr = document.getElementById('btnScanAnotherQr');
+  const qrCameraStatus = document.getElementById('qrCameraStatus');
   const qrCameraContainer = document.getElementById('qrCameraContainer');
   const qrScanResultBox = document.getElementById('qrScanResultBox');
   const qrResultCode = document.getElementById('qrResultCode');
@@ -176,10 +180,120 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let menuSections = window.MeryStore.getLocalSections();
   let activeCategoryId = menuSections[0]?.id || 'cocktails';
-  let activeTab = 'category'; // 'category' | 'videos'
+  let activeTab = 'category'; // 'category' | 'videos' | 'reservations' | 'whatsapp'
   let searchQuery = '';
   let toastTimer = null;
   let pendingConfirmCallback = null;
+
+  // --- Tab & Workspace State Persistence ---
+  const STORAGE_KEY_ADMIN_TAB = 'mery_admin_active_tab_v2';
+
+  function persistActiveTabState() {
+    try {
+      localStorage.setItem(STORAGE_KEY_ADMIN_TAB, JSON.stringify({
+        tab: activeTab,
+        categoryId: activeCategoryId
+      }));
+    } catch (_) {}
+
+    let targetHash = '';
+    if (activeTab === 'reservations') {
+      targetHash = '#reservas';
+    } else if (activeTab === 'whatsapp') {
+      targetHash = '#whatsapp';
+    } else if (activeTab === 'videos') {
+      targetHash = '#videos';
+    } else if (activeTab === 'category') {
+      targetHash = activeCategoryId ? `#cat-${activeCategoryId}` : '#menu';
+    }
+
+    if (window.location.hash !== targetHash) {
+      try {
+        history.replaceState(null, '', targetHash || window.location.pathname + window.location.search);
+      } catch (_) {
+        window.location.hash = targetHash;
+      }
+    }
+  }
+
+  function restorePersistedTab() {
+    let targetTab = null;
+    let targetCategory = null;
+
+    // 1. Read URL hash first
+    const hash = window.location.hash || '';
+    if (hash === '#reservas' || hash === '#reservaciones' || hash === '#reserva') {
+      targetTab = 'reservations';
+    } else if (hash === '#whatsapp') {
+      targetTab = 'whatsapp';
+    } else if (hash === '#videos') {
+      targetTab = 'videos';
+    } else if (hash.startsWith('#cat-')) {
+      targetTab = 'category';
+      targetCategory = decodeURIComponent(hash.slice(5).trim());
+    }
+
+    // 2. Fallback to localStorage if no matching hash in URL
+    if (!targetTab) {
+      try {
+        const savedRaw = localStorage.getItem(STORAGE_KEY_ADMIN_TAB);
+        if (savedRaw) {
+          const saved = JSON.parse(savedRaw);
+          if (saved && ['category', 'reservations', 'whatsapp', 'videos'].includes(saved.tab)) {
+            targetTab = saved.tab;
+            if (saved.categoryId) targetCategory = saved.categoryId;
+          }
+        }
+      } catch (_) {}
+    }
+
+    if (!targetTab) targetTab = 'category';
+    activeTab = targetTab;
+
+    if (targetCategory && menuSections.some((s) => s.id === targetCategory)) {
+      activeCategoryId = targetCategory;
+    } else if (!menuSections.some((s) => s.id === activeCategoryId) && menuSections.length > 0) {
+      activeCategoryId = menuSections[0].id;
+    }
+  }
+
+  function syncReservationsBackground() {
+    if (window.MeryStore && typeof window.MeryStore.fetchReservationsFromSupabase === 'function') {
+      window.MeryStore.fetchReservationsFromSupabase().then(() => {
+        updateReservationsBadge();
+        if (activeTab === 'reservations') {
+          renderReservationsWorkspace();
+        }
+      }).catch(() => {});
+    }
+  }
+
+  // Multidevice sync: sync reservations on visibility change
+  window.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      syncReservationsBackground();
+    }
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      syncReservationsBackground();
+    }
+  });
+
+  window.addEventListener('hashchange', () => {
+    if (dashboardScreen && !dashboardScreen.hidden) {
+      const prevTab = activeTab;
+      const prevCat = activeCategoryId;
+      restorePersistedTab();
+      if (prevTab !== activeTab || prevCat !== activeCategoryId) {
+        renderAdminSidebar();
+        if (activeTab === 'reservations') renderReservationsWorkspace();
+        else if (activeTab === 'whatsapp') renderWhatsappWorkspace();
+        else if (activeTab === 'videos') renderVideosWorkspace();
+        else renderActiveCategoryWorkspace();
+      }
+    }
+  });
 
   // Cropper state
   let cropperContext = null; // { mode: 'item-modal' } | { mode: 'direct-item', secId, itemId }
@@ -639,11 +753,22 @@ document.addEventListener('DOMContentLoaded', () => {
   function enterDashboard() {
     loginScreen.hidden = true;
     dashboardScreen.hidden = false;
-    if (!menuSections.some((s) => s.id === activeCategoryId) && menuSections.length > 0) {
-      activeCategoryId = menuSections[0].id;
-    }
+
+    restorePersistedTab();
     renderAdminSidebar();
-    renderActiveCategoryWorkspace();
+
+    if (activeTab === 'reservations') {
+      renderReservationsWorkspace();
+    } else if (activeTab === 'whatsapp') {
+      renderWhatsappWorkspace();
+    } else if (activeTab === 'videos') {
+      renderVideosWorkspace();
+    } else {
+      renderActiveCategoryWorkspace();
+    }
+
+    persistActiveTabState();
+    syncReservationsBackground();
 
     // Background non-blocking sync if remote backend is configured
     window.MeryStore.fetchMenuSections().then((fresh) => {
@@ -653,7 +778,9 @@ document.addEventListener('DOMContentLoaded', () => {
           activeCategoryId = menuSections[0].id;
         }
         renderAdminSidebar();
-        renderActiveCategoryWorkspace();
+        if (activeTab === 'category') {
+          renderActiveCategoryWorkspace();
+        }
       }
     }).catch(() => {});
   }
@@ -728,7 +855,9 @@ document.addEventListener('DOMContentLoaded', () => {
         activeCategoryId = menuSections[0]?.id || '';
       }
       renderAdminSidebar();
-      renderActiveCategoryWorkspace();
+      if (activeTab === 'category') {
+        renderActiveCategoryWorkspace();
+      }
     }
   });
 
@@ -738,7 +867,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     categoryPillsEl.innerHTML = menuSections.map((sec) => {
       const count = (sec.items || []).length;
-      const isActive = sec.id === activeCategoryId;
+      const isActive = activeTab === 'category' && sec.id === activeCategoryId;
       return `
         <button
           type="button"
@@ -753,16 +882,18 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
     }).join('');
 
+    btnNavVideos?.classList.toggle('active', activeTab === 'videos');
+    btnNavReservations?.classList.toggle('active', activeTab === 'reservations');
+    btnNavWhatsapp?.classList.toggle('active', activeTab === 'whatsapp');
+
     categoryPillsEl.querySelectorAll('.admin-cat-pill').forEach((btn) => {
       btn.addEventListener('click', () => {
         stopWaPolling();
         activeTab = 'category';
-        btnNavVideos?.classList.remove('active');
-        btnNavReservations?.classList.remove('active');
-        btnNavWhatsapp?.classList.remove('active');
         activeCategoryId = btn.getAttribute('data-cat') || menuSections[0]?.id;
         renderAdminSidebar();
         renderActiveCategoryWorkspace();
+        persistActiveTabState();
         closeAdminMobileMenu();
       });
     });
@@ -772,14 +903,9 @@ document.addEventListener('DOMContentLoaded', () => {
     btnNavVideos.addEventListener('click', () => {
       stopWaPolling();
       activeTab = 'videos';
-      categoryPillsEl?.querySelectorAll('.admin-cat-pill').forEach((p) => {
-        p.classList.remove('active');
-        p.setAttribute('aria-selected', 'false');
-      });
-      btnNavReservations?.classList.remove('active');
-      btnNavWhatsapp?.classList.remove('active');
-      btnNavVideos.classList.add('active');
+      renderAdminSidebar();
       renderVideosWorkspace();
+      persistActiveTabState();
       closeAdminMobileMenu();
     });
   }
@@ -788,29 +914,20 @@ document.addEventListener('DOMContentLoaded', () => {
     btnNavReservations.addEventListener('click', () => {
       stopWaPolling();
       activeTab = 'reservations';
-      categoryPillsEl?.querySelectorAll('.admin-cat-pill').forEach((p) => {
-        p.classList.remove('active');
-        p.setAttribute('aria-selected', 'false');
-      });
-      btnNavVideos?.classList.remove('active');
-      btnNavWhatsapp?.classList.remove('active');
-      btnNavReservations.classList.add('active');
+      renderAdminSidebar();
       renderReservationsWorkspace();
+      persistActiveTabState();
       closeAdminMobileMenu();
     });
   }
 
   if (btnNavWhatsapp) {
     btnNavWhatsapp.addEventListener('click', () => {
+      stopWaPolling();
       activeTab = 'whatsapp';
-      categoryPillsEl?.querySelectorAll('.admin-cat-pill').forEach((p) => {
-        p.classList.remove('active');
-        p.setAttribute('aria-selected', 'false');
-      });
-      btnNavVideos?.classList.remove('active');
-      btnNavReservations?.classList.remove('active');
-      btnNavWhatsapp.classList.add('active');
+      renderAdminSidebar();
       renderWhatsappWorkspace();
+      persistActiveTabState();
       closeAdminMobileMenu();
     });
   }
@@ -825,6 +942,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderActiveCategoryWorkspace() {
     if (!sectionsContainer) return;
     activeTab = 'category';
+    persistActiveTabState();
     btnNavVideos?.classList.remove('active');
     btnNavReservations?.classList.remove('active');
     btnNavWhatsapp?.classList.remove('active');
@@ -1128,6 +1246,7 @@ document.addEventListener('DOMContentLoaded', () => {
   async function renderVideosWorkspace() {
     if (!sectionsContainer) return;
     activeTab = 'videos';
+    persistActiveTabState();
 
     if (activeCategoryTitle) activeCategoryTitle.textContent = 'Videos de secciones';
     if (activeCategoryCount) {
@@ -1550,6 +1669,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderReservationsWorkspace() {
     if (!sectionsContainer) return;
     activeTab = 'reservations';
+    persistActiveTabState();
 
     if (activeCategoryTitle) activeCategoryTitle.textContent = 'Reservas y Check-in QR';
     if (activeCategoryCount) activeCategoryCount.textContent = 'Control de reservas, comprobantes de seña y acceso en puerta';
@@ -1971,24 +2091,80 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // --- Audio & Haptic Feedback for QR Scanner ---
+  let scanAudioCtx = null;
+
+  function initScanAudio() {
+    try {
+      if (!scanAudioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) scanAudioCtx = new AudioContextClass();
+      }
+      if (scanAudioCtx && scanAudioCtx.state === 'suspended') {
+        scanAudioCtx.resume().catch(() => {});
+      }
+    } catch (_) {}
+  }
+
+  function playScanBeep() {
+    try {
+      initScanAudio();
+      if (!scanAudioCtx) return;
+      const osc = scanAudioCtx.createOscillator();
+      const gain = scanAudioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, scanAudioCtx.currentTime); // A5 note
+      gain.gain.setValueAtTime(0.18, scanAudioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, scanAudioCtx.currentTime + 0.14);
+      osc.connect(gain);
+      gain.connect(scanAudioCtx.destination);
+      osc.start();
+      osc.stop(scanAudioCtx.currentTime + 0.14);
+    } catch (_) {}
+  }
+
+  function triggerScanHaptic() {
+    try {
+      if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+        navigator.vibrate([40, 60, 40]);
+      }
+    } catch (_) {}
+  }
+
+  // Camera & jsQR state
+  let qrScanAnimId = null;
+  let qrCanvasEl = null;
+  let qrCanvasCtx = null;
+  let isScanningActive = false;
+  let currentFacingMode = 'environment'; // 'environment' | 'user'
+  let isTorchOn = false;
+  let qrVideoPreviewEl = null;
+
   // --- Door QR Scanner / Check-in Modal Logic ---
   function openQrScannerModal(prefillCode = null) {
     if (!adminQrScannerModal) return;
     adminQrScannerModal.hidden = false;
+    document.body.classList.add('modal-open');
+    initScanAudio();
+
     if (qrScanResultBox) qrScanResultBox.hidden = true;
+    if (qrCameraStatus) qrCameraStatus.textContent = 'Apuntá al código QR del cliente';
     if (qrScannerCodeInput) {
       qrScannerCodeInput.value = prefillCode || '';
-      if (prefillCode) {
-        executeQrSearch(prefillCode);
-      } else {
-        qrScannerCodeInput.focus();
-      }
+    }
+
+    if (prefillCode) {
+      executeQrSearch(prefillCode);
+    } else {
+      startQrCamera();
+      if (qrScannerCodeInput) qrScannerCodeInput.focus();
     }
   }
 
   function closeQrScannerModal() {
     if (!adminQrScannerModal) return;
     adminQrScannerModal.hidden = true;
+    document.body.classList.remove('modal-open');
     stopQrCamera();
     activeScannedRes = null;
   }
@@ -2001,33 +2177,298 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  function executeQrSearch(rawTerm) {
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && adminQrScannerModal && !adminQrScannerModal.hidden) {
+      closeQrScannerModal();
+    }
+  });
+
+  function stopQrCamera() {
+    isScanningActive = false;
+    if (qrScanAnimId) {
+      cancelAnimationFrame(qrScanAnimId);
+      qrScanAnimId = null;
+    }
+    if (qrCameraStream) {
+      qrCameraStream.getTracks().forEach((track) => {
+        try {
+          track.stop();
+        } catch (_) {}
+      });
+      qrCameraStream = null;
+    }
+    isTorchOn = false;
+    if (btnToggleQrTorch) {
+      btnToggleQrTorch.classList.remove('active');
+      btnToggleQrTorch.setAttribute('aria-pressed', 'false');
+      btnToggleQrTorch.style.display = 'none';
+    }
+    if (qrVideoPreviewEl) {
+      qrVideoPreviewEl.srcObject = null;
+      qrVideoPreviewEl.remove();
+      qrVideoPreviewEl = null;
+    }
+    if (btnToggleQrCamera) {
+      btnToggleQrCamera.textContent = 'Usar cámara del celular / lector';
+    }
+  }
+
+  async function startQrCamera() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      showToast('Tu navegador no soporta o no permite acceso a la cámara');
+      if (qrCameraStatus) qrCameraStatus.textContent = 'Cámara no soportada';
+      return;
+    }
+
+    try {
+      stopQrCamera();
+      isScanningActive = true;
+      if (qrCameraStatus) qrCameraStatus.textContent = 'Buscando código QR...';
+
+      qrCameraStream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: currentFacingMode,
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      });
+
+      if (qrCameraContainer) {
+        qrVideoPreviewEl = document.createElement('video');
+        qrVideoPreviewEl.className = 'admin-camera-video';
+        qrVideoPreviewEl.setAttribute('playsinline', '');
+        qrVideoPreviewEl.setAttribute('autoplay', '');
+        qrVideoPreviewEl.muted = true;
+        qrCameraContainer.prepend(qrVideoPreviewEl);
+        qrVideoPreviewEl.srcObject = qrCameraStream;
+        await qrVideoPreviewEl.play().catch(() => {});
+        qrCameraContainer.hidden = false;
+      }
+
+      if (btnToggleQrCamera) {
+        btnToggleQrCamera.textContent = 'Detener cámara';
+      }
+
+      // Check torch capabilities
+      const track = qrCameraStream ? qrCameraStream.getVideoTracks()[0] : null;
+      const caps = track && typeof track.getCapabilities === 'function' ? track.getCapabilities() : {};
+      if (btnToggleQrTorch) {
+        if (caps.torch) {
+          btnToggleQrTorch.style.display = 'inline-flex';
+          btnToggleQrTorch.classList.toggle('active', isTorchOn);
+          btnToggleQrTorch.setAttribute('aria-pressed', isTorchOn ? 'true' : 'false');
+        } else {
+          btnToggleQrTorch.style.display = 'none';
+        }
+      }
+
+      // Offscreen canvas for frame extraction
+      if (!qrCanvasEl) {
+        qrCanvasEl = document.createElement('canvas');
+        qrCanvasCtx = qrCanvasEl.getContext('2d', { willReadFrequently: true });
+      }
+
+      let nativeDetector = null;
+      if (typeof window.BarcodeDetector !== 'undefined') {
+        try {
+          nativeDetector = new window.BarcodeDetector({ formats: ['qr_code'] });
+        } catch (_) {}
+      }
+
+      let lastScanTime = 0;
+
+      const scanLoop = async (now) => {
+        if (!isScanningActive || !qrCameraStream || !qrVideoPreviewEl) return;
+
+        if (qrVideoPreviewEl.readyState === qrVideoPreviewEl.HAVE_ENOUGH_DATA) {
+          const vw = qrVideoPreviewEl.videoWidth;
+          const vh = qrVideoPreviewEl.videoHeight;
+
+          if (now - lastScanTime >= 90 && vw > 0 && vh > 0) {
+            lastScanTime = now;
+            let detected = null;
+
+            // 1. Native BarcodeDetector
+            if (nativeDetector) {
+              try {
+                const barcodes = await nativeDetector.detect(qrVideoPreviewEl);
+                if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
+                  detected = barcodes[0].rawValue;
+                }
+              } catch (_) {}
+            }
+
+            // 2. jsQR frame decoding
+            if (!detected && typeof window.jsQR === 'function' && qrCanvasCtx) {
+              try {
+                qrCanvasEl.width = vw;
+                qrCanvasEl.height = vh;
+                qrCanvasCtx.drawImage(qrVideoPreviewEl, 0, 0, vw, vh);
+                const frameData = qrCanvasCtx.getImageData(0, 0, vw, vh);
+                const code = window.jsQR(frameData.data, frameData.width, frameData.height, {
+                  inversionAttempts: 'dontInvert'
+                });
+                if (code && code.data) {
+                  detected = code.data;
+                }
+              } catch (_) {}
+            }
+
+            if (detected) {
+              handleQrDetected(detected);
+              return;
+            }
+          }
+        }
+
+        qrScanAnimId = requestAnimationFrame(scanLoop);
+      };
+
+      qrScanAnimId = requestAnimationFrame(scanLoop);
+    } catch (err) {
+      console.warn('Acceso a cámara denegado o error:', err);
+      showToast('No se pudo acceder a la cámara: ' + (err.message || 'permiso denegado'));
+      if (qrCameraStatus) qrCameraStatus.textContent = 'Cámara no disponible';
+    }
+  }
+
+  function handleQrDetected(detectedCode) {
+    playScanBeep();
+    triggerScanHaptic();
+    stopQrCamera();
+    if (qrScannerCodeInput) qrScannerCodeInput.value = detectedCode;
+    executeQrSearch(detectedCode);
+  }
+
+  async function toggleTorch() {
+    if (!qrCameraStream) return;
+    const track = qrCameraStream.getVideoTracks()[0];
+    if (!track) return;
+    const caps = typeof track.getCapabilities === 'function' ? track.getCapabilities() : {};
+    if (!caps.torch) {
+      showToast('Tu cámara no soporta linterna');
+      return;
+    }
+    try {
+      isTorchOn = !isTorchOn;
+      await track.applyConstraints({
+        advanced: [{ torch: isTorchOn }]
+      });
+      if (btnToggleQrTorch) {
+        btnToggleQrTorch.classList.toggle('active', isTorchOn);
+        btnToggleQrTorch.setAttribute('aria-pressed', isTorchOn ? 'true' : 'false');
+      }
+    } catch (err) {
+      console.warn('Error cambiando linterna:', err);
+      showToast('No se pudo cambiar el estado de la linterna');
+    }
+  }
+
+  if (btnToggleQrTorch) {
+    btnToggleQrTorch.addEventListener('click', toggleTorch);
+  }
+
+  async function flipCamera() {
+    currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
+    isTorchOn = false;
+    if (btnToggleQrTorch) {
+      btnToggleQrTorch.classList.remove('active');
+      btnToggleQrTorch.setAttribute('aria-pressed', 'false');
+      btnToggleQrTorch.style.display = 'none';
+    }
+    stopQrCamera();
+    await startQrCamera();
+  }
+
+  if (btnFlipQrCamera) {
+    btnFlipQrCamera.addEventListener('click', flipCamera);
+  }
+
+  if (btnToggleQrCamera) {
+    btnToggleQrCamera.addEventListener('click', () => {
+      if (qrCameraStream) {
+        stopQrCamera();
+      } else {
+        startQrCamera();
+      }
+    });
+  }
+
+  if (btnScanAnotherQr) {
+    btnScanAnotherQr.addEventListener('click', () => {
+      if (qrScanResultBox) qrScanResultBox.hidden = true;
+      if (qrScannerCodeInput) qrScannerCodeInput.value = '';
+      activeScannedRes = null;
+      if (qrCameraStatus) qrCameraStatus.textContent = 'Apuntá al código QR del cliente';
+      startQrCamera();
+    });
+  }
+
+  async function executeQrSearch(rawTerm) {
     if (!rawTerm) return;
-    let term = rawTerm.trim();
-    // Support scanning raw URL or query param like ?checkin=MLP-8492
+    let term = String(rawTerm).trim();
+    // Support scanning raw URL or query param like ?checkin=MLP-8492 or ?reserva=MLP-8492
     if (term.includes('checkin=')) {
       term = term.split('checkin=')[1].split('&')[0];
     } else if (term.includes('reserva=')) {
       term = term.split('reserva=')[1].split('&')[0];
     }
-    term = decodeURIComponent(term).trim().toLowerCase();
+    term = decodeURIComponent(term).trim();
+    const termLower = term.toLowerCase();
+    const termDigits = term.replace(/\D/g, '');
 
-    const list = window.MeryStore ? window.MeryStore.getReservations() : [];
-    const found = list.find((r) =>
-      r.id.toLowerCase() === term ||
-      (r.customer_name || '').toLowerCase() === term ||
-      (r.birthday_dni || '').replace(/\D/g, '') === term.replace(/\D/g, '') ||
-      (r.customer_phone || '').replace(/\D/g, '') === term.replace(/\D/g, '')
+    let list = window.MeryStore ? window.MeryStore.getReservations() : [];
+    let found = list.find((r) =>
+      (r.id || '').toLowerCase() === termLower ||
+      (r.customer_name || '').toLowerCase() === termLower ||
+      (termDigits.length >= 6 && (r.birthday_dni || '').replace(/\D/g, '') === termDigits) ||
+      (termDigits.length >= 6 && (r.customer_phone || '').replace(/\D/g, '').endsWith(termDigits))
     );
+
+    // If not found locally, fetch from Supabase
+    if (!found && window.MeryStore) {
+      if (qrCameraStatus) qrCameraStatus.textContent = 'Buscando en Supabase...';
+      try {
+        if (typeof window.MeryStore.fetchReservationById === 'function') {
+          const remoteItem = await window.MeryStore.fetchReservationById(term);
+          if (remoteItem) {
+            found = remoteItem;
+          }
+        }
+      } catch (_) {}
+
+      if (!found && typeof window.MeryStore.fetchReservationsFromSupabase === 'function') {
+        try {
+          const freshList = await window.MeryStore.fetchReservationsFromSupabase();
+          if (Array.isArray(freshList)) {
+            list = freshList;
+            found = list.find((r) =>
+              (r.id || '').toLowerCase() === termLower ||
+              (r.customer_name || '').toLowerCase() === termLower ||
+              (termDigits.length >= 6 && (r.birthday_dni || '').replace(/\D/g, '') === termDigits) ||
+              (termDigits.length >= 6 && (r.customer_phone || '').replace(/\D/g, '').endsWith(termDigits))
+            );
+          }
+        } catch (_) {}
+      }
+    }
 
     if (!found) {
       if (qrScanResultBox) qrScanResultBox.hidden = true;
       showToast('No se encontró ninguna reserva para: ' + rawTerm);
+      if (qrCameraStatus) qrCameraStatus.textContent = 'Reserva no encontrada';
       return;
     }
 
     activeScannedRes = found;
-    if (qrScanResultBox) qrScanResultBox.hidden = false;
+    if (qrCameraStatus) qrCameraStatus.textContent = '✓ Pase VIP verificado';
+    if (qrScanResultBox) {
+      qrScanResultBox.hidden = false;
+      try {
+        qrScanResultBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      } catch (_) {}
+    }
+
     if (qrResultCode) qrResultCode.textContent = found.id;
     if (qrResultName) qrResultName.textContent = found.customer_name;
     if (qrResultDepositBadge) {
@@ -2088,10 +2529,10 @@ document.addEventListener('DOMContentLoaded', () => {
         message: `¿Confirmar ingreso en puerta de ${targetCustomerName} (${guestsCount} personas)?`,
         confirmLabel: 'Sí, confirmar ingreso',
         successText: '¡Ingreso confirmado con éxito!',
-        onConfirm: () => {
+        onConfirm: async () => {
           if (window.MeryStore && typeof window.MeryStore.checkInReservation === 'function') {
-            const updated = window.MeryStore.checkInReservation(targetResId, true);
-            activeScannedRes = updated;
+            const updated = await window.MeryStore.checkInReservation(targetResId, true);
+            activeScannedRes = updated || activeScannedRes;
             showToast(`✓ Ingreso confirmado para ${targetCustomerName} (${targetResId})`);
             closeQrScannerModal();
             updateReservationsBadge();
@@ -2099,77 +2540,6 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
       });
-    });
-  }
-
-  let qrVideoPreviewEl = null;
-
-  // Camera QR scanner integration
-  function stopQrCamera() {
-    if (qrCameraStream) {
-      qrCameraStream.getTracks().forEach((track) => track.stop());
-      qrCameraStream = null;
-    }
-    if (qrVideoPreviewEl) {
-      qrVideoPreviewEl.srcObject = null;
-      qrVideoPreviewEl.remove();
-      qrVideoPreviewEl = null;
-    }
-    if (qrCameraContainer) qrCameraContainer.hidden = true;
-  }
-
-  if (btnToggleQrCamera) {
-    btnToggleQrCamera.addEventListener('click', async () => {
-      if (qrCameraStream) {
-        stopQrCamera();
-        btnToggleQrCamera.textContent = 'Usar cámara del celular / lector';
-        return;
-      }
-
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        showToast('Tu navegador no tiene permisos de cámara o no la soporta');
-        return;
-      }
-
-      try {
-        qrCameraStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'environment' }
-        });
-        if (qrCameraContainer) {
-          qrVideoPreviewEl = document.createElement('video');
-          qrVideoPreviewEl.className = 'admin-camera-video';
-          qrVideoPreviewEl.setAttribute('playsinline', '');
-          qrVideoPreviewEl.muted = true;
-          qrCameraContainer.prepend(qrVideoPreviewEl);
-          qrVideoPreviewEl.srcObject = qrCameraStream;
-          qrVideoPreviewEl.play().catch(() => {});
-          qrCameraContainer.hidden = false;
-        }
-        btnToggleQrCamera.textContent = 'Detener cámara';
-
-        // Use native BarcodeDetector if available
-        if (typeof window.BarcodeDetector !== 'undefined') {
-          const detector = new window.BarcodeDetector({ formats: ['qr_code'] });
-          const scanInterval = setInterval(async () => {
-            if (!qrCameraStream || !qrVideoPreviewEl) {
-              clearInterval(scanInterval);
-              return;
-            }
-            try {
-              const barcodes = await detector.detect(qrVideoPreviewEl);
-              if (barcodes && barcodes.length > 0) {
-                const detectedVal = barcodes[0].rawValue;
-                clearInterval(scanInterval);
-                stopQrCamera();
-                btnToggleQrCamera.textContent = 'Usar cámara del celular / lector';
-                executeQrSearch(detectedVal);
-              }
-            } catch (_) {}
-          }, 350);
-        }
-      } catch (err) {
-        showToast('No se pudo acceder a la cámara: ' + (err.message || 'permiso denegado'));
-      }
     });
   }
 
@@ -2229,6 +2599,7 @@ document.addEventListener('DOMContentLoaded', () => {
   async function renderWhatsappWorkspace() {
     if (!sectionsContainer) return;
     activeTab = 'whatsapp';
+    persistActiveTabState();
     stopWaPolling();
 
     if (activeCategoryTitle) activeCategoryTitle.textContent = 'WhatsApp y Señas';

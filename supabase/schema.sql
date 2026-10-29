@@ -300,7 +300,7 @@ CREATE POLICY "Subida de comprobante de sena para reservas"
 DROP POLICY IF EXISTS "Admin gestion total de reservas" ON public.table_reservations;
 CREATE POLICY "Admin gestion total de reservas"
   ON public.table_reservations FOR ALL
-  TO authenticated
+  TO anon, authenticated
   USING (true)
   WITH CHECK (true);
 

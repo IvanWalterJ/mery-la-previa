@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="admin.css?v=14" />
+  <link rel="stylesheet" href="admin.css?v=15" />
 </head>
 <body>
 
@@ -557,45 +557,93 @@
   </div>
 
   <!-- ======================================================================
-       8. POPUP MODAL: DOOR QR SCANNER & CHECK-IN (S9)
+       8. POPUP MODAL: DOOR QR SCANNER & CHECK-IN (S9) - IMMERSIVE SCANNER
        ====================================================================== -->
-  <div id="adminQrScannerModal" class="admin-modal-backdrop" hidden role="dialog" aria-modal="true" aria-labelledby="qrScannerHeading">
-    <div class="admin-modal-card admin-modal-md">
-      <div class="admin-modal-header">
-        <div class="admin-modal-title-group">
-          <span class="diamond-dot"></span>
-          <h2 id="qrScannerHeading">Validar QR y Check-in de puerta</h2>
+  <div id="adminQrScannerModal" class="admin-modal-backdrop admin-qr-fullscreen-modal" hidden role="dialog" aria-modal="true" aria-labelledby="qrScannerHeading">
+    <div class="admin-qr-viewport">
+      <!-- Camera Video Stage / Viewfinder -->
+      <div id="qrCameraContainer" class="admin-qr-camera-stage">
+        <!-- Live video stream inserted here -->
+        <div class="admin-camera-reticle" aria-hidden="true">
+          <div class="admin-laser-beam"></div>
+          <span class="reticle-corner corner-tl"></span>
+          <span class="reticle-corner corner-tr"></span>
+          <span class="reticle-corner corner-bl"></span>
+          <span class="reticle-corner corner-br"></span>
         </div>
-        <button type="button" id="btnCloseQrScannerModal" class="admin-modal-close" aria-label="Cerrar">✕</button>
       </div>
 
-      <div class="admin-qr-scanner-body">
+      <!-- Top Floating Controls (Glassmorphism) -->
+      <header class="admin-qr-top-bar">
+        <div class="admin-qr-header-left">
+          <span class="diamond-dot"></span>
+          <div>
+            <h2 id="qrScannerHeading" class="admin-qr-title">Escanear Pase VIP</h2>
+            <p id="qrCameraStatus" class="admin-qr-subtitle">Apuntá al código QR del cliente</p>
+          </div>
+        </div>
+
+        <div class="admin-qr-top-actions">
+          <button
+            type="button"
+            id="btnToggleQrTorch"
+            class="admin-qr-action-btn"
+            title="Activar / Desactivar linterna"
+            aria-label="Linterna"
+            aria-pressed="false"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+          </button>
+
+          <button
+            type="button"
+            id="btnFlipQrCamera"
+            class="admin-qr-action-btn"
+            title="Girar cámara (Frontal / Trasera)"
+            aria-label="Girar cámara"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 16v4h-4"></path>
+              <path d="M4 8V4h4"></path>
+              <path d="M4 14.5A8.5 8.5 0 0 0 18.5 19L20 20"></path>
+              <path d="M20 9.5A8.5 8.5 0 0 0 5.5 5L4 4"></path>
+            </svg>
+          </button>
+
+          <button
+            type="button"
+            id="btnCloseQrScannerModal"
+            class="admin-qr-action-btn admin-qr-close-btn"
+            title="Cerrar scanner"
+            aria-label="Cerrar"
+          >
+            ✕
+          </button>
+        </div>
+      </header>
+
+      <!-- Bottom Floating Drawer: Manual Entry & Scan Result Card -->
+      <div class="admin-qr-bottom-drawer">
         <div class="admin-qr-input-row">
           <input
             type="text"
             id="qrScannerCodeInput"
-            class="admin-input"
-            placeholder="Ingresá código MLP-XXXX o DNI del cumpleañero..."
+            class="admin-input admin-qr-input"
+            placeholder="MLP-XXXX o DNI del cumpleañero..."
+            autocomplete="off"
           />
-          <button type="button" id="btnSearchQrCode" class="admin-btn-gold">
+          <button type="button" id="btnSearchQrCode" class="admin-btn-gold admin-qr-search-btn">
             Buscar
           </button>
         </div>
 
-        <!-- Camera Scanner Stage -->
-        <div class="admin-camera-stage">
-          <div id="qrCameraContainer" class="admin-camera-container" hidden>
-            <div class="admin-camera-reticle"></div>
-          </div>
-          <button type="button" id="btnToggleQrCamera" class="admin-btn-outline admin-btn-camera">
-            Usar cámara del celular / lector
-          </button>
-          <p class="admin-hint-text" style="font-size: 0.78rem; color: #a09f98; margin: 8px 0 0; text-align: center; line-height: 1.4;">
-            💡 En producción o red Wi-Fi compartida, al apuntar la cámara nativa del celular al QR del pase se abre directamente este validador (<code>/admin?checkin=MLP-XXXX</code>). En entorno local (localhost), los celulares no resuelven "localhost", por lo que podés usar esta cámara integrada o ingresar el código manualmente.
-          </p>
-        </div>
+        <button type="button" id="btnToggleQrCamera" class="admin-btn-outline admin-btn-camera" style="display: none;">
+          Usar cámara del celular / lector
+        </button>
 
-        <!-- Scan Result Card -->
+        <!-- Scan Result Card (Slide-up on scan) -->
         <div id="qrScanResultBox" class="admin-scan-result-card" hidden>
           <div class="admin-scan-result-header">
             <div>
@@ -632,12 +680,11 @@
             <button type="button" id="btnConfirmQrCheckIn" class="admin-btn-gold admin-btn-checkin-large">
               Confirmar ingreso (Asistió)
             </button>
+            <button type="button" id="btnScanAnotherQr" class="admin-btn-outline" style="width: 100%; margin-top: 8px;">
+              📷 Escanear otro código
+            </button>
           </div>
         </div>
-      </div>
-
-      <div class="admin-modal-footer">
-        <button type="button" id="btnDismissQrModal" class="admin-btn-outline">Cerrar</button>
       </div>
     </div>
   </div>
@@ -806,7 +853,9 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js?v=14"></script>
-  <script src="admin.js?v=14"></script>
+  <script src="assets/js/qrcode.min.js"></script>
+  <script src="assets/js/jsqr.min.js"></script>
+  <script src="supabase-config.js?v=15"></script>
+  <script src="admin.js?v=15"></script>
 </body>
 </html>

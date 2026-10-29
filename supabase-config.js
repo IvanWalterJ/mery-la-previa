@@ -1109,10 +1109,50 @@ const DEFAULT_MENU_SECTIONS = [
       : canvasOrId;
     if (!canvas || !canvas.getContext) return null;
 
-    const size = options.size || 220;
+    const size = options.size || 240;
     const colorDark = options.colorDark || '#0d0e0d';
-    const colorLight = options.colorLight || '#f7f4ed';
-    const margin = options.margin != null ? options.margin : 2;
+    const colorLight = options.colorLight || '#ffffff';
+    const margin = options.margin != null ? options.margin : 3;
+
+    const qrEngine = (typeof window !== 'undefined' && window.qrcode)
+      ? window.qrcode
+      : (typeof global !== 'undefined' && global.qrcode ? global.qrcode : null);
+
+    if (typeof qrEngine === 'function') {
+      try {
+        const qr = qrEngine(0, 'M');
+        qr.addData(String(text || ''));
+        qr.make();
+
+        const moduleCount = qr.getModuleCount();
+        const fullCount = moduleCount + margin * 2;
+        const cellSize = size / fullCount;
+
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return canvas;
+
+        ctx.fillStyle = colorLight;
+        ctx.fillRect(0, 0, size, size);
+
+        ctx.fillStyle = colorDark;
+        for (let r = 0; r < moduleCount; r++) {
+          for (let c = 0; c < moduleCount; c++) {
+            if (qr.isDark(r, c)) {
+              const x = Math.round((c + margin) * cellSize);
+              const y = Math.round((r + margin) * cellSize);
+              const w = Math.ceil(cellSize);
+              const h = Math.ceil(cellSize);
+              ctx.fillRect(x, y, w, h);
+            }
+          }
+        }
+        return canvas;
+      } catch (err) {
+        console.warn('qrcode-generator render error, using matrix fallback:', err);
+      }
+    }
 
     const { modules, moduleCount } = generateQrMatrix(String(text || ''));
     canvas.width = size;
@@ -1215,14 +1255,84 @@ const DEFAULT_MENU_SECTIONS = [
   function getReservations() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY_RESERVATIONS);
-      if (raw) {
+      if (raw !== null) {
         const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) return parsed;
       }
     } catch (_) {}
-    const cloned = JSON.parse(JSON.stringify(DEFAULT_RESERVATIONS));
-    saveReservations(cloned, false);
-    return cloned;
+    return [];
+  }
+
+  async function fetchReservationsFromSupabase() {
+    const client = getClient();
+    if (!client) {
+      return getReservations();
+    }
+
+    try {
+      const { data, error } = await client
+        .from('table_reservations')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      if (Array.isArray(data)) {
+        const normalized = data.map((r) => ({
+          ...r,
+          is_birthday: Boolean(r.is_birthday),
+          attended: Boolean(r.attended),
+          guests: Number(r.guests) || 2
+        }));
+
+        saveReservations(normalized, false);
+        return normalized;
+      }
+      return getReservations();
+    } catch (err) {
+      console.warn('Fallback a reservas locales:', err.message || err);
+      return getReservations();
+    }
+  }
+
+  async function fetchReservationById(id) {
+    if (!id) return null;
+    const cleanId = String(id).trim().toUpperCase();
+    const local = getReservations();
+    const localMatch = local.find((r) => (r.id || '').toUpperCase() === cleanId);
+
+    const client = getClient();
+    if (!client) return localMatch || null;
+
+    try {
+      const { data, error } = await client
+        .from('table_reservations')
+        .select('*')
+        .ilike('id', cleanId)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (data) {
+        const normalized = {
+          ...data,
+          is_birthday: Boolean(data.is_birthday),
+          attended: Boolean(data.attended),
+          guests: Number(data.guests) || 2
+        };
+        const idx = local.findIndex((r) => (r.id || '').toUpperCase() === cleanId);
+        if (idx !== -1) {
+          local[idx] = normalized;
+        } else {
+          local.unshift(normalized);
+        }
+        saveReservations(local, false);
+        return normalized;
+      }
+      return localMatch || null;
+    } catch (err) {
+      console.warn('Fallback al buscar reserva por ID:', err.message || err);
+      return localMatch || null;
+    }
   }
 
   function saveReservations(reservations, notify = true, broadcastPayload = null) {
@@ -1673,6 +1783,8 @@ const DEFAULT_MENU_SECTIONS = [
     toggleDayClosed,
     getReservations,
     saveReservations,
+    fetchReservationsFromSupabase,
+    fetchReservationById,
     createReservation,
     uploadDepositProof,
     approveReservationDeposit,
