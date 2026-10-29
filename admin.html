@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="admin.css?v=4" />
+  <link rel="stylesheet" href="admin.css?v=5" />
 </head>
 <body>
 
@@ -136,6 +136,21 @@
           <button type="button" id="btnNewCategory" class="admin-sidebar-add-btn">
             <span>+ Nueva categoría</span>
           </button>
+        </div>
+
+        <div class="admin-sidebar-section">
+          <div class="admin-sidebar-label-row">
+            <span class="admin-sidebar-label">Operaciones y reservas</span>
+          </div>
+          <nav class="admin-sidebar-nav" aria-label="Operaciones de reservas y WhatsApp">
+            <button type="button" id="btnNavReservations" class="admin-cat-pill">
+              <span>Reservas y Check-in QR</span>
+              <span id="adminReservationsBadge" class="admin-cat-pill-count">0</span>
+            </button>
+            <button type="button" id="btnNavWhatsapp" class="admin-cat-pill">
+              <span>WhatsApp y Señas (QR)</span>
+            </button>
+          </nav>
         </div>
 
         <div class="admin-sidebar-section">
@@ -485,8 +500,134 @@
     </div>
   </div>
 
+  <!-- ======================================================================
+       7. POPUP MODAL: VIEW AND APPROVE DEPOSIT PROOF (S9)
+       ====================================================================== -->
+  <div id="adminProofModal" class="admin-modal-backdrop" hidden role="dialog" aria-modal="true" aria-labelledby="proofModalHeading">
+    <div class="admin-modal-card admin-modal-md">
+      <div class="admin-modal-header">
+        <div class="admin-modal-title-group">
+          <span class="diamond-dot"></span>
+          <h2 id="proofModalHeading">Comprobante de seña</h2>
+        </div>
+        <button type="button" id="btnCloseProofModal" class="admin-modal-close" aria-label="Cerrar">✕</button>
+      </div>
+
+      <div class="admin-proof-body">
+        <div class="admin-proof-meta-row">
+          <div>
+            <span class="admin-label-muted">Reserva:</span>
+            <strong id="adminProofResId" class="admin-proof-code">MLP-8492</strong>
+          </div>
+          <div>
+            <span class="admin-label-muted">Titular:</span>
+            <strong id="adminProofCustomerName">Agustina Di Marco</strong>
+          </div>
+          <div>
+            <span class="admin-label-muted">Subido:</span>
+            <span id="adminProofUploadedAt">13/11 19:30 hs</span>
+          </div>
+        </div>
+
+        <div class="admin-proof-image-stage">
+          <img id="adminProofImage" src="" alt="Comprobante de transferencia" class="admin-proof-full-img" />
+        </div>
+
+        <div id="adminProofStatusNotice" class="admin-proof-notice"></div>
+      </div>
+
+      <div class="admin-modal-footer">
+        <button type="button" id="btnCancelProofModal" class="admin-btn-outline">Cerrar</button>
+        <button type="button" id="btnApproveProofModal" class="admin-btn-gold">Confirmar seña y asegurar lugar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================================
+       8. POPUP MODAL: DOOR QR SCANNER & CHECK-IN (S9)
+       ====================================================================== -->
+  <div id="adminQrScannerModal" class="admin-modal-backdrop" hidden role="dialog" aria-modal="true" aria-labelledby="qrScannerHeading">
+    <div class="admin-modal-card admin-modal-md">
+      <div class="admin-modal-header">
+        <div class="admin-modal-title-group">
+          <span class="diamond-dot"></span>
+          <h2 id="qrScannerHeading">Validar QR y Check-in de puerta</h2>
+        </div>
+        <button type="button" id="btnCloseQrScannerModal" class="admin-modal-close" aria-label="Cerrar">✕</button>
+      </div>
+
+      <div class="admin-qr-scanner-body">
+        <div class="admin-qr-input-row">
+          <input
+            type="text"
+            id="qrScannerCodeInput"
+            class="admin-input"
+            placeholder="Ingresá código MLP-XXXX o DNI del cumpleañero..."
+          />
+          <button type="button" id="btnSearchQrCode" class="admin-btn-gold">
+            Buscar
+          </button>
+        </div>
+
+        <!-- Camera Scanner Stage -->
+        <div class="admin-camera-stage">
+          <div id="qrCameraContainer" class="admin-camera-container" hidden>
+            <div class="admin-camera-reticle"></div>
+          </div>
+          <button type="button" id="btnToggleQrCamera" class="admin-btn-outline admin-btn-camera">
+            Usar cámara del celular / lector
+          </button>
+        </div>
+
+        <!-- Scan Result Card -->
+        <div id="qrScanResultBox" class="admin-scan-result-card" hidden>
+          <div class="admin-scan-result-header">
+            <div>
+              <span id="qrResultCode" class="admin-result-code">MLP-8492</span>
+              <h3 id="qrResultName" class="admin-result-name">Agustina Di Marco</h3>
+            </div>
+            <span id="qrResultDepositBadge" class="admin-res-badge">Con seña</span>
+          </div>
+
+          <div class="admin-scan-grid">
+            <div>
+              <span class="admin-label-muted">Sector / Motivo</span>
+              <strong id="qrResultType">Cumpleaños VIP</strong>
+            </div>
+            <div>
+              <span class="admin-label-muted">Personas</span>
+              <strong id="qrResultGuests">10 personas</strong>
+            </div>
+            <div>
+              <span class="admin-label-muted">Día y Hora</span>
+              <strong id="qrResultDateTime">Viernes 13/11 • 22:00 hs</strong>
+            </div>
+            <div>
+              <span class="admin-label-muted">Estado de Ingreso</span>
+              <strong id="qrResultAttendance">Pendiente de ingreso</strong>
+            </div>
+          </div>
+
+          <div id="qrResultBirthdayNotice" class="admin-scan-birthday-notice" hidden>
+            🎂 <strong>Cumpleaños VIP:</strong> DNI <span id="qrResultDni">-</span> • Brindis y beneficios habilitados en barra.
+          </div>
+
+          <div class="admin-scan-actions">
+            <button type="button" id="btnConfirmQrCheckIn" class="admin-btn-gold admin-btn-checkin-large">
+              Confirmar ingreso (Asistió)
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-modal-footer">
+        <button type="button" id="btnDismissQrModal" class="admin-btn-outline">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js?v=4"></script>
-  <script src="admin.js?v=4"></script>
+  <script src="supabase-config.js?v=5"></script>
+  <script src="admin.js?v=5"></script>
 </body>
 </html>

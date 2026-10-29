@@ -653,22 +653,415 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // 7. Qitchen Reservation & Birthday WhatsApp Form Submission
+  // 7. Qitchen Reservation & Birthday System with Airport Boarding Pass (S9)
   const resForm = document.getElementById('qitchenResForm');
+  const resTypeSelect = document.getElementById('resType');
+  const resBirthdayFields = document.getElementById('resBirthdayFields');
+  const resDniInput = document.getElementById('resDni');
+  const resBirthDateInput = document.getElementById('resBirthDate');
+  const resDepositModeWrap = document.getElementById('resDepositModeWrap');
+  const resDepositModeInput = document.getElementById('resDepositMode');
+
+  // Toggle birthday fields on motivo change
+  function updateBirthdayFieldsVisibility() {
+    if (!resBirthdayFields) return;
+    const isBirthday = (resTypeSelect?.value === 'Cumpleaños VIP');
+    resBirthdayFields.hidden = !isBirthday;
+    if (resDniInput) resDniInput.required = isBirthday;
+    if (resBirthDateInput) resBirthDateInput.required = isBirthday;
+  }
+
+  if (resTypeSelect) {
+    resTypeSelect.addEventListener('change', updateBirthdayFieldsVisibility);
+    // Also listen to custom select clicks on resType options
+    document.querySelectorAll('[data-select-id="resType"] .q-select-option').forEach((opt) => {
+      opt.addEventListener('click', () => {
+        setTimeout(updateBirthdayFieldsVisibility, 50);
+      });
+    });
+    updateBirthdayFieldsVisibility();
+  }
+
+  // Deposit Mode selector cards
+  if (resDepositModeWrap) {
+    const cards = resDepositModeWrap.querySelectorAll('.q-deposit-card');
+    cards.forEach((card) => {
+      card.addEventListener('click', () => {
+        cards.forEach((c) => {
+          c.classList.remove('active');
+          const check = c.querySelector('.q-deposit-card-check');
+          if (check) check.textContent = '○';
+        });
+        card.classList.add('active');
+        const check = card.querySelector('.q-deposit-card-check');
+        if (check) check.textContent = '●';
+        const mode = card.getAttribute('data-deposit-mode') || 'con_sena';
+        if (resDepositModeInput) resDepositModeInput.value = mode;
+      });
+    });
+  }
+
+  // --- Airport Boarding Pass Modal ---
+  const bpModal = document.getElementById('qitchenBoardingPassModal');
+  const btnCloseBp = document.getElementById('btnCloseBoardingPass');
+  const bpProofFileInput = document.getElementById('bpProofFileInput');
+  const btnUploadProofNow = document.getElementById('btnUploadProofNow');
+  const btnDownloadBp = document.getElementById('btnDownloadBoardingPass');
+  const btnShareBpWhatsapp = document.getElementById('btnShareBoardingPassWhatsapp');
+  const btnCopyPortalUrl = document.getElementById('btnCopyPortalUrl');
+
+  let activeBoardingPass = null;
+
+  function openBoardingPassModal(res) {
+    if (!bpModal || !res) return;
+    activeBoardingPass = res;
+
+    // Populate data
+    const bpCode = document.getElementById('bpCode');
+    const bpName = document.getElementById('bpName');
+    const bpDateTime = document.getElementById('bpDateTime');
+    const bpType = document.getElementById('bpType');
+    const bpGuests = document.getElementById('bpGuests');
+    const bpDni = document.getElementById('bpDni');
+    const bpBirthDate = document.getElementById('bpBirthDate');
+    const bdBdayRow = document.getElementById('bpBirthdayInfoRow');
+    const bpStatusBadge = document.getElementById('bpStatusBadge');
+    const bpDepositSection = document.getElementById('bpDepositSection');
+
+    if (bpCode) bpCode.textContent = res.id;
+    if (bpName) bpName.textContent = res.customer_name;
+    if (bpDateTime) bpDateTime.textContent = `${res.res_day} • ${res.res_time}`;
+    if (bpType) bpType.textContent = res.res_type;
+    if (bpGuests) bpGuests.textContent = `${res.guests} ${res.guests === 1 ? 'persona' : 'personas'}`;
+
+    if (bdBdayRow) {
+      if (res.is_birthday && (res.birthday_dni || res.birthday_date)) {
+        bdBdayRow.hidden = false;
+        if (bpDni) bpDni.textContent = res.birthday_dni || 'No especificado';
+        if (bpBirthDate) bpBirthDate.textContent = res.birthday_date || 'No especificada';
+      } else {
+        bdBdayRow.hidden = true;
+      }
+    }
+
+    // Status Badge
+    if (bpStatusBadge) {
+      if (res.deposit_mode === 'sin_sena') {
+        bpStatusBadge.className = 'bp-status-badge bp-status-simple';
+        bpStatusBadge.textContent = 'RESERVA SIN SEÑA • SUJETA A DISPONIBILIDAD';
+      } else if (res.deposit_status === 'confirmada') {
+        bpStatusBadge.className = 'bp-status-badge bp-status-confirmed';
+        bpStatusBadge.textContent = 'LUGAR ASEGURADO • SEÑA CONFIRMADA ✓';
+      } else if (res.deposit_status === 'comprobante_subido') {
+        bpStatusBadge.className = 'bp-status-badge bp-status-review';
+        bpStatusBadge.textContent = 'COMPROBANTE EN REVISIÓN';
+      } else {
+        bpStatusBadge.className = 'bp-status-badge bp-status-pending';
+        bpStatusBadge.textContent = 'PENDIENTE DE COMPROBANTE DE SEÑA';
+      }
+    }
+
+    // Deposit details
+    const settings = window.MeryStore ? window.MeryStore.getReservationSettings() : {};
+    if (bpDepositSection) {
+      if (res.deposit_mode === 'sin_sena') {
+        bpDepositSection.hidden = true;
+      } else {
+        bpDepositSection.hidden = false;
+        const bpDepositAlias = document.getElementById('bpDepositAlias');
+        const bpDepositCbu = document.getElementById('bpDepositCbu');
+        const bpDepositAmount = document.getElementById('bpDepositAmount');
+        const bpPaymentLink = document.getElementById('bpPaymentLink');
+
+        if (bpDepositAlias) bpDepositAlias.textContent = settings.depositAlias || 'MERY.LAPREVIA.MP';
+        if (bpDepositCbu) bpDepositCbu.textContent = settings.depositCbu || '0000003100098765432100';
+        if (bpDepositAmount) bpDepositAmount.textContent = settings.depositAmount || '$15.000';
+        if (bpPaymentLink && settings.depositPaymentLink) bpPaymentLink.href = settings.depositPaymentLink;
+      }
+    }
+
+    // Customer Portal URL
+    const origin = window.location.origin || 'http://localhost:3000';
+    const portalUrl = `${origin}/?reserva=${encodeURIComponent(res.id)}`;
+    const bpCustomerPortalUrl = document.getElementById('bpCustomerPortalUrl');
+    if (bpCustomerPortalUrl) bpCustomerPortalUrl.value = portalUrl;
+
+    // Proof Preview
+    const bpProofPreviewWrap = document.getElementById('bpProofPreviewWrap');
+    const bpProofPreviewImg = document.getElementById('bpProofPreviewImg');
+    const bpProofStatusMsg = document.getElementById('bpProofStatusMsg');
+    if (bpProofPreviewWrap && bpProofPreviewImg) {
+      if (res.proof_url) {
+        bpProofPreviewWrap.hidden = false;
+        bpProofPreviewImg.src = res.proof_url;
+        if (bpProofStatusMsg) {
+          bpProofStatusMsg.textContent = res.deposit_status === 'confirmada'
+            ? '✓ Seña confirmada por el equipo'
+            : '✓ Comprobante recibido — Ya notificamos al equipo';
+        }
+      } else {
+        bpProofPreviewWrap.hidden = true;
+        bpProofPreviewImg.src = '';
+      }
+    }
+
+    // Scannable Door Check-in QR Canvas
+    const checkinUrl = `${origin}/admin?checkin=${encodeURIComponent(res.id)}`;
+    if (window.MeryStore && typeof window.MeryStore.renderQrCode === 'function') {
+      window.MeryStore.renderQrCode('bpQrCanvas', checkinUrl, { size: 220 });
+    }
+
+    // Open Modal
+    bpModal.classList.add('open');
+    bpModal.setAttribute('aria-hidden', 'false');
+    const cardEl = bpModal.querySelector('.bp-modal-card');
+    if (cardEl) cardEl.scrollTo({ top: 0, behavior: 'instant' });
+  }
+
+  function closeBoardingPassModal() {
+    if (!bpModal) return;
+    bpModal.classList.remove('open');
+    bpModal.setAttribute('aria-hidden', 'true');
+  }
+
+  if (btnCloseBp) btnCloseBp.addEventListener('click', closeBoardingPassModal);
+  if (bpModal) {
+    bpModal.addEventListener('click', (e) => {
+      if (e.target === bpModal) closeBoardingPassModal();
+    });
+  }
+
+  // Copy buttons
+  if (btnCopyPortalUrl) {
+    btnCopyPortalUrl.addEventListener('click', () => {
+      const urlInput = document.getElementById('bpCustomerPortalUrl');
+      if (urlInput && urlInput.value) {
+        navigator.clipboard.writeText(urlInput.value).then(() => {
+          const prev = btnCopyPortalUrl.textContent;
+          btnCopyPortalUrl.textContent = '¡Copiado!';
+          setTimeout(() => { btnCopyPortalUrl.textContent = prev; }, 1800);
+        }).catch(() => {});
+      }
+    });
+  }
+
+  document.querySelectorAll('.bp-btn-copy').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const targetId = btn.getAttribute('data-copy-target');
+      const targetEl = targetId ? document.getElementById(targetId) : null;
+      if (targetEl && targetEl.textContent) {
+        navigator.clipboard.writeText(targetEl.textContent.trim()).then(() => {
+          const prev = btn.textContent;
+          btn.textContent = '✓ Copiado';
+          setTimeout(() => { btn.textContent = prev; }, 1800);
+        }).catch(() => {});
+      }
+    });
+  });
+
+  // Direct deposit proof file upload in Boarding Pass modal
+  if (btnUploadProofNow && bpProofFileInput) {
+    btnUploadProofNow.addEventListener('click', () => {
+      bpProofFileInput.click();
+    });
+
+    bpProofFileInput.addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      if (!file || !activeBoardingPass) return;
+
+      const originalBtnText = btnUploadProofNow.textContent;
+      btnUploadProofNow.disabled = true;
+      btnUploadProofNow.textContent = 'Subiendo comprobante optimizado...';
+
+      try {
+        if (window.MeryStore && typeof window.MeryStore.uploadDepositProof === 'function') {
+          const updated = await window.MeryStore.uploadDepositProof(activeBoardingPass.id, file);
+          activeBoardingPass = updated;
+          openBoardingPassModal(updated);
+        }
+      } catch (err) {
+        alert('Error al subir el comprobante: ' + (err.message || err));
+      } finally {
+        btnUploadProofNow.disabled = false;
+        btnUploadProofNow.textContent = originalBtnText;
+        bpProofFileInput.value = '';
+      }
+    });
+  }
+
+  // Download Boarding Pass as PNG
+  if (btnDownloadBp) {
+    btnDownloadBp.addEventListener('click', () => {
+      if (!activeBoardingPass) return;
+      const qrCanvas = document.getElementById('bpQrCanvas');
+      const downloadCanvas = document.createElement('canvas');
+      downloadCanvas.width = 680;
+      downloadCanvas.height = 860;
+      const ctx = downloadCanvas.getContext('2d');
+      if (!ctx) return;
+
+      // Dark background with gold border
+      ctx.fillStyle = '#0f1110';
+      ctx.fillRect(0, 0, 680, 860);
+      ctx.strokeStyle = '#d4af37';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(20, 20, 640, 820);
+
+      // Header
+      ctx.fillStyle = '#d4af37';
+      ctx.font = 'bold 15px sans-serif';
+      ctx.fillText('MERY LA PREVIA • VIP NIGHTS', 45, 65);
+
+      ctx.fillStyle = '#f7f4ed';
+      ctx.font = 'bold 32px serif';
+      ctx.fillText('BOARDING PASS', 45, 105);
+
+      ctx.fillStyle = '#d4af37';
+      ctx.font = 'bold 24px monospace';
+      ctx.textAlign = 'right';
+      ctx.fillText(activeBoardingPass.id, 635, 105);
+      ctx.textAlign = 'left';
+
+      // Divider
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(45, 130);
+      ctx.lineTo(635, 130);
+      ctx.stroke();
+
+      // Details
+      ctx.fillStyle = '#a09f98';
+      ctx.font = '12px sans-serif';
+      ctx.fillText('PASAJERO / TITULAR', 45, 165);
+      ctx.fillStyle = '#f7f4ed';
+      ctx.font = 'bold 18px sans-serif';
+      ctx.fillText(activeBoardingPass.customer_name, 45, 192);
+
+      ctx.fillStyle = '#a09f98';
+      ctx.font = '12px sans-serif';
+      ctx.fillText('FECHA Y HORA', 380, 165);
+      ctx.fillStyle = '#f7f4ed';
+      ctx.font = 'bold 18px sans-serif';
+      ctx.fillText(`${activeBoardingPass.res_day} • ${activeBoardingPass.res_time}`, 380, 192);
+
+      ctx.fillStyle = '#a09f98';
+      ctx.font = '12px sans-serif';
+      ctx.fillText('SECTOR / MOTIVO', 45, 240);
+      ctx.fillStyle = '#f7f4ed';
+      ctx.font = 'bold 18px sans-serif';
+      ctx.fillText(activeBoardingPass.res_type, 45, 267);
+
+      ctx.fillStyle = '#a09f98';
+      ctx.font = '12px sans-serif';
+      ctx.fillText('PERSONAS', 380, 240);
+      ctx.fillStyle = '#f7f4ed';
+      ctx.font = 'bold 18px sans-serif';
+      ctx.fillText(`${activeBoardingPass.guests} personas`, 380, 267);
+
+      if (activeBoardingPass.is_birthday && activeBoardingPass.birthday_dni) {
+        ctx.fillStyle = '#d4af37';
+        ctx.font = 'bold 14px sans-serif';
+        ctx.fillText(`🎂 Cumpleaños VIP — DNI: ${activeBoardingPass.birthday_dni}`, 45, 310);
+      }
+
+      // Draw QR Canvas in center
+      if (qrCanvas) {
+        const qrSize = 260;
+        const qrX = (680 - qrSize) / 2;
+        const qrY = 350;
+        ctx.fillStyle = '#f7f4ed';
+        ctx.fillRect(qrX - 10, qrY - 10, qrSize + 20, qrSize + 20);
+        ctx.drawImage(qrCanvas, qrX, qrY, qrSize, qrSize);
+      }
+
+      // Door note
+      ctx.fillStyle = '#a09f98';
+      ctx.font = '13px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Mostrá este código QR al recepcionista en la puerta de Mery La Previa', 340, 675);
+      ctx.fillStyle = '#d4af37';
+      ctx.font = 'bold 14px sans-serif';
+      ctx.fillText('ACCESO NOCTURNO • CABINA 13:11 • LONGCHAMPS', 340, 705);
+
+      // Trigger download
+      const link = document.createElement('a');
+      link.download = `pase-abordaje-${activeBoardingPass.id}.png`;
+      link.href = downloadCanvas.toDataURL('image/png');
+      link.click();
+    });
+  }
+
+  // Share Boarding Pass on WhatsApp
+  if (btnShareBpWhatsapp) {
+    btnShareBpWhatsapp.addEventListener('click', () => {
+      if (!activeBoardingPass) return;
+      const origin = window.location.origin || 'http://localhost:3000';
+      const portalUrl = `${origin}/?reserva=${encodeURIComponent(activeBoardingPass.id)}`;
+      const msg = `¡Ya tengo mi Pase de Abordaje para Mery La Previa!\n` +
+        `Código: ${activeBoardingPass.id}\n` +
+        `Sector: ${activeBoardingPass.res_type} (${activeBoardingPass.guests} personas)\n` +
+        `Fecha: ${activeBoardingPass.res_day} • ${activeBoardingPass.res_time}\n` +
+        `Ver Pase QR y detalles: ${portalUrl}`;
+      window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank', 'noopener');
+    });
+  }
+
+  // Handle Reservation Form Submission
   if (resForm) {
     resForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      const name = document.getElementById('resName')?.value || '';
-      const motivo = document.getElementById('resType')?.value || 'Reserva';
-      const guests = document.getElementById('resGuests')?.value || '4';
-      const day = document.getElementById('resDay')?.value || 'Viernes';
-      const time = document.getElementById('resTime')?.value || '21:00 hs';
 
-      const dishNote = selectedDishForReservation
-        ? ` Me gustaría incluir en la mesa: ${selectedDishForReservation}.`
-        : '';
-      const msg = `Hola Mery La Previa! Soy ${name}. Quiero reservar para ${guests} personas (${motivo}) el ${day} a las ${time}.${dishNote}`;
-      window.open(`https://wa.me/5491100000000?text=${encodeURIComponent(msg)}`, '_blank', 'noopener');
+      const name = document.getElementById('resName')?.value || '';
+      const email = document.getElementById('resEmail')?.value || '';
+      const phone = document.getElementById('resPhone')?.value || '';
+      const motivo = document.getElementById('resType')?.value || 'Mesa Cena + Previa';
+      const guests = document.getElementById('resGuests')?.value || '4';
+      const day = document.getElementById('resDay')?.value || 'Viernes 13/11';
+      const time = document.getElementById('resTime')?.value || '20:30 hs (Cena)';
+      const depositMode = document.getElementById('resDepositMode')?.value || 'con_sena';
+      const dni = document.getElementById('resDni')?.value || '';
+      const birthDate = document.getElementById('resBirthDate')?.value || '';
+
+      const isBirthday = (motivo === 'Cumpleaños VIP');
+
+      let createdRes = null;
+      if (window.MeryStore && typeof window.MeryStore.createReservation === 'function') {
+        createdRes = window.MeryStore.createReservation({
+          customer_name: name,
+          customer_email: email,
+          customer_phone: phone,
+          res_type: motivo,
+          is_birthday: isBirthday,
+          birthday_dni: dni,
+          birthday_date: birthDate,
+          guests: Number(guests) || 2,
+          res_day: day,
+          res_time: time,
+          deposit_mode: depositMode
+        });
+      }
+
+      if (createdRes) {
+        openBoardingPassModal(createdRes);
+      }
     });
+  }
+
+  // --- Automatic URL Lookup for Customer Portal (?reserva=MLP-XXXX) ---
+  const searchParams = new URLSearchParams(window.location.search);
+  const reservaParam = searchParams.get('reserva');
+  if (reservaParam && window.MeryStore) {
+    const list = window.MeryStore.getReservations();
+    const found = list.find((r) => r.id.toLowerCase() === reservaParam.trim().toLowerCase());
+    if (found) {
+      // Dismiss intro curtain immediately
+      const curtain = document.getElementById('neonIntroCurtain');
+      if (curtain) {
+        curtain.classList.add('curtain-out');
+        setTimeout(() => curtain.remove(), 400);
+      }
+      openBoardingPassModal(found);
+    }
   }
 });

@@ -11,9 +11,70 @@ const DEFAULT_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3Mi
 const STORAGE_KEY_MENU = 'mery_menu_sections_v2';
 const STORAGE_KEY_SUPA_CFG = 'mery_supabase_config_v1';
 const STORAGE_KEY_VIDEOS = 'mery_site_videos_v1';
+const STORAGE_KEY_RESERVATIONS = 'mery_reservations_v1';
+const STORAGE_KEY_RES_SETTINGS = 'mery_reservation_settings_v1';
 const BROADCAST_CHANNEL_NAME = 'mery_la_previa_realtime_v1';
 const IDB_NAME = 'mery_media_idb_v1';
 const IDB_STORE = 'media';
+
+const DEFAULT_RESERVATION_SETTINGS = {
+  depositAlias: 'MERY.LAPREVIA.MP',
+  depositCbu: '0000003100098765432100',
+  depositHolder: 'Mery La Previa S.R.L.',
+  depositAmount: '$15.000',
+  depositPaymentLink: 'https://mpago.la/mery-la-previa',
+  evolutionServerUrl: '',
+  evolutionApiKey: '',
+  evolutionInstanceName: 'mery-la-previa',
+  whatsappConnected: false
+};
+
+const DEFAULT_RESERVATIONS = [
+  {
+    id: 'MLP-8492',
+    customer_name: 'Agustina Di Marco',
+    customer_email: 'agustina.dimarco@example.com',
+    customer_phone: '11 6234-9812',
+    res_type: 'Cumpleaños VIP',
+    is_birthday: true,
+    birthday_dni: '41.890.312',
+    birthday_date: '1999-11-14',
+    guests: 10,
+    res_day: 'Viernes 13/11',
+    res_time: '22:00 hs (Cena Tardía)',
+    deposit_mode: 'con_sena',
+    deposit_status: 'comprobante_subido',
+    proof_url: 'assets/img/ice-cube-previa.jpg',
+    proof_uploaded_at: '2025-11-13T19:30:00.000Z',
+    attended: false,
+    checked_in_at: null,
+    notes: 'Festejo de 25 años. Solicitó caja Mery Jane y ubicación cercana a la cabina de DJ.',
+    created_at: '2025-11-13T18:00:00.000Z',
+    updated_at: '2025-11-13T19:30:00.000Z'
+  },
+  {
+    id: 'MLP-4105',
+    customer_name: 'Mateo Benítez',
+    customer_email: 'mateo.benitez@example.com',
+    customer_phone: '11 4123-5566',
+    res_type: 'Mesa Cena + Previa',
+    is_birthday: false,
+    birthday_dni: '',
+    birthday_date: '',
+    guests: 4,
+    res_day: 'Sábado',
+    res_time: '20:30 hs (Cena)',
+    deposit_mode: 'sin_sena',
+    deposit_status: 'sin_sena',
+    proof_url: '',
+    proof_uploaded_at: null,
+    attended: false,
+    checked_in_at: null,
+    notes: 'Cena y cócteles de autor. Tolerancia de 15 minutos en puerta.',
+    created_at: '2025-11-13T17:15:00.000Z',
+    updated_at: '2025-11-13T17:15:00.000Z'
+  }
+];
 
 const DEFAULT_SITE_VIDEOS = {
   intro: 'assets/video/neon-intro-mery.mp4',
@@ -754,9 +815,706 @@ const DEFAULT_MENU_SECTIONS = [
     return { ok: true, url: current[slotKey] };
   }
 
+  // ===========================================================================
+  // S9: QR CODE GENERATOR (100% Offline, Self-Contained)
+  // ===========================================================================
+  const QRMath = {
+    EXP: new Uint8Array(512),
+    LOG: new Uint8Array(256),
+    init: function() {
+      let x = 1;
+      for (let i = 0; i < 255; i++) {
+        this.EXP[i] = x;
+        this.EXP[i + 255] = x;
+        this.LOG[x] = i;
+        x = (x << 1) ^ (x >= 128 ? 0x11d : 0);
+      }
+    },
+    glog: function(n) { return this.LOG[n]; },
+    gexp: function(n) { while (n < 0) n += 255; while (n >= 255) n -= 255; return this.EXP[n]; }
+  };
+  QRMath.init();
+
+  function QRPolynomial(num, shift) {
+    let offset = 0;
+    while (offset < num.length && num[offset] === 0) offset++;
+    this.num = new Uint8Array(num.length - offset + shift);
+    for (let i = 0; i < num.length - offset; i++) this.num[i] = num[offset + i];
+  }
+  QRPolynomial.prototype = {
+    get: function(i) { return this.num[i]; },
+    getLength: function() { return this.num.length; },
+    multiply: function(e) {
+      const num = new Uint8Array(this.getLength() + e.getLength() - 1);
+      for (let i = 0; i < this.getLength(); i++) {
+        for (let j = 0; j < e.getLength(); j++) {
+          num[i + j] ^= QRMath.gexp(QRMath.glog(this.get(i)) + QRMath.glog(e.get(j)));
+        }
+      }
+      return new QRPolynomial(num, 0);
+    },
+    mod: function(e) {
+      if (this.getLength() - e.getLength() < 0) return this;
+      const ratio = QRMath.glog(this.get(0)) - QRMath.glog(e.get(0));
+      const num = new Uint8Array(this.getLength());
+      for (let i = 0; i < this.getLength(); i++) num[i] = this.get(i);
+      for (let i = 0; i < e.getLength(); i++) {
+        num[i] ^= QRMath.gexp(QRMath.glog(e.get(i)) + ratio);
+      }
+      return new QRPolynomial(num, 0).mod(e);
+    }
+  };
+
+  function getErrorCorrectPolynomial(errorCorrectLength) {
+    let a = new QRPolynomial(new Uint8Array([1]), 0);
+    for (let i = 0; i < errorCorrectLength; i++) {
+      a = a.multiply(new QRPolynomial(new Uint8Array([1, QRMath.gexp(i)]), 0));
+    }
+    return a;
+  }
+
+  const RS_TABLE = [
+    // 1: L, M, Q, H
+    [[1, 26, 19]], [[1, 26, 16]], [[1, 26, 13]], [[1, 26, 9]],
+    // 2
+    [[1, 44, 34]], [[1, 44, 28]], [[1, 44, 22]], [[1, 44, 16]],
+    // 3
+    [[1, 70, 55]], [[1, 70, 44]], [[2, 35, 17]], [[2, 35, 13]],
+    // 4
+    [[1, 100, 80]], [[2, 50, 32]], [[2, 50, 24]], [[4, 25, 9]],
+    // 5
+    [[1, 134, 108]], [[2, 67, 43]], [[2, 33, 15], [2, 34, 16]], [[2, 33, 11], [2, 34, 12]],
+    // 6
+    [[2, 86, 68]], [[4, 43, 27]], [[4, 43, 19]], [[4, 43, 15]]
+  ];
+
+  const ALIGNMENT_PATTERN_POS = [
+    [],
+    [6, 18],
+    [6, 22],
+    [6, 26],
+    [6, 30],
+    [6, 34]
+  ];
+
+  function getBCHDigit(data) {
+    let digit = 0;
+    while (data !== 0) {
+      digit++;
+      data >>>= 1;
+    }
+    return digit;
+  }
+
+  function getBCHTypeInfo(data) {
+    let d = data << 10;
+    while (getBCHDigit(d) - getBCHDigit(1335) >= 0) {
+      d ^= (1335 << (getBCHDigit(d) - getBCHDigit(1335)));
+    }
+    return ((data << 10) | d) ^ 0x5412;
+  }
+
+  function generateQrMatrix(text) {
+    const bytes = [];
+    for (let i = 0; i < text.length; i++) {
+      let c = text.charCodeAt(i);
+      if (c < 128) bytes.push(c);
+      else if (c < 2048) bytes.push(192 | (c >> 6), 128 | (c & 63));
+      else bytes.push(224 | (c >> 12), 128 | ((c >> 6) & 63), 128 | (c & 63));
+    }
+    const len = bytes.length;
+    let typeNumber = 3;
+    if (len <= 14) typeNumber = 1;
+    else if (len <= 26) typeNumber = 2;
+    else if (len <= 42) typeNumber = 3;
+    else if (len <= 62) typeNumber = 4;
+    else if (len <= 84) typeNumber = 5;
+    else typeNumber = 6;
+
+    const errorLevel = 1; // M
+    const rsEntry = RS_TABLE[(typeNumber - 1) * 4 + errorLevel];
+    const rsBlocks = [];
+    for (const [count, totalCount, dataCount] of rsEntry) {
+      for (let i = 0; i < count; i++) rsBlocks.push({ totalCount, dataCount });
+    }
+
+    const bits = [];
+    function putBits(val, bitCount) {
+      for (let i = bitCount - 1; i >= 0; i--) bits.push((val >> i) & 1);
+    }
+    putBits(4, 4); // 8-bit byte mode
+    putBits(bytes.length, 8); // character count indicator
+    for (const b of bytes) putBits(b, 8);
+
+    let totalDataCount = 0;
+    for (const b of rsBlocks) totalDataCount += b.dataCount;
+
+    if (bits.length + 4 <= totalDataCount * 8) putBits(0, 4);
+    while (bits.length % 8 !== 0) bits.push(0);
+
+    const dataBytes = [];
+    for (let i = 0; i < bits.length; i += 8) {
+      let byte = 0;
+      for (let j = 0; j < 8; j++) byte = (byte << 1) | bits[i + j];
+      dataBytes.push(byte);
+    }
+    while (dataBytes.length < totalDataCount) {
+      dataBytes.push(0xec);
+      if (dataBytes.length < totalDataCount) dataBytes.push(0x11);
+    }
+
+    let offset = 0;
+    const dataList = [];
+    const ecList = [];
+    for (let i = 0; i < rsBlocks.length; i++) {
+      const { totalCount, dataCount } = rsBlocks[i];
+      const raw = dataBytes.slice(offset, offset + dataCount);
+      offset += dataCount;
+      dataList.push(raw);
+
+      const ecLength = totalCount - dataCount;
+      const ecPoly = getErrorCorrectPolynomial(ecLength);
+      const rawPoly = new QRPolynomial(new Uint8Array(raw), ecLength);
+      const modPoly = rawPoly.mod(ecPoly);
+      const ec = new Uint8Array(ecLength);
+      const shift = ecLength - modPoly.getLength();
+      for (let j = 0; j < modPoly.getLength(); j++) ec[j + shift] = modPoly.get(j);
+      ecList.push(ec);
+    }
+
+    const finalBytes = [];
+    let maxDataLen = 0;
+    for (const d of dataList) maxDataLen = Math.max(maxDataLen, d.length);
+    for (let i = 0; i < maxDataLen; i++) {
+      for (const d of dataList) {
+        if (i < d.length) finalBytes.push(d[i]);
+      }
+    }
+    let maxEcLen = 0;
+    for (const ec of ecList) maxEcLen = Math.max(maxEcLen, ec.length);
+    for (let i = 0; i < maxEcLen; i++) {
+      for (const ec of ecList) {
+        if (i < ec.length) finalBytes.push(ec[i]);
+      }
+    }
+
+    const moduleCount = typeNumber * 4 + 17;
+    const modules = Array.from({ length: moduleCount }, () => Array(moduleCount).fill(null));
+
+    function setupFinder(row, col) {
+      for (let r = -1; r <= 7; r++) {
+        if (row + r < 0 || row + r >= moduleCount) continue;
+        for (let c = -1; c <= 7; c++) {
+          if (col + c < 0 || col + c >= moduleCount) continue;
+          if ((0 <= r && r <= 6 && (c === 0 || c === 6)) ||
+              (0 <= c && c <= 6 && (r === 0 || r === 6)) ||
+              (2 <= r && r <= 4 && 2 <= c && c <= 4)) {
+            modules[row + r][col + c] = true;
+          } else {
+            modules[row + r][col + c] = false;
+          }
+        }
+      }
+    }
+    setupFinder(0, 0);
+    setupFinder(moduleCount - 7, 0);
+    setupFinder(0, moduleCount - 7);
+
+    // Timing
+    for (let r = 8; r < moduleCount - 8; r++) {
+      if (modules[r][6] === null) modules[r][6] = (r % 2 === 0);
+    }
+    for (let c = 8; c < moduleCount - 8; c++) {
+      if (modules[6][c] === null) modules[6][c] = (c % 2 === 0);
+    }
+
+    // Alignment
+    const alignPos = ALIGNMENT_PATTERN_POS[typeNumber - 1] || [];
+    for (let i = 0; i < alignPos.length; i++) {
+      for (let j = 0; j < alignPos.length; j++) {
+        const row = alignPos[i], col = alignPos[j];
+        if (modules[row][col] !== null) continue;
+        for (let r = -2; r <= 2; r++) {
+          for (let c = -2; c <= 2; c++) {
+            if (r === -2 || r === 2 || c === -2 || c === 2 || (r === 0 && c === 0)) {
+              modules[row + r][col + c] = true;
+            } else {
+              modules[row + r][col + c] = false;
+            }
+          }
+        }
+      }
+    }
+
+    // Format info (mask 0)
+    const typeInfo = getBCHTypeInfo((errorLevel << 3) | 0);
+    for (let i = 0; i < 15; i++) {
+      const mod = ((typeInfo >> i) & 1) === 1;
+      if (i < 6) modules[i][8] = mod;
+      else if (i < 8) modules[i + 1][8] = mod;
+      else modules[moduleCount - 15 + i][8] = mod;
+
+      if (i < 8) modules[8][moduleCount - i - 1] = mod;
+      else if (i < 9) modules[8][15 - i] = mod;
+      else modules[8][15 - i - 1] = mod;
+    }
+    modules[moduleCount - 8][8] = true;
+
+    // Data zigzag
+    let inc = -1;
+    let row = moduleCount - 1;
+    let bitIdx = 7;
+    let byteIdx = 0;
+    for (let col = moduleCount - 1; col > 0; col -= 2) {
+      if (col === 6) col--;
+      while (true) {
+        for (let c = 0; c < 2; c++) {
+          const cCol = col - c;
+          if (modules[row][cCol] === null) {
+            let dark = false;
+            if (byteIdx < finalBytes.length) {
+              dark = (((finalBytes[byteIdx] >>> bitIdx) & 1) === 1);
+            }
+            if ((row + cCol) % 2 === 0) dark = !dark;
+            modules[row][cCol] = dark;
+            bitIdx--;
+            if (bitIdx === -1) {
+              byteIdx++;
+              bitIdx = 7;
+            }
+          }
+        }
+        row += inc;
+        if (row < 0 || moduleCount <= row) {
+          row -= inc;
+          inc = -inc;
+          break;
+        }
+      }
+    }
+
+    return { modules, moduleCount };
+  }
+
+  function renderQrCode(canvasOrId, text, options = {}) {
+    const canvas = typeof canvasOrId === 'string'
+      ? (typeof document !== 'undefined' ? document.getElementById(canvasOrId) : null)
+      : canvasOrId;
+    if (!canvas || !canvas.getContext) return null;
+
+    const size = options.size || 220;
+    const colorDark = options.colorDark || '#0d0e0d';
+    const colorLight = options.colorLight || '#f7f4ed';
+    const margin = options.margin != null ? options.margin : 2;
+
+    const { modules, moduleCount } = generateQrMatrix(String(text || ''));
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+
+    ctx.fillStyle = colorLight;
+    ctx.fillRect(0, 0, size, size);
+
+    const fullCount = moduleCount + margin * 2;
+    const cellSize = size / fullCount;
+
+    ctx.fillStyle = colorDark;
+    for (let r = 0; r < moduleCount; r++) {
+      for (let c = 0; c < moduleCount; c++) {
+        if (modules[r][c]) {
+          const x = Math.round((c + margin) * cellSize);
+          const y = Math.round((r + margin) * cellSize);
+          const w = Math.ceil(cellSize);
+          const h = Math.ceil(cellSize);
+          ctx.fillRect(x, y, w, h);
+        }
+      }
+    }
+    return canvas;
+  }
+
+  // ===========================================================================
+  // S9: RESERVATIONS, DEPOSIT PROOFS & EVOLUTION API DATA LAYER
+  // ===========================================================================
+  function getReservationSettings() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_RES_SETTINGS);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        return { ...DEFAULT_RESERVATION_SETTINGS, ...parsed };
+      }
+    } catch (_) {}
+    return { ...DEFAULT_RESERVATION_SETTINGS };
+  }
+
+  function saveReservationSettings(settings) {
+    const merged = { ...getReservationSettings(), ...settings };
+    try {
+      localStorage.setItem(STORAGE_KEY_RES_SETTINGS, JSON.stringify(merged));
+    } catch (_) {}
+    if (broadcastChannel) {
+      broadcastChannel.postMessage({
+        type: 'SETTINGS_UPDATED',
+        settings: merged,
+        timestamp: Date.now()
+      });
+    }
+    return merged;
+  }
+
+  function getReservations() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_RESERVATIONS);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (_) {}
+    const cloned = JSON.parse(JSON.stringify(DEFAULT_RESERVATIONS));
+    saveReservations(cloned, false);
+    return cloned;
+  }
+
+  function saveReservations(reservations, notify = true, broadcastPayload = null) {
+    try {
+      localStorage.setItem(STORAGE_KEY_RESERVATIONS, JSON.stringify(reservations));
+    } catch (_) {}
+    if (notify && broadcastChannel) {
+      broadcastChannel.postMessage(
+        broadcastPayload || {
+          type: 'RESERVATIONS_UPDATED',
+          reservations,
+          timestamp: Date.now()
+        }
+      );
+    }
+  }
+
+  function generateReservationId() {
+    const existing = getReservations();
+    for (let i = 0; i < 50; i++) {
+      const code = 'MLP-' + Math.floor(1000 + Math.random() * 9000);
+      if (!existing.some((r) => r.id === code)) return code;
+    }
+    return 'MLP-' + Date.now().toString().slice(-4);
+  }
+
+  function createReservation(payload) {
+    const list = getReservations();
+    const id = payload.id || generateReservationId();
+    const now = new Date().toISOString();
+    const isBirthday = Boolean(payload.is_birthday || payload.res_type === 'Cumpleaños VIP');
+    const depositMode = payload.deposit_mode === 'sin_sena' ? 'sin_sena' : 'con_sena';
+    const depositStatus = depositMode === 'sin_sena' ? 'sin_sena' : (payload.deposit_status || 'pendiente');
+
+    const newRes = {
+      id,
+      customer_name: (payload.customer_name || '').trim(),
+      customer_email: (payload.customer_email || '').trim(),
+      customer_phone: (payload.customer_phone || '').trim(),
+      res_type: payload.res_type || 'Mesa Cena + Previa',
+      is_birthday: isBirthday,
+      birthday_dni: (payload.birthday_dni || '').trim(),
+      birthday_date: (payload.birthday_date || '').trim(),
+      guests: Number(payload.guests) || 2,
+      res_day: payload.res_day || 'Viernes 13/11',
+      res_time: payload.res_time || '20:30 hs (Cena)',
+      deposit_mode: depositMode,
+      deposit_status: depositStatus,
+      proof_url: payload.proof_url || '',
+      proof_uploaded_at: payload.proof_uploaded_at || null,
+      attended: Boolean(payload.attended),
+      checked_in_at: payload.checked_in_at || null,
+      notes: payload.notes || '',
+      created_at: payload.created_at || now,
+      updated_at: payload.updated_at || now
+    };
+
+    list.unshift(newRes);
+    saveReservations(list, true, {
+      type: 'RESERVATIONS_UPDATED',
+      event: 'NEW_RESERVATION',
+      reservation: newRes,
+      reservations: list,
+      timestamp: Date.now()
+    });
+
+    const client = getClient();
+    if (client) {
+      client.from('table_reservations').insert(newRes).then(() => {}).catch((err) => {
+        console.warn('Supabase insert reservation fallback:', err.message || err);
+      });
+    }
+
+    sendReservationNotifications(newRes);
+    return newRes;
+  }
+
+  async function uploadDepositProof(reservationId, file) {
+    const list = getReservations();
+    const idx = list.findIndex((r) => r.id === reservationId);
+    if (idx === -1) throw new Error('Reserva no encontrada: ' + reservationId);
+
+    let webpUrl = '';
+    if (typeof file === 'string') {
+      webpUrl = file;
+    } else if (file) {
+      const uploadRes = await uploadDishImage(file);
+      webpUrl = uploadRes && uploadRes.url ? uploadRes.url : '';
+    }
+
+    const now = new Date().toISOString();
+    list[idx].deposit_status = 'comprobante_subido';
+    list[idx].proof_url = webpUrl;
+    list[idx].proof_uploaded_at = now;
+    list[idx].updated_at = now;
+
+    saveReservations(list, true, {
+      type: 'RESERVATIONS_UPDATED',
+      event: 'PROOF_UPLOADED',
+      reservationId,
+      reservation: list[idx],
+      reservations: list,
+      timestamp: Date.now()
+    });
+
+    const client = getClient();
+    if (client) {
+      client.from('table_reservations').update({
+        deposit_status: 'comprobante_subido',
+        proof_url: webpUrl,
+        proof_uploaded_at: now,
+        updated_at: now
+      }).eq('id', reservationId).then(() => {}).catch((err) => {
+        console.warn('Supabase update proof fallback:', err.message || err);
+      });
+    }
+
+    return list[idx];
+  }
+
+  function approveReservationDeposit(reservationId) {
+    const list = getReservations();
+    const idx = list.findIndex((r) => r.id === reservationId);
+    if (idx === -1) throw new Error('Reserva no encontrada: ' + reservationId);
+
+    const now = new Date().toISOString();
+    list[idx].deposit_status = 'confirmada';
+    list[idx].updated_at = now;
+
+    saveReservations(list, true, {
+      type: 'RESERVATIONS_UPDATED',
+      event: 'DEPOSIT_APPROVED',
+      reservationId,
+      reservation: list[idx],
+      reservations: list,
+      timestamp: Date.now()
+    });
+
+    const client = getClient();
+    if (client) {
+      client.from('table_reservations').update({
+        deposit_status: 'confirmada',
+        updated_at: now
+      }).eq('id', reservationId).then(() => {}).catch((err) => {
+        console.warn('Supabase approve deposit fallback:', err.message || err);
+      });
+    }
+
+    return list[idx];
+  }
+
+  function checkInReservation(reservationId, attended = true) {
+    const list = getReservations();
+    const idx = list.findIndex((r) => r.id === reservationId);
+    if (idx === -1) throw new Error('Reserva no encontrada: ' + reservationId);
+
+    const now = new Date().toISOString();
+    const isAttended = Boolean(attended);
+    list[idx].attended = isAttended;
+    list[idx].checked_in_at = isAttended ? now : null;
+    list[idx].updated_at = now;
+
+    saveReservations(list, true, {
+      type: 'RESERVATIONS_UPDATED',
+      event: 'CHECKIN_UPDATED',
+      reservationId,
+      reservation: list[idx],
+      reservations: list,
+      timestamp: Date.now()
+    });
+
+    const client = getClient();
+    if (client) {
+      client.from('table_reservations').update({
+        attended: isAttended,
+        checked_in_at: isAttended ? now : null,
+        updated_at: now
+      }).eq('id', reservationId).then(() => {}).catch((err) => {
+        console.warn('Supabase checkin fallback:', err.message || err);
+      });
+    }
+
+    return list[idx];
+  }
+
+  function deleteReservation(reservationId) {
+    const list = getReservations();
+    const filtered = list.filter((r) => r.id !== reservationId);
+    saveReservations(filtered, true, {
+      type: 'RESERVATIONS_UPDATED',
+      event: 'DELETE_RESERVATION',
+      reservationId,
+      reservations: filtered,
+      timestamp: Date.now()
+    });
+
+    const client = getClient();
+    if (client) {
+      client.from('table_reservations').delete().eq('id', reservationId).then(() => {}).catch((err) => {
+        console.warn('Supabase delete reservation fallback:', err.message || err);
+      });
+    }
+
+    return true;
+  }
+
+  function subscribeToReservationChanges(onUpdate) {
+    if (typeof onUpdate !== 'function') return () => {};
+
+    const handleBroadcast = (event) => {
+      if (event.data && event.data.type === 'RESERVATIONS_UPDATED') {
+        onUpdate(event.data.reservations || getReservations(), event.data);
+      }
+    };
+    if (broadcastChannel) {
+      broadcastChannel.addEventListener('message', handleBroadcast);
+    }
+
+    const handleStorage = (event) => {
+      if (event.key === STORAGE_KEY_RESERVATIONS && event.newValue) {
+        try {
+          const parsed = JSON.parse(event.newValue);
+          if (Array.isArray(parsed)) onUpdate(parsed, { type: 'RESERVATIONS_UPDATED', reservations: parsed });
+        } catch (_) {}
+      }
+    };
+    global.addEventListener('storage', handleStorage);
+
+    const client = getClient();
+    let channel = null;
+    if (client && typeof client.channel === 'function') {
+      try {
+        channel = client
+          .channel('realtime_table_reservations_' + Math.random().toString(36).slice(2, 7))
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'table_reservations' },
+            async (payload) => {
+              const current = getReservations();
+              if (payload.eventType === 'INSERT' && payload.new) {
+                if (!current.some((r) => r.id === payload.new.id)) {
+                  current.unshift(payload.new);
+                  saveReservations(current, false);
+                  onUpdate(current, { type: 'RESERVATIONS_UPDATED', event: 'NEW_RESERVATION', reservation: payload.new, reservations: current });
+                }
+              } else if (payload.eventType === 'UPDATE' && payload.new) {
+                const idx = current.findIndex((r) => r.id === payload.new.id);
+                if (idx !== -1) {
+                  current[idx] = { ...current[idx], ...payload.new };
+                  saveReservations(current, false);
+                  onUpdate(current, { type: 'RESERVATIONS_UPDATED', event: 'UPDATE_RESERVATION', reservation: current[idx], reservations: current });
+                }
+              } else if (payload.eventType === 'DELETE' && payload.old) {
+                const filtered = current.filter((r) => r.id !== payload.old.id);
+                saveReservations(filtered, false);
+                onUpdate(filtered, { type: 'RESERVATIONS_UPDATED', event: 'DELETE_RESERVATION', reservationId: payload.old.id, reservations: filtered });
+              }
+            }
+          )
+          .subscribe();
+      } catch (err) {
+        console.warn('Realtime Supabase subscription error for table_reservations:', err.message || err);
+      }
+    }
+
+    return () => {
+      if (broadcastChannel) broadcastChannel.removeEventListener('message', handleBroadcast);
+      global.removeEventListener('storage', handleStorage);
+      if (client && channel && typeof client.removeChannel === 'function') {
+        try { client.removeChannel(channel); } catch (_) {}
+      }
+    };
+  }
+
+  async function sendReservationNotifications(reservation) {
+    const origin = (typeof window !== 'undefined' && window.location && window.location.origin)
+      ? window.location.origin
+      : (typeof location !== 'undefined' && location.origin ? location.origin : 'http://localhost:3000');
+    const portalLink = `${origin}/?reserva=${encodeURIComponent(reservation.id)}`;
+    const checkinUrl = `${origin}/admin?checkin=${encodeURIComponent(reservation.id)}`;
+
+    const settings = getReservationSettings();
+    const serverUrl = (settings.evolutionServerUrl || '').trim().replace(/\/+$/, '');
+    const apiKey = (settings.evolutionApiKey || '').trim();
+    const instanceName = (settings.evolutionInstanceName || 'mery-la-previa').trim();
+
+    if (serverUrl && apiKey && reservation.customer_phone) {
+      try {
+        const cleanPhone = reservation.customer_phone.replace(/\D/g, '');
+        const formattedPhone = cleanPhone.startsWith('549')
+          ? cleanPhone
+          : (cleanPhone.startsWith('54') ? '549' + cleanPhone.slice(2) : (cleanPhone.startsWith('11') || cleanPhone.startsWith('15') ? '549' + cleanPhone : '549' + cleanPhone));
+
+        const messageText = `*MERY LA PREVIA — PASE DE ABORDAJE CONFIRMADO*\n\n` +
+          `¡Hola ${reservation.customer_name}! Tu reserva en Mery La Previa ya está registrada con el código *${reservation.id}*.\n\n` +
+          `• *Sector / Motivo:* ${reservation.res_type}\n` +
+          `• *Personas:* ${reservation.guests} personas\n` +
+          `• *Fecha:* ${reservation.res_day}\n` +
+          `• *Horario:* ${reservation.res_time}\n` +
+          (reservation.is_birthday ? `• *Cumpleaños:* DNI ${reservation.birthday_dni} (¡Tenés brindis y beneficios especiales!)\n` : '') +
+          `\n` +
+          (reservation.deposit_mode === 'con_sena'
+            ? `*LUGAR ASEGURADO CON SEÑA:*\n` +
+              `Para confirmar definitivamente tu mesa toda la noche, realizá la seña de ${settings.depositAmount} por transferencia:\n` +
+              `• *Alias:* ${settings.depositAlias}\n` +
+              `• *CBU:* ${settings.depositCbu}\n` +
+              `• *Titular:* ${settings.depositHolder}\n` +
+              (settings.depositPaymentLink ? `• *Link Mercado Pago:* ${settings.depositPaymentLink}\n` : '') +
+              `\nSubí tu comprobante directamente en tu portal exclusivo:\n${portalLink}\n`
+            : `*RESERVA SIN SEÑA:*\n` +
+              `Tu mesa queda sujeta a disponibilidad con 15 minutos de tolerancia en puerta.\n` +
+              `Podés ver tu Pase QR aquí: ${portalLink}\n`
+          ) +
+          `\nPresentá este Pase de Abordaje al recepcionista al llegar a Mery La Previa. ¡Nos vemos en la previa!`;
+
+        fetch(`${serverUrl}/message/sendText/${instanceName}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': apiKey
+          },
+          body: JSON.stringify({
+            number: formattedPhone,
+            text: messageText
+          })
+        }).catch((err) => {
+          console.warn('Evolution API sendText network error:', err.message || err);
+        });
+      } catch (err) {
+        console.warn('Evolution API sendText error:', err.message || err);
+      }
+    }
+
+    return { portalLink, checkinUrl };
+  }
+
   global.MeryStore = {
     DEFAULT_MENU_SECTIONS,
     DEFAULT_SITE_VIDEOS,
+    DEFAULT_RESERVATIONS,
+    DEFAULT_RESERVATION_SETTINGS,
     getSupabaseConfig,
     setSupabaseConfig,
     isSupabaseConfigured,
@@ -772,6 +1530,19 @@ const DEFAULT_MENU_SECTIONS = [
     getSiteVideos,
     saveSiteVideos,
     subscribeToVideoChanges,
-    deleteBlobFromIDB
+    deleteBlobFromIDB,
+    // Reservations & Evolution API
+    getReservations,
+    saveReservations,
+    createReservation,
+    uploadDepositProof,
+    approveReservationDeposit,
+    checkInReservation,
+    deleteReservation,
+    subscribeToReservationChanges,
+    getReservationSettings,
+    saveReservationSettings,
+    sendReservationNotifications,
+    renderQrCode
   };
 })(window);

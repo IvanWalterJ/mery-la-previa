@@ -249,3 +249,115 @@ INSERT INTO public.menu_items (
     3
   )
 ON CONFLICT (id) DO NOTHING;
+
+-- =============================================================================
+-- 7. TABLA DE RESERVAS, COMPROBANTES DE SEÑA Y CHECK-IN QR (S9)
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS public.table_reservations (
+  id TEXT PRIMARY KEY,
+  customer_name TEXT NOT NULL,
+  customer_email TEXT NOT NULL,
+  customer_phone TEXT NOT NULL,
+  res_type TEXT NOT NULL,
+  is_birthday BOOLEAN NOT NULL DEFAULT false,
+  birthday_dni TEXT NOT NULL DEFAULT '',
+  birthday_date TEXT NOT NULL DEFAULT '',
+  guests INTEGER NOT NULL DEFAULT 2,
+  res_day TEXT NOT NULL,
+  res_time TEXT NOT NULL,
+  deposit_mode TEXT NOT NULL DEFAULT 'con_sena',
+  deposit_status TEXT NOT NULL DEFAULT 'pendiente',
+  proof_url TEXT NOT NULL DEFAULT '',
+  proof_uploaded_at TIMESTAMPTZ,
+  attended BOOLEAN NOT NULL DEFAULT false,
+  checked_in_at TIMESTAMPTZ,
+  notes TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.table_reservations ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Lectura de reservas para usuarios anon y authenticated" ON public.table_reservations;
+CREATE POLICY "Lectura de reservas para usuarios anon y authenticated"
+  ON public.table_reservations FOR SELECT
+  TO anon, authenticated
+  USING (true);
+
+DROP POLICY IF EXISTS "Creacion de reservas para usuarios anon y authenticated" ON public.table_reservations;
+CREATE POLICY "Creacion de reservas para usuarios anon y authenticated"
+  ON public.table_reservations FOR INSERT
+  TO anon, authenticated
+  WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Subida de comprobante de sena para reservas" ON public.table_reservations;
+CREATE POLICY "Subida de comprobante de sena para reservas"
+  ON public.table_reservations FOR UPDATE
+  TO anon, authenticated
+  USING (true)
+  WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Admin gestion total de reservas" ON public.table_reservations;
+CREATE POLICY "Admin gestion total de reservas"
+  ON public.table_reservations FOR ALL
+  TO authenticated
+  USING (true)
+  WITH CHECK (true);
+
+-- Agregar tabla de reservas a la publicación en tiempo real
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'table_reservations'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.table_reservations;
+  END IF;
+END $$;
+
+-- Datos de muestra iniciales para reservas
+INSERT INTO public.table_reservations (
+  id, customer_name, customer_email, customer_phone, res_type,
+  is_birthday, birthday_dni, birthday_date, guests, res_day, res_time,
+  deposit_mode, deposit_status, proof_url, proof_uploaded_at, attended, notes
+) VALUES
+  (
+    'MLP-8492',
+    'Agustina Di Marco',
+    'agustina.dimarco@example.com',
+    '11 6234-9812',
+    'Cumpleaños VIP',
+    true,
+    '41.890.312',
+    '1999-11-14',
+    10,
+    'Viernes 13/11',
+    '22:00 hs (Cena Tardía)',
+    'con_sena',
+    'comprobante_subido',
+    'assets/img/ice-cube-previa.jpg',
+    now(),
+    false,
+    'Festejo de 25 años. Solicitó caja Mery Jane y ubicación cercana a la cabina de DJ.'
+  ),
+  (
+    'MLP-4105',
+    'Mateo Benítez',
+    'mateo.benitez@example.com',
+    '11 4123-5566',
+    'Mesa Cena + Previa',
+    false,
+    '',
+    '',
+    4,
+    'Sábado',
+    '20:30 hs (Cena)',
+    'sin_sena',
+    'sin_sena',
+    '',
+    null,
+    false,
+    'Cena y cócteles de autor. Tolerancia de 15 minutos en puerta.'
+  )
+ON CONFLICT (id) DO NOTHING;
+

@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Forum&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=4" />
+  <link rel="stylesheet" href="styles.css?v=5" />
 </head>
 <body>
 
@@ -281,6 +281,7 @@
 
           <form id="qitchenResForm" class="q-res-form">
             <input type="text" id="resName" class="q-input" placeholder="Tu Nombre y Apellido" required />
+            <input type="email" id="resEmail" class="q-input" placeholder="Tu Email para enviarte el Pase QR y link de seña" required />
             <input type="tel" id="resPhone" class="q-input" placeholder="Tu WhatsApp (ej. 11 5555-5555)" required />
 
             <!-- Custom Branded Select: Motivo de Reserva -->
@@ -312,6 +313,12 @@
                 <option value="Mesa Cena + Previa">Motivo: Mesa Cena + Quedarse a la Previa</option>
                 <option value="Living VIP Cabina 13/11">Motivo: Living VIP / Evento 13/11</option>
               </select>
+            </div>
+
+            <!-- Conditional Birthday Fields (shown for Cumpleaños VIP) -->
+            <div id="resBirthdayFields" class="q-form-row-2">
+              <input type="text" id="resDni" class="q-input" placeholder="DNI del cumpleañero/a" required />
+              <input type="date" id="resBirthDate" class="q-input" placeholder="Fecha de cumpleaños" required />
             </div>
 
             <div class="q-form-row-3">
@@ -385,8 +392,32 @@
               </div>
             </div>
 
-            <button type="submit" class="q-btn-submit">
-              Confirmar Reserva por WhatsApp
+            <!-- Deposit Mode Selector -->
+            <div class="q-deposit-mode-container">
+              <label class="q-form-label">Tipo de reserva &amp; Garantía de mesa</label>
+              <div id="resDepositModeWrap" class="q-deposit-cards-grid">
+                <div class="q-deposit-card active" data-deposit-mode="con_sena">
+                  <div class="q-deposit-card-header">
+                    <span class="q-deposit-card-badge">RECOMENDADO</span>
+                    <span class="q-deposit-card-check">●</span>
+                  </div>
+                  <strong class="q-deposit-card-title">Con seña — Lugar asegurado</strong>
+                  <p class="q-deposit-card-desc">Se guarda y asegura tu mesa toda la noche. Transferencia por Alias o Link de pago.</p>
+                </div>
+                <div class="q-deposit-card" data-deposit-mode="sin_sena">
+                  <div class="q-deposit-card-header">
+                    <span class="q-deposit-card-badge q-badge-simple">SIMPLE</span>
+                    <span class="q-deposit-card-check">○</span>
+                  </div>
+                  <strong class="q-deposit-card-title">Sin seña — Reserva simple</strong>
+                  <p class="q-deposit-card-desc">Sujeta a disponibilidad y 15 min de tolerancia en puerta.</p>
+                </div>
+              </div>
+              <input type="hidden" id="resDepositMode" value="con_sena" />
+            </div>
+
+            <button type="submit" id="btnSubmitReservation" class="q-btn-submit">
+              Generar Pase de Abordaje QR &amp; Confirmar Reserva
             </button>
           </form>
 
@@ -459,8 +490,157 @@
     </div>
   </div>
 
+  <!-- 5. AIRPORT BOARDING PASS & CUSTOMER DEPOSIT PORTAL MODAL (S9) -->
+  <div id="qitchenBoardingPassModal" class="q-dish-modal-backdrop bp-modal-backdrop" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="bpModalTitle">
+    <div class="q-dish-modal-card bp-modal-card">
+      <button type="button" id="btnCloseBoardingPass" class="q-dish-modal-close" aria-label="Cerrar Pase de Abordaje">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <line x1="6" y1="6" x2="18" y2="18" />
+          <line x1="18" y1="6" x2="6" y2="18" />
+        </svg>
+      </button>
+
+      <!-- Airport Boarding Pass Card Container -->
+      <div id="bpCardContainer" class="bp-ticket">
+        <!-- Top Boarding Pass Header -->
+        <div class="bp-header">
+          <div class="bp-brand">
+            <span class="bp-tagline">MERY LA PREVIA • VIP NIGHTS</span>
+            <h3 id="bpModalTitle" class="bp-title">BOARDING PASS</h3>
+          </div>
+          <div class="bp-code-wrap">
+            <span class="bp-label">CÓDIGO DE RESERVA</span>
+            <span id="bpCode" class="bp-code">MLP-8492</span>
+          </div>
+        </div>
+
+        <!-- Status Pill Banner -->
+        <div class="bp-status-bar">
+          <span id="bpStatusBadge" class="bp-status-badge bp-status-pending">PENDIENTE DE COMPROBANTE DE SEÑA</span>
+        </div>
+
+        <!-- Passenger / Reservation Details Grid -->
+        <div class="bp-grid">
+          <div class="bp-cell">
+            <span class="bp-label">PASAJERO / TITULAR</span>
+            <strong id="bpName" class="bp-val">Agustina Di Marco</strong>
+          </div>
+          <div class="bp-cell">
+            <span class="bp-label">FECHA Y HORARIO</span>
+            <strong id="bpDateTime" class="bp-val">Viernes 13/11 • 22:00 hs</strong>
+          </div>
+          <div class="bp-cell">
+            <span class="bp-label">SECTOR / MOTIVO</span>
+            <strong id="bpType" class="bp-val">Cumpleaños VIP</strong>
+          </div>
+          <div class="bp-cell">
+            <span class="bp-label">CANTIDAD DE PERSONAS</span>
+            <strong id="bpGuests" class="bp-val">10 personas</strong>
+          </div>
+          <div id="bpBirthdayInfoRow" class="bp-cell bp-cell-full" hidden>
+            <span class="bp-label">DATOS DE CUMPLEAÑERO/A</span>
+            <span class="bp-val">DNI: <strong id="bpDni">-</strong> • Fecha: <strong id="bpBirthDate">-</strong> (Brindis y Beneficios)</span>
+          </div>
+        </div>
+
+        <!-- Perforated tear line style separator -->
+        <div class="bp-tear-line">
+          <span class="bp-notch bp-notch-left"></span>
+          <span class="bp-dashed"></span>
+          <span class="bp-notch bp-notch-right"></span>
+        </div>
+
+        <!-- Scannable QR Code Section -->
+        <div class="bp-qr-section">
+          <div class="bp-qr-box">
+            <canvas id="bpQrCanvas" width="220" height="220" class="bp-qr-canvas"></canvas>
+          </div>
+          <div class="bp-qr-info">
+            <span class="bp-qr-title">Check-in de Puerta Escaneable</span>
+            <p class="bp-qr-desc">Presentá este código QR en la entrada para registrar tu ingreso y acceder sin fila.</p>
+            <div class="bp-door-badge">
+              <span>ACCESO NOCTURNO • CABINA 13:11</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Customer Deposit Proof & Transfer Section -->
+        <div id="bpDepositSection" class="bp-deposit-section">
+          <div class="bp-deposit-header">
+            <div class="bp-deposit-title-wrap">
+              <span class="bp-deposit-icon">◇</span>
+              <h4>Asegurar mesa con seña</h4>
+            </div>
+            <span id="bpDepositAmount" class="bp-deposit-amount">$15.000</span>
+          </div>
+
+          <p class="bp-deposit-intro">
+            Para garantizar tu mesa durante toda la noche, realizá la transferencia y adjuntá el comprobante:
+          </p>
+
+          <div class="bp-bank-details">
+            <div class="bp-bank-row">
+              <span class="bp-bank-label">Alias:</span>
+              <strong id="bpDepositAlias" class="bp-bank-val">MERY.LAPREVIA.MP</strong>
+              <button type="button" class="bp-btn-copy" data-copy-target="bpDepositAlias">Copiar</button>
+            </div>
+            <div class="bp-bank-row">
+              <span class="bp-bank-label">CBU:</span>
+              <strong id="bpDepositCbu" class="bp-bank-val">0000003100098765432100</strong>
+              <button type="button" class="bp-btn-copy" data-copy-target="bpDepositCbu">Copiar</button>
+            </div>
+          </div>
+
+          <div class="bp-paylink-wrap">
+            <a id="bpPaymentLink" href="https://mpago.la/mery-la-previa" target="_blank" rel="noopener" class="bp-btn-mp">
+              Pagar con Mercado Pago →
+            </a>
+          </div>
+
+          <!-- Customer Portal Link Strip -->
+          <div class="bp-portal-link-box">
+            <span class="bp-label">ENLACE DIRECTO DE TU PORTAL</span>
+            <div class="bp-portal-link-row">
+              <input type="text" id="bpCustomerPortalUrl" class="bp-portal-input" readonly />
+              <button type="button" id="btnCopyPortalUrl" class="bp-btn-copy">Copiar enlace</button>
+            </div>
+            <p class="bp-portal-note">
+              También te enviamos este enlace a tu correo y WhatsApp para que puedas subir el comprobante cuando quieras.
+            </p>
+          </div>
+
+          <!-- Direct Proof Upload Zone -->
+          <div class="bp-proof-zone">
+            <span class="bp-label">SUBIR COMPROBANTE DE TRANSFERENCIA</span>
+            <div class="bp-proof-upload-box">
+              <input type="file" id="bpProofFileInput" accept="image/*" hidden />
+              <button type="button" id="btnUploadProofNow" class="q-btn-submit bp-btn-proof">
+                Adjuntar comprobante de pago
+              </button>
+              <div id="bpProofPreviewWrap" class="bp-proof-preview-wrap" hidden>
+                <img id="bpProofPreviewImg" src="" alt="Comprobante subido" class="bp-proof-img" />
+                <span id="bpProofStatusMsg" class="bp-proof-status-msg">✓ Comprobante recibido — Ya notificamos al equipo</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer Action Buttons -->
+      <div class="bp-footer-actions">
+        <button type="button" id="btnDownloadBoardingPass" class="q-btn-submit">
+          Descargar Pase QR (PNG)
+        </button>
+        <button type="button" id="btnShareBoardingPassWhatsapp" class="q-btn-secondary">
+          Compartir por WhatsApp
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js?v=4"></script>
-  <script src="app.js?v=4"></script>
+  <script src="supabase-config.js?v=5"></script>
+  <script src="app.js?v=5"></script>
 </body>
 </html>

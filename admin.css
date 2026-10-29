@@ -1637,3 +1637,475 @@ body:has(.admin-modal-backdrop:not([hidden])) {
 .ig-modal-footer {
   margin-top: 8px;
 }
+
+/* ==========================================================================
+   7. RESERVATIONS & QR CHECK-IN WORKSPACE (S9)
+   ========================================================================== */
+.admin-modal-md {
+  max-width: 640px;
+}
+
+.admin-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+@media (max-width: 820px) {
+  .admin-kpi-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.admin-kpi-card {
+  background: var(--q-surface);
+  border: 1px solid var(--q-border);
+  border-radius: 12px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: border-color 0.2s ease;
+}
+
+.admin-kpi-card.kpi-highlight {
+  border-color: var(--q-gold);
+  background: rgba(212, 175, 55, 0.08);
+}
+
+.admin-kpi-num {
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--q-cream);
+  line-height: 1.1;
+}
+
+.admin-kpi-card.kpi-highlight .admin-kpi-num {
+  color: var(--q-gold);
+}
+
+.admin-kpi-label {
+  font-size: 0.8rem;
+  color: var(--q-cream-muted);
+}
+
+/* Action bar & Filter pills */
+.admin-res-action-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.admin-filter-pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.admin-filter-pill {
+  appearance: none;
+  border: 1px solid var(--q-border);
+  background: transparent;
+  color: var(--q-cream-muted);
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.admin-filter-pill:hover {
+  border-color: var(--q-border-strong);
+  color: var(--q-cream);
+}
+
+.admin-filter-pill.active {
+  background: var(--q-gold);
+  color: #0d0e0d;
+  border-color: var(--q-gold);
+  font-weight: 600;
+}
+
+.admin-btn-scanner {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Reservations list */
+.admin-res-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.admin-res-card {
+  background: var(--q-surface);
+  border: 1px solid var(--q-border);
+  border-radius: 14px;
+  padding: 18px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: border-color 0.2s ease;
+}
+
+.admin-res-card.has-proof-alert {
+  border-color: rgba(212, 175, 55, 0.45);
+  box-shadow: 0 0 16px rgba(212, 175, 55, 0.08);
+}
+
+.admin-res-card.is-attended {
+  border-left: 4px solid #2ecc71;
+}
+
+.admin-res-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 12px;
+}
+
+.admin-res-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-res-code {
+  font-family: monospace;
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--q-gold);
+  letter-spacing: 0.06em;
+}
+
+.admin-res-name {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--q-cream);
+  margin: 0;
+}
+
+.admin-res-badges-wrap {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.admin-res-badge {
+  padding: 4px 10px;
+  border-radius: 100px;
+  font-size: 0.74rem;
+  font-weight: 500;
+}
+
+.admin-badge-deposit-ok {
+  background: rgba(46, 204, 113, 0.15);
+  color: #2ecc71;
+  border: 1px solid rgba(46, 204, 113, 0.35);
+}
+
+.admin-badge-deposit-proof {
+  background: rgba(212, 175, 55, 0.2);
+  color: var(--q-gold);
+  border: 1px solid var(--q-gold);
+  font-weight: 600;
+}
+
+.admin-badge-deposit-pending {
+  background: rgba(243, 156, 18, 0.15);
+  color: #f39c12;
+  border: 1px solid rgba(243, 156, 18, 0.35);
+}
+
+.admin-badge-simple {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--q-cream-muted);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.admin-badge-attended {
+  background: rgba(46, 204, 113, 0.18);
+  color: #2ecc71;
+  font-weight: 600;
+}
+
+.admin-badge-pending-in {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--q-cream-muted);
+}
+
+/* Grid details */
+.admin-res-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.admin-res-item-label {
+  font-size: 0.74rem;
+  color: var(--q-cream-muted);
+  display: block;
+  margin-bottom: 2px;
+}
+
+.admin-res-item-val {
+  font-size: 0.88rem;
+  color: var(--q-cream);
+  font-weight: 500;
+}
+
+.admin-res-bday-tag {
+  background: rgba(212, 175, 55, 0.08);
+  border: 1px dashed rgba(212, 175, 55, 0.35);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.84rem;
+  color: var(--q-gold);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-res-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.admin-btn-action-sm {
+  padding: 6px 12px;
+  font-size: 0.78rem;
+}
+
+/* Proof Viewer Modal */
+.admin-proof-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.admin-proof-meta-row {
+  display: flex;
+  justify-content: space-between;
+  background: #111311;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--q-border);
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 0.82rem;
+}
+
+.admin-proof-code {
+  color: var(--q-gold);
+  font-family: monospace;
+}
+
+.admin-proof-image-stage {
+  background: #080908;
+  border: 1px solid var(--q-border);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 240px;
+  max-height: 440px;
+  overflow: hidden;
+}
+
+.admin-proof-full-img {
+  max-width: 100%;
+  max-height: 400px;
+  object-fit: contain;
+  border-radius: 6px;
+}
+
+.admin-proof-notice {
+  font-size: 0.82rem;
+  color: var(--q-cream-muted);
+  line-height: 1.4;
+}
+
+/* QR Scanner & Door Check-in Modal */
+.admin-qr-scanner-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.admin-qr-input-row {
+  display: flex;
+  gap: 8px;
+}
+
+.admin-camera-stage {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+
+.admin-camera-container {
+  width: 100%;
+  max-width: 380px;
+  height: 240px;
+  background: #000;
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--q-gold);
+}
+
+.admin-camera-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.admin-camera-reticle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 160px;
+  height: 160px;
+  transform: translate(-50%, -50%);
+  border: 2px dashed rgba(212, 175, 55, 0.7);
+  border-radius: 12px;
+  pointer-events: none;
+}
+
+.admin-btn-camera {
+  font-size: 0.8rem;
+}
+
+.admin-scan-result-card {
+  background: #111311;
+  border: 1px solid var(--q-border-strong);
+  border-radius: 12px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.admin-scan-result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.admin-result-code {
+  font-family: monospace;
+  font-size: 0.84rem;
+  color: var(--q-gold);
+}
+
+.admin-result-name {
+  margin: 2px 0 0;
+  font-size: 1.15rem;
+  color: var(--q-cream);
+}
+
+.admin-scan-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  font-size: 0.84rem;
+}
+
+.admin-scan-birthday-notice {
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  color: var(--q-gold);
+}
+
+.admin-scan-actions {
+  margin-top: 6px;
+}
+
+.admin-btn-checkin-large {
+  width: 100%;
+  padding: 14px;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+/* WhatsApp & Deposit Settings View */
+.admin-whatsapp-view {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.admin-settings-card {
+  background: var(--q-surface);
+  border: 1px solid var(--q-border);
+  border-radius: 14px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.admin-settings-title {
+  margin: 0;
+  font-size: 1.15rem;
+  color: var(--q-cream);
+  font-weight: 600;
+}
+
+.admin-settings-intro {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--q-cream-muted);
+  line-height: 1.5;
+}
+
+.admin-instance-badge {
+  display: inline-block;
+  background: rgba(212, 175, 55, 0.12);
+  color: var(--q-gold);
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 0.85rem;
+  margin-top: 4px;
+}
+
+.admin-qr-preview-box {
+  background: #080908;
+  border: 1px dashed var(--q-border-strong);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.admin-qr-preview-canvas {
+  width: 180px;
+  height: 180px;
+  background: #fff;
+  border-radius: 8px;
+  padding: 10px;
+}
+

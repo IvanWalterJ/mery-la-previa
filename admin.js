@@ -34,9 +34,43 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnDeleteActiveCat = document.getElementById('btnDeleteActiveCat');
   const btnNewDish = document.getElementById('btnNewDish');
   const btnNavVideos = document.getElementById('btnNavVideos');
+  const btnNavReservations = document.getElementById('btnNavReservations');
+  const adminReservationsBadge = document.getElementById('adminReservationsBadge');
+  const btnNavWhatsapp = document.getElementById('btnNavWhatsapp');
   const adminSearchInput = document.getElementById('adminSearchInput');
   const sectionsContainer = document.getElementById('adminSectionsContainer');
   const toastEl = document.getElementById('adminToast');
+
+  // Proof Modal elements (S9)
+  const adminProofModal = document.getElementById('adminProofModal');
+  const adminProofResId = document.getElementById('adminProofResId');
+  const adminProofCustomerName = document.getElementById('adminProofCustomerName');
+  const adminProofUploadedAt = document.getElementById('adminProofUploadedAt');
+  const adminProofImage = document.getElementById('adminProofImage');
+  const adminProofStatusNotice = document.getElementById('adminProofStatusNotice');
+  const btnApproveProofModal = document.getElementById('btnApproveProofModal');
+  const btnCloseProofModal = document.getElementById('btnCloseProofModal');
+  const btnCancelProofModal = document.getElementById('btnCancelProofModal');
+
+  // QR Scanner & Check-in Modal elements (S9)
+  const adminQrScannerModal = document.getElementById('adminQrScannerModal');
+  const qrScannerCodeInput = document.getElementById('qrScannerCodeInput');
+  const btnSearchQrCode = document.getElementById('btnSearchQrCode');
+  const btnToggleQrCamera = document.getElementById('btnToggleQrCamera');
+  const qrCameraContainer = document.getElementById('qrCameraContainer');
+  const qrScanResultBox = document.getElementById('qrScanResultBox');
+  const qrResultCode = document.getElementById('qrResultCode');
+  const qrResultName = document.getElementById('qrResultName');
+  const qrResultDepositBadge = document.getElementById('qrResultDepositBadge');
+  const qrResultType = document.getElementById('qrResultType');
+  const qrResultGuests = document.getElementById('qrResultGuests');
+  const qrResultDateTime = document.getElementById('qrResultDateTime');
+  const qrResultAttendance = document.getElementById('qrResultAttendance');
+  const qrResultBirthdayNotice = document.getElementById('qrResultBirthdayNotice');
+  const qrResultDni = document.getElementById('qrResultDni');
+  const btnConfirmQrCheckIn = document.getElementById('btnConfirmQrCheckIn');
+  const btnCloseQrScannerModal = document.getElementById('btnCloseQrScannerModal');
+  const btnDismissQrModal = document.getElementById('btnDismissQrModal');
 
   // Mobile Drawer & Topbar controls
   const btnAdminMobileMenu = document.getElementById('btnAdminMobileMenu');
@@ -646,6 +680,8 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.addEventListener('click', () => {
         activeTab = 'category';
         btnNavVideos?.classList.remove('active');
+        btnNavReservations?.classList.remove('active');
+        btnNavWhatsapp?.classList.remove('active');
         activeCategoryId = btn.getAttribute('data-cat') || menuSections[0]?.id;
         renderAdminSidebar();
         renderActiveCategoryWorkspace();
@@ -661,8 +697,40 @@ document.addEventListener('DOMContentLoaded', () => {
         p.classList.remove('active');
         p.setAttribute('aria-selected', 'false');
       });
+      btnNavReservations?.classList.remove('active');
+      btnNavWhatsapp?.classList.remove('active');
       btnNavVideos.classList.add('active');
       renderVideosWorkspace();
+      closeAdminMobileMenu();
+    });
+  }
+
+  if (btnNavReservations) {
+    btnNavReservations.addEventListener('click', () => {
+      activeTab = 'reservations';
+      categoryPillsEl?.querySelectorAll('.admin-cat-pill').forEach((p) => {
+        p.classList.remove('active');
+        p.setAttribute('aria-selected', 'false');
+      });
+      btnNavVideos?.classList.remove('active');
+      btnNavWhatsapp?.classList.remove('active');
+      btnNavReservations.classList.add('active');
+      renderReservationsWorkspace();
+      closeAdminMobileMenu();
+    });
+  }
+
+  if (btnNavWhatsapp) {
+    btnNavWhatsapp.addEventListener('click', () => {
+      activeTab = 'whatsapp';
+      categoryPillsEl?.querySelectorAll('.admin-cat-pill').forEach((p) => {
+        p.classList.remove('active');
+        p.setAttribute('aria-selected', 'false');
+      });
+      btnNavVideos?.classList.remove('active');
+      btnNavReservations?.classList.remove('active');
+      btnNavWhatsapp.classList.add('active');
+      renderWhatsappWorkspace();
       closeAdminMobileMenu();
     });
   }
@@ -678,6 +746,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!sectionsContainer) return;
     activeTab = 'category';
     btnNavVideos?.classList.remove('active');
+    btnNavReservations?.classList.remove('active');
+    btnNavWhatsapp?.classList.remove('active');
     if (btnRenameActiveCat) btnRenameActiveCat.hidden = false;
     if (btnNewDish) btnNewDish.hidden = false;
     if (adminSearchInput?.parentElement) adminSearchInput.parentElement.hidden = false;
@@ -1371,5 +1441,819 @@ document.addEventListener('DOMContentLoaded', () => {
         }, { onConflict: 'slug' }).then(() => {}).catch(() => {});
       }
     });
+  }
+
+  // ===========================================================================
+  // 7. S9: RESERVATIONS, DEPOSIT PROOFS, DOOR QR SCANNER & EVOLUTION API
+  // ===========================================================================
+  let activeResFilter = 'Todas';
+  let resSearchQuery = '';
+  let activeProofRes = null;
+  let activeScannedRes = null;
+  let qrCameraStream = null;
+
+  function updateReservationsBadge() {
+    if (!adminReservationsBadge || !window.MeryStore) return;
+    const reservations = window.MeryStore.getReservations();
+    const pendingProofs = reservations.filter((r) => r.deposit_status === 'comprobante_subido').length;
+    if (pendingProofs > 0) {
+      adminReservationsBadge.textContent = String(pendingProofs);
+      adminReservationsBadge.classList.add('kpi-highlight');
+      adminReservationsBadge.title = `${pendingProofs} comprobantes de seña pendientes de confirmación`;
+    } else {
+      adminReservationsBadge.textContent = String(reservations.length);
+      adminReservationsBadge.classList.remove('kpi-highlight');
+      adminReservationsBadge.title = `${reservations.length} reservas registradas`;
+    }
+  }
+
+  function renderReservationsWorkspace() {
+    if (!sectionsContainer) return;
+    activeTab = 'reservations';
+
+    if (activeCategoryTitle) activeCategoryTitle.textContent = 'Reservas y Check-in QR';
+    if (activeCategoryCount) activeCategoryCount.textContent = 'Control de reservas, comprobantes de seña y acceso en puerta';
+    if (btnRenameActiveCat) btnRenameActiveCat.hidden = true;
+    if (btnDeleteActiveCat) btnDeleteActiveCat.hidden = true;
+    if (btnNewDish) btnNewDish.hidden = true;
+    if (adminSearchInput?.parentElement) adminSearchInput.parentElement.hidden = true;
+
+    const allReservations = window.MeryStore ? window.MeryStore.getReservations() : [];
+
+    // KPI Counters
+    const totalReservas = allReservations.length;
+    const conSena = allReservations.filter((r) => r.deposit_mode === 'con_sena').length;
+    const comprobantesPendientes = allReservations.filter((r) => r.deposit_status === 'comprobante_subido').length;
+    const asistieron = allReservations.filter((r) => r.attended).length;
+
+    // Filter Logic
+    let filtered = allReservations;
+    if (activeResFilter === 'Con seña') {
+      filtered = filtered.filter((r) => r.deposit_mode === 'con_sena');
+    } else if (activeResFilter === 'Comprobantes subidos') {
+      filtered = filtered.filter((r) => r.deposit_status === 'comprobante_subido');
+    } else if (activeResFilter === 'Sin seña') {
+      filtered = filtered.filter((r) => r.deposit_mode === 'sin_sena');
+    } else if (activeResFilter === 'Cumpleaños') {
+      filtered = filtered.filter((r) => r.is_birthday);
+    } else if (activeResFilter === 'Asistieron') {
+      filtered = filtered.filter((r) => r.attended);
+    }
+
+    if (resSearchQuery) {
+      const q = resSearchQuery.toLowerCase();
+      filtered = filtered.filter((r) =>
+        (r.customer_name || '').toLowerCase().includes(q) ||
+        (r.id || '').toLowerCase().includes(q) ||
+        (r.birthday_dni || '').toLowerCase().includes(q) ||
+        (r.customer_phone || '').toLowerCase().includes(q) ||
+        (r.customer_email || '').toLowerCase().includes(q)
+      );
+    }
+
+    const filterOptions = ['Todas', 'Con seña', 'Comprobantes subidos', 'Sin seña', 'Cumpleaños', 'Asistieron'];
+
+    sectionsContainer.innerHTML = `
+      <!-- Summary KPI Row -->
+      <div class="admin-kpi-row">
+        <div class="admin-kpi-card">
+          <span class="admin-kpi-num">${totalReservas}</span>
+          <span class="admin-kpi-label">Total reservas</span>
+        </div>
+        <div class="admin-kpi-card">
+          <span class="admin-kpi-num">${conSena}</span>
+          <span class="admin-kpi-label">Con seña / Lugar asegurado</span>
+        </div>
+        <div class="admin-kpi-card ${comprobantesPendientes > 0 ? 'kpi-highlight' : ''}">
+          <span class="admin-kpi-num">${comprobantesPendientes}</span>
+          <span class="admin-kpi-label">Comprobantes por confirmar</span>
+        </div>
+        <div class="admin-kpi-card">
+          <span class="admin-kpi-num">${asistieron}</span>
+          <span class="admin-kpi-label">Asistieron (Check-in QR)</span>
+        </div>
+      </div>
+
+      <!-- Top Action Bar -->
+      <div class="admin-res-action-bar">
+        <div class="admin-filter-pills" role="tablist" aria-label="Filtros de reservas">
+          ${filterOptions.map((f) => `
+            <button
+              type="button"
+              class="admin-filter-pill ${activeResFilter === f ? 'active' : ''}"
+              data-filter="${escapeHtml(f)}"
+            >
+              ${escapeHtml(f)} ${f === 'Comprobantes subidos' && comprobantesPendientes > 0 ? `(${comprobantesPendientes})` : ''}
+            </button>
+          `).join('')}
+        </div>
+
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+          <input
+            type="search"
+            id="resWorkspaceSearch"
+            class="admin-input"
+            style="width:240px; padding:8px 12px; font-size:0.84rem;"
+            placeholder="Buscar por nombre, MLP-XXXX, DNI..."
+            value="${escapeHtml(resSearchQuery)}"
+          />
+          <button type="button" id="btnOpenQrScanner" class="admin-btn-gold admin-btn-scanner">
+            <span>📷</span>
+            <span>Escanear / Validar QR en puerta</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Reservations Cards List -->
+      <div class="admin-res-cards-list">
+        ${filtered.length === 0 ? `
+          <div style="padding:40px; text-align:center; color:var(--q-cream-muted); background:var(--q-surface); border-radius:12px; border:1px solid var(--q-border);">
+            No hay reservas que coincidan con el filtro seleccionado.
+          </div>
+        ` : filtered.map((r) => {
+          const hasProofAlert = (r.deposit_status === 'comprobante_subido');
+          return `
+            <article class="admin-res-card ${hasProofAlert ? 'has-proof-alert' : ''} ${r.attended ? 'is-attended' : ''}" data-res-id="${escapeHtml(r.id)}">
+              <div class="admin-res-header">
+                <div class="admin-res-title-group">
+                  <span class="admin-res-code">${escapeHtml(r.id)}</span>
+                  <h3 class="admin-res-name">${escapeHtml(r.customer_name)}</h3>
+                </div>
+
+                <div class="admin-res-badges-wrap">
+                  <!-- Deposit mode badge -->
+                  <span class="admin-res-badge ${r.deposit_mode === 'con_sena' ? 'admin-badge-deposit-ok' : 'admin-badge-simple'}">
+                    ${r.deposit_mode === 'con_sena' ? 'Con seña • Lugar asegurado' : 'Sin seña'}
+                  </span>
+
+                  <!-- Deposit status badge -->
+                  ${r.deposit_mode === 'con_sena' ? `
+                    <span class="admin-res-badge ${
+                      r.deposit_status === 'confirmada'
+                        ? 'admin-badge-deposit-ok'
+                        : r.deposit_status === 'comprobante_subido'
+                        ? 'admin-badge-deposit-proof'
+                        : 'admin-badge-deposit-pending'
+                    }">
+                      ${
+                        r.deposit_status === 'confirmada'
+                          ? 'Seña confirmada ✓'
+                          : r.deposit_status === 'comprobante_subido'
+                          ? 'Comprobante subido'
+                          : 'Seña pendiente'
+                      }
+                    </span>
+                  ` : ''}
+
+                  <!-- Attendance badge -->
+                  <span class="admin-res-badge ${r.attended ? 'admin-badge-attended' : 'admin-badge-pending-in'}">
+                    ${r.attended
+                      ? `✓ Asistió ${r.checked_in_at ? new Date(r.checked_in_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) + ' hs' : ''}`
+                      : 'Pendiente de ingreso'
+                    }
+                  </span>
+                </div>
+              </div>
+
+              <div class="admin-res-grid">
+                <div>
+                  <span class="admin-res-item-label">Teléfono / WhatsApp</span>
+                  <span class="admin-res-item-val">${escapeHtml(r.customer_phone || '-')}</span>
+                </div>
+                <div>
+                  <span class="admin-res-item-label">Correo electrónico</span>
+                  <span class="admin-res-item-val">${escapeHtml(r.customer_email || '-')}</span>
+                </div>
+                <div>
+                  <span class="admin-res-item-label">Personas</span>
+                  <span class="admin-res-item-val">${r.guests} personas</span>
+                </div>
+                <div>
+                  <span class="admin-res-item-label">Día y Horario</span>
+                  <span class="admin-res-item-val">${escapeHtml(r.res_day)} • ${escapeHtml(r.res_time)}</span>
+                </div>
+                <div>
+                  <span class="admin-res-item-label">Sector / Motivo</span>
+                  <span class="admin-res-item-val">${escapeHtml(r.res_type)}</span>
+                </div>
+              </div>
+
+              ${r.is_birthday ? `
+                <div class="admin-res-bday-tag">
+                  <span>🎂</span>
+                  <span><strong>Cumpleaños VIP:</strong> DNI: ${escapeHtml(r.birthday_dni || 'No especificado')} • Cumple: ${escapeHtml(r.birthday_date || 'No especificada')}</span>
+                </div>
+              ` : ''}
+
+              ${r.notes ? `
+                <div style="font-size:0.8rem; color:var(--q-cream-muted); background:rgba(255,255,255,0.03); padding:8px 12px; border-radius:6px;">
+                  <strong>Notas:</strong> ${escapeHtml(r.notes)}
+                </div>
+              ` : ''}
+
+              <div class="admin-res-actions">
+                ${r.proof_url ? `
+                  <button type="button" class="admin-btn-gold admin-btn-action-sm" data-res-action="view-proof" data-id="${escapeHtml(r.id)}">
+                    Ver comprobante subido
+                  </button>
+                ` : ''}
+
+                ${r.deposit_mode === 'con_sena' && r.deposit_status !== 'confirmada' ? `
+                  <button type="button" class="admin-btn-outline admin-btn-action-sm" data-res-action="approve-deposit" data-id="${escapeHtml(r.id)}">
+                    Confirmar seña
+                  </button>
+                ` : ''}
+
+                <button type="button" class="admin-btn-outline admin-btn-action-sm" data-res-action="toggle-checkin" data-id="${escapeHtml(r.id)}">
+                  ${r.attended ? 'Cancelar check-in' : 'Check-in QR (Asistió)'}
+                </button>
+
+                <button type="button" class="admin-btn-outline admin-btn-action-sm" data-res-action="view-pass" data-id="${escapeHtml(r.id)}">
+                  Ver Pase QR / Link
+                </button>
+
+                <button type="button" class="admin-btn-outline admin-btn-danger admin-btn-action-sm" data-res-action="delete-res" data-id="${escapeHtml(r.id)}">
+                  Eliminar
+                </button>
+              </div>
+            </article>
+          `;
+        }).join('')}
+      </div>
+    `;
+
+    // Filter pill events
+    sectionsContainer.querySelectorAll('.admin-filter-pill').forEach((pill) => {
+      pill.addEventListener('click', () => {
+        activeResFilter = pill.getAttribute('data-filter') || 'Todas';
+        renderReservationsWorkspace();
+      });
+    });
+
+    // Search input event
+    const searchEl = sectionsContainer.querySelector('#resWorkspaceSearch');
+    if (searchEl) {
+      searchEl.addEventListener('input', () => {
+        resSearchQuery = searchEl.value.trim();
+        renderReservationsWorkspace();
+      });
+    }
+
+    // Open QR Scanner button
+    const btnOpenQr = sectionsContainer.querySelector('#btnOpenQrScanner');
+    if (btnOpenQr) {
+      btnOpenQr.addEventListener('click', () => {
+        openQrScannerModal();
+      });
+    }
+
+    // Reservation card action buttons
+    sectionsContainer.querySelectorAll('[data-res-action]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const action = btn.getAttribute('data-res-action');
+        const resId = btn.getAttribute('data-id');
+        const target = allReservations.find((r) => r.id === resId);
+        if (!target) return;
+
+        if (action === 'view-proof') {
+          openProofModal(target);
+        } else if (action === 'approve-deposit') {
+          if (window.MeryStore && typeof window.MeryStore.approveReservationDeposit === 'function') {
+            window.MeryStore.approveReservationDeposit(resId);
+            showToast(`Seña confirmada para ${target.customer_name} (${target.id})`);
+            updateReservationsBadge();
+            renderReservationsWorkspace();
+          }
+        } else if (action === 'toggle-checkin') {
+          if (window.MeryStore && typeof window.MeryStore.checkInReservation === 'function') {
+            const nextState = !target.attended;
+            window.MeryStore.checkInReservation(resId, nextState);
+            showToast(nextState ? `✓ Ingreso registrado para ${target.customer_name}` : `Check-in cancelado para ${target.customer_name}`);
+            updateReservationsBadge();
+            renderReservationsWorkspace();
+          }
+        } else if (action === 'view-pass') {
+          window.open(`index.html?reserva=${encodeURIComponent(target.id)}`, '_blank', 'noopener');
+        } else if (action === 'delete-res') {
+          openConfirmModal({
+            title: `¿Eliminar reserva ${target.id}?`,
+            message: `Vas a eliminar la reserva de ${target.customer_name} (${target.res_day} ${target.res_time}). Esta acción no se puede deshacer.`,
+            confirmLabel: 'Sí, eliminar',
+            onConfirm: () => {
+              if (window.MeryStore && typeof window.MeryStore.deleteReservation === 'function') {
+                window.MeryStore.deleteReservation(resId);
+                showToast(`Reserva ${target.id} eliminada`);
+                updateReservationsBadge();
+                renderReservationsWorkspace();
+              }
+            }
+          });
+        }
+      });
+    });
+  }
+
+  // --- Proof Viewer Modal Logic ---
+  function openProofModal(res) {
+    if (!adminProofModal || !res) return;
+    activeProofRes = res;
+    if (adminProofResId) adminProofResId.textContent = res.id;
+    if (adminProofCustomerName) adminProofCustomerName.textContent = res.customer_name;
+    if (adminProofUploadedAt) {
+      adminProofUploadedAt.textContent = res.proof_uploaded_at
+        ? new Date(res.proof_uploaded_at).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' })
+        : 'Reciente';
+    }
+    if (adminProofImage) {
+      adminProofImage.src = res.proof_url || '';
+    }
+    if (adminProofStatusNotice) {
+      adminProofStatusNotice.textContent = res.deposit_status === 'confirmada'
+        ? '✓ Esta seña ya fue aprobada y el lugar se encuentra asegurado.'
+        : 'Comprobante recibido en revisión. Verificá que los datos de la transferencia concuerden con el monto de la seña antes de confirmar.';
+    }
+    if (btnApproveProofModal) {
+      btnApproveProofModal.hidden = (res.deposit_status === 'confirmada');
+    }
+    adminProofModal.hidden = false;
+  }
+
+  function closeProofModal() {
+    if (!adminProofModal) return;
+    adminProofModal.hidden = true;
+    activeProofRes = null;
+  }
+
+  if (btnCloseProofModal) btnCloseProofModal.addEventListener('click', closeProofModal);
+  if (btnCancelProofModal) btnCancelProofModal.addEventListener('click', closeProofModal);
+  if (adminProofModal) {
+    adminProofModal.addEventListener('click', (e) => {
+      if (e.target === adminProofModal) closeProofModal();
+    });
+  }
+
+  if (btnApproveProofModal) {
+    btnApproveProofModal.addEventListener('click', () => {
+      if (!activeProofRes) return;
+      if (window.MeryStore && typeof window.MeryStore.approveReservationDeposit === 'function') {
+        window.MeryStore.approveReservationDeposit(activeProofRes.id);
+        showToast(`Seña confirmada para ${activeProofRes.customer_name} (${activeProofRes.id})`);
+        closeProofModal();
+        updateReservationsBadge();
+        if (activeTab === 'reservations') renderReservationsWorkspace();
+      }
+    });
+  }
+
+  // --- Door QR Scanner / Check-in Modal Logic ---
+  function openQrScannerModal(prefillCode = null) {
+    if (!adminQrScannerModal) return;
+    adminQrScannerModal.hidden = false;
+    if (qrScanResultBox) qrScanResultBox.hidden = true;
+    if (qrScannerCodeInput) {
+      qrScannerCodeInput.value = prefillCode || '';
+      if (prefillCode) {
+        executeQrSearch(prefillCode);
+      } else {
+        qrScannerCodeInput.focus();
+      }
+    }
+  }
+
+  function closeQrScannerModal() {
+    if (!adminQrScannerModal) return;
+    adminQrScannerModal.hidden = true;
+    stopQrCamera();
+    activeScannedRes = null;
+  }
+
+  if (btnCloseQrScannerModal) btnCloseQrScannerModal.addEventListener('click', closeQrScannerModal);
+  if (btnDismissQrModal) btnDismissQrModal.addEventListener('click', closeQrScannerModal);
+  if (adminQrScannerModal) {
+    adminQrScannerModal.addEventListener('click', (e) => {
+      if (e.target === adminQrScannerModal) closeQrScannerModal();
+    });
+  }
+
+  function executeQrSearch(rawTerm) {
+    if (!rawTerm) return;
+    let term = rawTerm.trim();
+    // Support scanning raw URL or query param like ?checkin=MLP-8492
+    if (term.includes('checkin=')) {
+      term = term.split('checkin=')[1].split('&')[0];
+    } else if (term.includes('reserva=')) {
+      term = term.split('reserva=')[1].split('&')[0];
+    }
+    term = decodeURIComponent(term).trim().toLowerCase();
+
+    const list = window.MeryStore ? window.MeryStore.getReservations() : [];
+    const found = list.find((r) =>
+      r.id.toLowerCase() === term ||
+      (r.customer_name || '').toLowerCase() === term ||
+      (r.birthday_dni || '').replace(/\D/g, '') === term.replace(/\D/g, '') ||
+      (r.customer_phone || '').replace(/\D/g, '') === term.replace(/\D/g, '')
+    );
+
+    if (!found) {
+      if (qrScanResultBox) qrScanResultBox.hidden = true;
+      showToast('No se encontró ninguna reserva para: ' + rawTerm);
+      return;
+    }
+
+    activeScannedRes = found;
+    if (qrScanResultBox) qrScanResultBox.hidden = false;
+    if (qrResultCode) qrResultCode.textContent = found.id;
+    if (qrResultName) qrResultName.textContent = found.customer_name;
+    if (qrResultDepositBadge) {
+      qrResultDepositBadge.textContent = found.deposit_mode === 'con_sena'
+        ? (found.deposit_status === 'confirmada' ? 'Con seña confirmada ✓' : 'Con seña pendiente')
+        : 'Sin seña';
+      qrResultDepositBadge.className = found.deposit_mode === 'con_sena' && found.deposit_status === 'confirmada'
+        ? 'admin-res-badge admin-badge-deposit-ok'
+        : (found.deposit_mode === 'con_sena' ? 'admin-res-badge admin-badge-deposit-pending' : 'admin-res-badge admin-badge-simple');
+    }
+    if (qrResultType) qrResultType.textContent = found.res_type;
+    if (qrResultGuests) qrResultGuests.textContent = `${found.guests} personas`;
+    if (qrResultDateTime) qrResultDateTime.textContent = `${found.res_day} • ${found.res_time}`;
+    if (qrResultAttendance) {
+      qrResultAttendance.textContent = found.attended
+        ? `✓ Asistió ${found.checked_in_at ? new Date(found.checked_in_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) + ' hs' : ''}`
+        : 'Pendiente de ingreso';
+      qrResultAttendance.style.color = found.attended ? '#2ecc71' : 'var(--q-cream-muted)';
+    }
+
+    if (qrResultBirthdayNotice) {
+      if (found.is_birthday) {
+        qrResultBirthdayNotice.hidden = false;
+        if (qrResultDni) qrResultDni.textContent = found.birthday_dni || 'No especificado';
+      } else {
+        qrResultBirthdayNotice.hidden = true;
+      }
+    }
+
+    if (btnConfirmQrCheckIn) {
+      btnConfirmQrCheckIn.textContent = found.attended
+        ? '✓ Ya ingresó — Revalidar ingreso'
+        : 'Confirmar ingreso (Asistió)';
+    }
+  }
+
+  if (btnSearchQrCode && qrScannerCodeInput) {
+    btnSearchQrCode.addEventListener('click', () => {
+      executeQrSearch(qrScannerCodeInput.value);
+    });
+    qrScannerCodeInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        executeQrSearch(qrScannerCodeInput.value);
+      }
+    });
+  }
+
+  if (btnConfirmQrCheckIn) {
+    btnConfirmQrCheckIn.addEventListener('click', () => {
+      if (!activeScannedRes) return;
+      if (window.MeryStore && typeof window.MeryStore.checkInReservation === 'function') {
+        const updated = window.MeryStore.checkInReservation(activeScannedRes.id, true);
+        activeScannedRes = updated;
+        showToast(`✓ Ingreso confirmado para ${updated.customer_name} (${updated.id})`);
+        closeQrScannerModal();
+        updateReservationsBadge();
+        if (activeTab === 'reservations') renderReservationsWorkspace();
+      }
+    });
+  }
+
+  let qrVideoPreviewEl = null;
+
+  // Camera QR scanner integration
+  function stopQrCamera() {
+    if (qrCameraStream) {
+      qrCameraStream.getTracks().forEach((track) => track.stop());
+      qrCameraStream = null;
+    }
+    if (qrVideoPreviewEl) {
+      qrVideoPreviewEl.srcObject = null;
+      qrVideoPreviewEl.remove();
+      qrVideoPreviewEl = null;
+    }
+    if (qrCameraContainer) qrCameraContainer.hidden = true;
+  }
+
+  if (btnToggleQrCamera) {
+    btnToggleQrCamera.addEventListener('click', async () => {
+      if (qrCameraStream) {
+        stopQrCamera();
+        btnToggleQrCamera.textContent = 'Usar cámara del celular / lector';
+        return;
+      }
+
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        showToast('Tu navegador no tiene permisos de cámara o no la soporta');
+        return;
+      }
+
+      try {
+        qrCameraStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment' }
+        });
+        if (qrCameraContainer) {
+          qrVideoPreviewEl = document.createElement('video');
+          qrVideoPreviewEl.className = 'admin-camera-video';
+          qrVideoPreviewEl.setAttribute('playsinline', '');
+          qrVideoPreviewEl.muted = true;
+          qrCameraContainer.prepend(qrVideoPreviewEl);
+          qrVideoPreviewEl.srcObject = qrCameraStream;
+          qrVideoPreviewEl.play().catch(() => {});
+          qrCameraContainer.hidden = false;
+        }
+        btnToggleQrCamera.textContent = 'Detener cámara';
+
+        // Use native BarcodeDetector if available
+        if (typeof window.BarcodeDetector !== 'undefined') {
+          const detector = new window.BarcodeDetector({ formats: ['qr_code'] });
+          const scanInterval = setInterval(async () => {
+            if (!qrCameraStream || !qrVideoPreviewEl) {
+              clearInterval(scanInterval);
+              return;
+            }
+            try {
+              const barcodes = await detector.detect(qrVideoPreviewEl);
+              if (barcodes && barcodes.length > 0) {
+                const detectedVal = barcodes[0].rawValue;
+                clearInterval(scanInterval);
+                stopQrCamera();
+                btnToggleQrCamera.textContent = 'Usar cámara del celular / lector';
+                executeQrSearch(detectedVal);
+              }
+            } catch (_) {}
+          }, 350);
+        }
+      } catch (err) {
+        showToast('No se pudo acceder a la cámara: ' + (err.message || 'permiso denegado'));
+      }
+    });
+  }
+
+  // ===========================================================================
+  // 8. S9: WHATSAPP (EVOLUTION API) & DEPOSIT SETTINGS WORKSPACE
+  // ===========================================================================
+  function renderWhatsappWorkspace() {
+    if (!sectionsContainer) return;
+    activeTab = 'whatsapp';
+
+    if (activeCategoryTitle) activeCategoryTitle.textContent = 'WhatsApp y Señas (QR)';
+    if (activeCategoryCount) activeCategoryCount.textContent = 'Vinculación de instancia aislada mery-la-previa y datos bancarios';
+    if (btnRenameActiveCat) btnRenameActiveCat.hidden = true;
+    if (btnDeleteActiveCat) btnDeleteActiveCat.hidden = true;
+    if (btnNewDish) btnNewDish.hidden = true;
+    if (adminSearchInput?.parentElement) adminSearchInput.parentElement.hidden = true;
+
+    const settings = window.MeryStore ? window.MeryStore.getReservationSettings() : {};
+
+    sectionsContainer.innerHTML = `
+      <div class="admin-whatsapp-view">
+        <!-- Card 1: Evolution API Multi-Instance -->
+        <article class="admin-settings-card">
+          <div class="admin-modal-title-group">
+            <span class="diamond-dot"></span>
+            <h3 class="admin-settings-title">Integración WhatsApp con Evolution API</h3>
+          </div>
+
+          <p class="admin-settings-intro">
+            Mery La Previa utiliza una instancia dedicada aislada (<strong>mery-la-previa</strong>) en tu servidor de Evolution API existente, garantizando 100% de aislamiento respecto a HotDetailing y otros negocios.
+            Al confirmarse una reserva, el sistema enviará automáticamente el Pase de Abordaje y el enlace para subir el comprobante.
+          </p>
+
+          <span class="admin-instance-badge">Instancia aislada: ${escapeHtml(settings.evolutionInstanceName || 'mery-la-previa')}</span>
+
+          <form id="adminEvolutionForm" class="admin-modal-form" style="display:flex; flex-direction:column; gap:14px;">
+            <div class="admin-form-grid-2">
+              <div class="admin-field">
+                <label for="cfgEvolutionServerUrl">URL del Servidor Evolution API</label>
+                <input
+                  type="url"
+                  id="cfgEvolutionServerUrl"
+                  class="admin-input"
+                  placeholder="https://evolution.tudominio.com"
+                  value="${escapeHtml(settings.evolutionServerUrl || '')}"
+                />
+              </div>
+
+              <div class="admin-field">
+                <label for="cfgEvolutionApiKey">API Key Global</label>
+                <input
+                  type="password"
+                  id="cfgEvolutionApiKey"
+                  class="admin-input"
+                  placeholder="••••••••••••••••••••••••••••••••"
+                  value="${escapeHtml(settings.evolutionApiKey || '')}"
+                />
+              </div>
+            </div>
+
+            <div class="admin-field">
+              <label for="cfgEvolutionInstanceName">Nombre de Instancia (Instancia única de Mery La Previa)</label>
+              <input
+                type="text"
+                id="cfgEvolutionInstanceName"
+                class="admin-input"
+                placeholder="mery-la-previa"
+                value="${escapeHtml(settings.evolutionInstanceName || 'mery-la-previa')}"
+              />
+            </div>
+
+            <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:4px;">
+              <button type="button" id="btnGenEvolutionQr" class="admin-btn-gold">
+                Generar / Ver QR de vinculación WhatsApp
+              </button>
+            </div>
+
+            <div id="evolutionQrPreviewBox" class="admin-qr-preview-box" hidden>
+              <span style="font-size:0.86rem; color:var(--q-cream); font-weight:600;">Escanear QR desde WhatsApp en el teléfono del bar:</span>
+              <canvas id="evolutionQrCanvas" class="admin-qr-preview-canvas" width="200" height="200"></canvas>
+              <p style="font-size:0.78rem; color:var(--q-cream-muted); margin:0;">
+                Abrí WhatsApp > Dispositivos vinculados > Vincular dispositivo y apuntá a este código QR.
+              </p>
+            </div>
+          </form>
+        </article>
+
+        <!-- Card 2: Deposit Bank & Mercado Pago Settings -->
+        <article class="admin-settings-card">
+          <div class="admin-modal-title-group">
+            <span class="diamond-dot"></span>
+            <h3 class="admin-settings-title">Datos de Seña Bancaria & Mercado Pago</h3>
+          </div>
+
+          <p class="admin-settings-intro">
+            Estos datos se muestran en el Pase de Abordaje y portal del cliente para que puedan realizar la transferencia y adjuntar su comprobante de pago.
+          </p>
+
+          <form id="adminDepositSettingsForm" class="admin-modal-form" style="display:flex; flex-direction:column; gap:14px;">
+            <div class="admin-form-grid-2">
+              <div class="admin-field">
+                <label for="cfgDepositAlias">Alias de Transferencia</label>
+                <input
+                  type="text"
+                  id="cfgDepositAlias"
+                  class="admin-input"
+                  placeholder="MERY.LAPREVIA.MP"
+                  value="${escapeHtml(settings.depositAlias || 'MERY.LAPREVIA.MP')}"
+                  required
+                />
+              </div>
+
+              <div class="admin-field">
+                <label for="cfgDepositCbu">CBU / CVU</label>
+                <input
+                  type="text"
+                  id="cfgDepositCbu"
+                  class="admin-input"
+                  placeholder="0000003100098765432100"
+                  value="${escapeHtml(settings.depositCbu || '0000003100098765432100')}"
+                  required
+                />
+              </div>
+            </div>
+
+            <div class="admin-form-grid-2">
+              <div class="admin-field">
+                <label for="cfgDepositHolder">Titular de la Cuenta</label>
+                <input
+                  type="text"
+                  id="cfgDepositHolder"
+                  class="admin-input"
+                  placeholder="Mery La Previa S.R.L."
+                  value="${escapeHtml(settings.depositHolder || 'Mery La Previa S.R.L.')}"
+                />
+              </div>
+
+              <div class="admin-field">
+                <label for="cfgDepositAmount">Monto de Seña Sugerido</label>
+                <input
+                  type="text"
+                  id="cfgDepositAmount"
+                  class="admin-input"
+                  placeholder="$15.000"
+                  value="${escapeHtml(settings.depositAmount || '$15.000')}"
+                />
+              </div>
+            </div>
+
+            <div class="admin-field">
+              <label for="cfgDepositPaymentLink">Link de Pago Mercado Pago</label>
+              <input
+                type="url"
+                id="cfgDepositPaymentLink"
+                class="admin-input"
+                placeholder="https://mpago.la/mery-la-previa"
+                value="${escapeHtml(settings.depositPaymentLink || 'https://mpago.la/mery-la-previa')}"
+              />
+            </div>
+
+            <div style="margin-top:8px;">
+              <button type="submit" id="btnSaveDepositSettings" class="admin-btn-gold">
+                Guardar cambios de WhatsApp y Señas
+              </button>
+            </div>
+          </form>
+        </article>
+      </div>
+    `;
+
+    // Save Settings
+    const formEl = sectionsContainer.querySelector('#adminDepositSettingsForm');
+    if (formEl) {
+      formEl.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const serverUrl = sectionsContainer.querySelector('#cfgEvolutionServerUrl')?.value.trim() || '';
+        const apiKey = sectionsContainer.querySelector('#cfgEvolutionApiKey')?.value.trim() || '';
+        const instanceName = sectionsContainer.querySelector('#cfgEvolutionInstanceName')?.value.trim() || 'mery-la-previa';
+
+        const alias = sectionsContainer.querySelector('#cfgDepositAlias')?.value.trim() || 'MERY.LAPREVIA.MP';
+        const cbu = sectionsContainer.querySelector('#cfgDepositCbu')?.value.trim() || '0000003100098765432100';
+        const holder = sectionsContainer.querySelector('#cfgDepositHolder')?.value.trim() || 'Mery La Previa S.R.L.';
+        const amount = sectionsContainer.querySelector('#cfgDepositAmount')?.value.trim() || '$15.000';
+        const paymentLink = sectionsContainer.querySelector('#cfgDepositPaymentLink')?.value.trim() || '';
+
+        if (window.MeryStore && typeof window.MeryStore.saveReservationSettings === 'function') {
+          window.MeryStore.saveReservationSettings({
+            evolutionServerUrl: serverUrl,
+            evolutionApiKey: apiKey,
+            evolutionInstanceName: instanceName,
+            depositAlias: alias,
+            depositCbu: cbu,
+            depositHolder: holder,
+            depositAmount: amount,
+            depositPaymentLink: paymentLink
+          });
+          showToast('Configuración de WhatsApp y señas guardada correctamente');
+        }
+      });
+    }
+
+    // Generate/View Evolution QR
+    const btnGenQr = sectionsContainer.querySelector('#btnGenEvolutionQr');
+    const qrPreviewBox = sectionsContainer.querySelector('#evolutionQrPreviewBox');
+    if (btnGenQr && qrPreviewBox) {
+      btnGenQr.addEventListener('click', async () => {
+        qrPreviewBox.hidden = false;
+        const serverUrl = sectionsContainer.querySelector('#cfgEvolutionServerUrl')?.value.trim() || '';
+        const apiKey = sectionsContainer.querySelector('#cfgEvolutionApiKey')?.value.trim() || '';
+        const instanceName = sectionsContainer.querySelector('#cfgEvolutionInstanceName')?.value.trim() || 'mery-la-previa';
+
+        let connectionPayload = `https://wa.me/?evolution_instance=${instanceName}&ts=${Date.now()}`;
+
+        if (serverUrl && apiKey) {
+          showToast('Conectando con Evolution API...');
+          try {
+            const cleanUrl = serverUrl.replace(/\/+$/, '');
+            const resp = await fetch(`${cleanUrl}/instance/connect/${instanceName}`, {
+              headers: { apikey: apiKey }
+            });
+            if (resp.ok) {
+              const data = await resp.json();
+              if (data && (data.code || data.base64 || data.qrcode)) {
+                connectionPayload = data.code || data.base64 || data.qrcode;
+                showToast('QR de WhatsApp obtenido de Evolution API');
+              }
+            }
+          } catch (err) {
+            console.warn('Evolution API connect fallback:', err.message || err);
+          }
+        }
+
+        if (window.MeryStore && typeof window.MeryStore.renderQrCode === 'function') {
+          window.MeryStore.renderQrCode('evolutionQrCanvas', connectionPayload, { size: 200 });
+        }
+      });
+    }
+  }
+
+  // --- Real-time Subscription to Reservation Updates ---
+  if (window.MeryStore && typeof window.MeryStore.subscribeToReservationChanges === 'function') {
+    window.MeryStore.subscribeToReservationChanges((updatedList, event) => {
+      updateReservationsBadge();
+      if (event) {
+        if (event.event === 'PROOF_UPLOADED') {
+          showToast(`🔔 Nuevo comprobante de seña subido en reserva ${event.reservationId || ''}`);
+        } else if (event.event === 'NEW_RESERVATION') {
+          showToast(`🔔 Nueva reserva recibida: ${event.reservation?.customer_name || ''} (${event.reservation?.id || ''})`);
+        }
+      }
+      if (activeTab === 'reservations') {
+        renderReservationsWorkspace();
+      }
+    });
+  }
+
+  // Initial badge update
+  updateReservationsBadge();
+
+  // --- Door Check-in URL parameter (?checkin=MLP-XXXX) ---
+  const urlCheckinParam = new URLSearchParams(window.location.search).get('checkin');
+  if (urlCheckinParam) {
+    openQrScannerModal(urlCheckinParam.trim());
   }
 });

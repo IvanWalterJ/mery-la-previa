@@ -1097,11 +1097,559 @@ select.q-select option,
   border-color: var(--q-cream);
 }
 
-.q-form-row-3 {
+.q-form-row-2 {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 12px;
 }
+
+@media (max-width: 600px) {
+  .q-form-row-2,
+  .q-form-row-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Deposit Mode Selector Cards */
+.q-deposit-mode-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.q-form-label {
+  font-size: 0.76rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--q-cream-muted);
+  font-weight: 500;
+}
+
+.q-deposit-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 680px) {
+  .q-deposit-cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.q-deposit-card {
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--q-border);
+  background: rgba(20, 22, 20, 0.6);
+  cursor: pointer;
+  transition: all 0.22s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+
+.q-deposit-card:hover {
+  border-color: var(--q-border-strong);
+  background: rgba(28, 30, 28, 0.7);
+}
+
+.q-deposit-card.active {
+  border-color: var(--q-gold);
+  background: rgba(212, 175, 55, 0.08);
+  box-shadow: 0 0 16px rgba(212, 175, 55, 0.12);
+}
+
+.q-deposit-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.q-deposit-card-badge {
+  font-size: 0.65rem;
+  letter-spacing: 0.14em;
+  padding: 2px 7px;
+  border-radius: 100px;
+  background: rgba(212, 175, 55, 0.18);
+  color: var(--q-gold);
+  font-weight: 600;
+}
+
+.q-deposit-card-badge.q-badge-simple {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--q-cream-muted);
+}
+
+.q-deposit-card-check {
+  font-size: 0.9rem;
+  color: var(--q-cream-muted);
+}
+
+.q-deposit-card.active .q-deposit-card-check {
+  color: var(--q-gold);
+}
+
+.q-deposit-card-title {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--q-cream);
+}
+
+.q-deposit-card-desc {
+  font-size: 0.76rem;
+  color: var(--q-cream-muted);
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* ==========================================================================
+   AIRPORT BOARDING PASS MODAL STYLES (S9)
+   ========================================================================== */
+.bp-modal-backdrop {
+  z-index: 1050;
+}
+
+.bp-modal-card {
+  max-width: 580px;
+  background: #0f1110;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  padding: 0;
+  border-radius: 18px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.9), 0 0 40px rgba(212, 175, 55, 0.08);
+  overflow-y: auto;
+  max-height: 92vh;
+}
+
+.bp-ticket {
+  display: flex;
+  flex-direction: column;
+}
+
+.bp-header {
+  padding: 28px 26px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: linear-gradient(180deg, rgba(212, 175, 55, 0.12) 0%, rgba(15, 17, 16, 0) 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.bp-tagline {
+  font-size: 0.68rem;
+  letter-spacing: 0.22em;
+  color: var(--q-gold);
+  font-weight: 600;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.bp-title {
+  font-family: var(--font-serif);
+  font-size: 1.45rem;
+  letter-spacing: 0.18em;
+  color: var(--q-cream);
+  margin: 0;
+}
+
+.bp-code-wrap {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bp-label {
+  font-size: 0.64rem;
+  letter-spacing: 0.16em;
+  color: var(--q-cream-muted);
+  font-weight: 500;
+  text-transform: uppercase;
+  display: block;
+}
+
+.bp-code {
+  font-family: monospace;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--q-gold);
+}
+
+.bp-status-bar {
+  padding: 8px 26px 14px;
+}
+
+.bp-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.bp-status-confirmed {
+  background: rgba(46, 204, 113, 0.16);
+  color: #2ecc71;
+  border: 1px solid rgba(46, 204, 113, 0.35);
+}
+
+.bp-status-pending {
+  background: rgba(243, 156, 18, 0.16);
+  color: #f39c12;
+  border: 1px solid rgba(243, 156, 18, 0.35);
+}
+
+.bp-status-review {
+  background: rgba(52, 152, 219, 0.16);
+  color: #3498db;
+  border: 1px solid rgba(52, 152, 219, 0.35);
+}
+
+.bp-status-simple {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--q-cream-muted);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.bp-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px 20px;
+  padding: 12px 26px 20px;
+}
+
+@media (max-width: 500px) {
+  .bp-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.bp-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bp-cell-full {
+  grid-column: 1 / -1;
+  background: rgba(212, 175, 55, 0.07);
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px dashed rgba(212, 175, 55, 0.3);
+}
+
+.bp-val {
+  font-size: 0.88rem;
+  color: var(--q-cream);
+  line-height: 1.4;
+}
+
+/* Perforated tear line */
+.bp-tear-line {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 6px 0;
+  height: 20px;
+}
+
+.bp-notch {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  background: var(--q-bg);
+  border-radius: 50%;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.9);
+}
+
+.bp-notch-left {
+  left: -12px;
+}
+
+.bp-notch-right {
+  right: -12px;
+}
+
+.bp-dashed {
+  width: calc(100% - 36px);
+  border-bottom: 2px dashed rgba(255, 255, 255, 0.15);
+}
+
+/* Scannable QR code section */
+.bp-qr-section {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px 26px;
+  background: rgba(20, 22, 20, 0.45);
+}
+
+@media (max-width: 540px) {
+  .bp-qr-section {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+.bp-qr-box {
+  background: #f7f4ed;
+  padding: 12px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  flex-shrink: 0;
+}
+
+.bp-qr-canvas {
+  display: block;
+  width: 150px;
+  height: 150px;
+}
+
+.bp-qr-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bp-qr-title {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--q-cream);
+}
+
+.bp-qr-desc {
+  font-size: 0.78rem;
+  color: var(--q-cream-muted);
+  line-height: 1.45;
+  margin: 0;
+}
+
+.bp-door-badge {
+  font-size: 0.65rem;
+  letter-spacing: 0.16em;
+  color: var(--q-gold);
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+/* Deposit and Proof section */
+.bp-deposit-section {
+  padding: 22px 26px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.bp-deposit-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.bp-deposit-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bp-deposit-icon {
+  color: var(--q-gold);
+  font-size: 0.9rem;
+}
+
+.bp-deposit-header h4 {
+  margin: 0;
+  font-size: 0.98rem;
+  color: var(--q-cream);
+  font-weight: 600;
+}
+
+.bp-deposit-amount {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--q-gold);
+}
+
+.bp-deposit-intro {
+  font-size: 0.8rem;
+  color: var(--q-cream-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.bp-bank-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(25, 27, 25, 0.6);
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.bp-bank-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.bp-bank-label {
+  font-size: 0.76rem;
+  color: var(--q-cream-muted);
+}
+
+.bp-bank-val {
+  font-family: monospace;
+  font-size: 0.86rem;
+  color: var(--q-cream);
+  word-break: break-all;
+}
+
+.bp-btn-copy {
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--q-border);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--q-cream);
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.bp-btn-copy:hover {
+  background: var(--q-gold);
+  color: #0d0e0d;
+  border-color: var(--q-gold);
+}
+
+.bp-paylink-wrap {
+  text-align: center;
+}
+
+.bp-btn-mp {
+  display: block;
+  text-align: center;
+  padding: 12px 18px;
+  border-radius: 10px;
+  background: #009ee3;
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+
+.bp-btn-mp:hover {
+  background: #0087c2;
+}
+
+.bp-portal-link-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(212, 175, 55, 0.06);
+  border: 1px dashed rgba(212, 175, 55, 0.25);
+}
+
+.bp-portal-link-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.bp-portal-input {
+  flex: 1;
+  background: rgba(10, 11, 10, 0.7);
+  border: 1px solid var(--q-border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  color: var(--q-cream-muted);
+  font-size: 0.74rem;
+  font-family: monospace;
+  outline: none;
+}
+
+.bp-portal-note {
+  font-size: 0.72rem;
+  color: var(--q-cream-muted);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.bp-proof-zone {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bp-proof-upload-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bp-btn-proof {
+  background: var(--q-gold);
+  border-color: var(--q-gold);
+  color: #0d0e0d;
+}
+
+.bp-btn-proof:hover {
+  background: #e6c875;
+  border-color: #e6c875;
+}
+
+.bp-proof-preview-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(46, 204, 113, 0.08);
+  border: 1px solid rgba(46, 204, 113, 0.25);
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+.bp-proof-img {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid rgba(46, 204, 113, 0.3);
+}
+
+.bp-proof-status-msg {
+  font-size: 0.78rem;
+  color: #2ecc71;
+  font-weight: 500;
+}
+
+.bp-footer-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 26px 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
 
 .q-btn-submit {
   appearance: none;
