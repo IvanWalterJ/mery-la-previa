@@ -212,7 +212,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (dishModalImage) {
       dishModalImage.src = item.image || 'assets/img/ice-cube-previa.jpg';
       dishModalImage.alt = item.name || 'Detalle del plato';
-      dishModalImage.style.objectPosition = item.imagePosition || '50% 50%';
+      const modalPos = item.modalImagePosition || item.imagePosition || '50% 50%';
+      const modalZoom = item.modalImageZoom || item.imageZoom || 1;
+      dishModalImage.style.objectPosition = modalPos;
+      dishModalImage.style.transformOrigin = modalPos;
+      dishModalImage.style.transform = `scale(${modalZoom})`;
     }
     if (dishModalCategory) {
       dishModalCategory.textContent = categoryTitle || 'LA CARTA';
@@ -364,7 +368,15 @@ document.addEventListener('DOMContentLoaded', () => {
               data-item-idx="${idx}"
               aria-label="Ver detalle de ${escapeHtml(item.name)}"
             >
-              <img class="q-dish-thumb" src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" style="object-position: ${escapeHtml(item.imagePosition || '50% 50%')};" loading="lazy" />
+              <div class="q-dish-thumb-wrap">
+                <img
+                  class="q-dish-thumb"
+                  src="${escapeHtml(item.image)}"
+                  alt="${escapeHtml(item.name)}"
+                  style="object-position: ${escapeHtml(item.imagePosition || '50% 50%')}; transform-origin: ${escapeHtml(item.imagePosition || '50% 50%')}; transform: scale(${Number(item.imageZoom) || 1});"
+                  loading="lazy"
+                />
+              </div>
               <div class="q-dish-body">
                 <div class="q-dish-header">
                   <div class="q-dish-title-wrap">

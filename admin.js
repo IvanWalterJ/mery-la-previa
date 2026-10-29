@@ -93,14 +93,37 @@ document.addEventListener('DOMContentLoaded', () => {
   const itemFormBadge = document.getElementById('itemFormBadge');
   const itemPhotoCropStage = document.getElementById('itemPhotoCropStage');
   const itemFormPreview = document.getElementById('itemFormPreview');
+  const itemFormModalPreview = document.getElementById('itemFormModalPreview');
   const itemFormFile = document.getElementById('itemFormFile');
   const itemFormImageUrl = document.getElementById('itemFormImageUrl');
   const itemFormImagePos = document.getElementById('itemFormImagePos');
+  const itemFormImageZoom = document.getElementById('itemFormImageZoom');
+  const itemFormModalImagePos = document.getElementById('itemFormModalImagePos');
+  const itemFormModalImageZoom = document.getElementById('itemFormModalImageZoom');
+  const btnOpenPhotoCropper = document.getElementById('btnOpenPhotoCropper');
   const btnResetImagePos = document.getElementById('btnResetImagePos');
   const itemFormShortDesc = document.getElementById('itemFormShortDesc');
   const itemFormDetailCopy = document.getElementById('itemFormDetailCopy');
   const itemFormPairing = document.getElementById('itemFormPairing');
   const itemFormTags = document.getElementById('itemFormTags');
+
+  // Instagram-style Dedicated Dual Photo Cropper Modal controls
+  const adminPhotoCropperModal = document.getElementById('adminPhotoCropperModal');
+  const cropTabThumb = document.getElementById('cropTabThumb');
+  const cropTabModal = document.getElementById('cropTabModal');
+  const igCropViewport = document.getElementById('igCropViewport');
+  const igCropImage = document.getElementById('igCropImage');
+  const igActiveModeLabel = document.getElementById('igActiveModeLabel');
+  const igCropZoomSlider = document.getElementById('igCropZoomSlider');
+  const igCropZoomValue = document.getElementById('igCropZoomValue');
+  const btnResetActiveCrop = document.getElementById('btnResetActiveCrop');
+  const igLivePreviewThumb = document.getElementById('igLivePreviewThumb');
+  const igLivePreviewModal = document.getElementById('igLivePreviewModal');
+  const igLivePreviewThumbWrap = document.getElementById('igLivePreviewThumbWrap');
+  const igLivePreviewModalWrap = document.getElementById('igLivePreviewModalWrap');
+  const btnClosePhotoCropper = document.getElementById('btnClosePhotoCropper');
+  const btnCancelPhotoCropper = document.getElementById('btnCancelPhotoCropper');
+  const btnApplyPhotoCropper = document.getElementById('btnApplyPhotoCropper');
 
   // Category Modal controls
   const categoryModal = document.getElementById('adminCategoryModal');
@@ -124,12 +147,14 @@ document.addEventListener('DOMContentLoaded', () => {
   let toastTimer = null;
   let pendingConfirmCallback = null;
 
-  // Draggable photo repositioning / framing logic
-  let isDraggingCrop = false;
-  let dragStartX = 0;
-  let dragStartY = 0;
-  let cropStartPosX = 50;
-  let cropStartPosY = 50;
+  // Cropper state
+  let cropperContext = null; // { mode: 'item-modal' } | { mode: 'direct-item', secId, itemId }
+  let activeCropMode = 'thumb'; // 'thumb' | 'modal'
+  let currentCrops = {
+    thumb: { x: 50, y: 50, zoom: 1 },
+    modal: { x: 50, y: 50, zoom: 1 }
+  };
+  let currentCropperImageUrl = '';
 
   function parseImagePosition(posStr) {
     if (!posStr) return { x: 50, y: 50 };
@@ -139,19 +164,243 @@ document.addEventListener('DOMContentLoaded', () => {
     return { x, y };
   }
 
+  function applyCropToElement(el, crop) {
+    if (!el || !crop) return;
+    const pos = `${crop.x}% ${crop.y}%`;
+    const zoom = typeof crop.zoom === 'number' && !isNaN(crop.zoom) ? crop.zoom : 1;
+    el.style.objectPosition = pos;
+    el.style.transformOrigin = pos;
+    el.style.transform = `scale(${zoom})`;
+  }
+
   function setImagePosition(x, y) {
     const clampedX = Math.round(Math.min(100, Math.max(0, x)));
     const clampedY = Math.round(Math.min(100, Math.max(0, y)));
     const val = `${clampedX}% ${clampedY}%`;
     if (itemFormImagePos) itemFormImagePos.value = val;
-    if (itemFormPreview) itemFormPreview.style.objectPosition = val;
+    if (itemFormPreview) {
+      itemFormPreview.style.objectPosition = val;
+      itemFormPreview.style.transformOrigin = val;
+    }
   }
+
+  function updateCropperView() {
+    if (!igCropViewport) return;
+    const isThumb = activeCropMode === 'thumb';
+    igCropViewport.classList.toggle('mode-thumb', isThumb);
+    igCropViewport.classList.toggle('mode-modal', !isThumb);
+
+    if (cropTabThumb) {
+      cropTabThumb.classList.toggle('active', isThumb);
+      cropTabThumb.setAttribute('aria-selected', isThumb ? 'true' : 'false');
+    }
+    if (cropTabModal) {
+      cropTabModal.classList.toggle('active', !isThumb);
+      cropTabModal.setAttribute('aria-selected', !isThumb ? 'true' : 'false');
+    }
+
+    if (igLivePreviewThumbWrap) igLivePreviewThumbWrap.classList.toggle('active-preview', isThumb);
+    if (igLivePreviewModalWrap) igLivePreviewModalWrap.classList.toggle('active-preview', !isThumb);
+
+    if (igActiveModeLabel) {
+      igActiveModeLabel.textContent = isThumb
+        ? 'Miniatura de la carta (115 × 86)'
+        : 'Ventana de detalle del plato (580 × 250)';
+    }
+
+    const activeCrop = currentCrops[activeCropMode] || { x: 50, y: 50, zoom: 1 };
+    applyCropToElement(igCropImage, activeCrop);
+
+    if (igCropZoomSlider) igCropZoomSlider.value = activeCrop.zoom;
+    if (igCropZoomValue) igCropZoomValue.textContent = activeCrop.zoom.toFixed(2) + 'x';
+
+    applyCropToElement(igLivePreviewThumb, currentCrops.thumb);
+    applyCropToElement(igLivePreviewModal, currentCrops.modal);
+  }
+
+  function openPhotoCropper({ imageUrl, thumbPos, thumbZoom, modalPos, modalZoom, context }) {
+    if (!adminPhotoCropperModal) return;
+    cropperContext = context || { mode: 'item-modal' };
+    activeCropMode = 'thumb';
+
+    const parsedThumb = parseImagePosition(thumbPos || '50% 50%');
+    const parsedModal = parseImagePosition(modalPos || thumbPos || '50% 50%');
+
+    currentCrops = {
+      thumb: {
+        x: parsedThumb.x,
+        y: parsedThumb.y,
+        zoom: typeof thumbZoom === 'number' && !isNaN(thumbZoom) ? thumbZoom : 1
+      },
+      modal: {
+        x: parsedModal.x,
+        y: parsedModal.y,
+        zoom: typeof modalZoom === 'number' && !isNaN(modalZoom) ? modalZoom : (typeof thumbZoom === 'number' && !isNaN(thumbZoom) ? thumbZoom : 1)
+      }
+    };
+
+    currentCropperImageUrl = imageUrl || 'assets/img/ice-cube-previa.jpg';
+    if (igCropImage) igCropImage.src = currentCropperImageUrl;
+    if (igLivePreviewThumb) igLivePreviewThumb.src = currentCropperImageUrl;
+    if (igLivePreviewModal) igLivePreviewModal.src = currentCropperImageUrl;
+
+    updateCropperView();
+    adminPhotoCropperModal.hidden = false;
+  }
+
+  function closePhotoCropper() {
+    if (!adminPhotoCropperModal) return;
+    adminPhotoCropperModal.hidden = true;
+    cropperContext = null;
+  }
+
+  // Draggable photo repositioning inside cropper viewport
+  let isDraggingIgCrop = false;
+  let dragIgStartX = 0;
+  let dragIgStartY = 0;
+  let cropStartPosX = 50;
+  let cropStartPosY = 50;
+
+  if (igCropViewport) {
+    igCropViewport.addEventListener('pointerdown', (e) => {
+      isDraggingIgCrop = true;
+      dragIgStartX = e.clientX;
+      dragIgStartY = e.clientY;
+      const cur = currentCrops[activeCropMode] || { x: 50, y: 50, zoom: 1 };
+      cropStartPosX = cur.x;
+      cropStartPosY = cur.y;
+      igCropViewport.classList.add('is-dragging');
+      try {
+        igCropViewport.setPointerCapture(e.pointerId);
+      } catch (_) {}
+    });
+
+    igCropViewport.addEventListener('pointermove', (e) => {
+      if (!isDraggingIgCrop) return;
+      const rect = igCropViewport.getBoundingClientRect();
+      const stageW = rect.width || (activeCropMode === 'thumb' ? 345 : 522);
+      const stageH = rect.height || (activeCropMode === 'thumb' ? 258 : 225);
+      const dx = e.clientX - dragIgStartX;
+      const dy = e.clientY - dragIgStartY;
+      const nextX = Math.round(Math.min(100, Math.max(0, cropStartPosX - (dx / stageW) * 100)));
+      const nextY = Math.round(Math.min(100, Math.max(0, cropStartPosY - (dy / stageH) * 100)));
+      currentCrops[activeCropMode].x = nextX;
+      currentCrops[activeCropMode].y = nextY;
+      updateCropperView();
+    });
+
+    const stopIgCropDrag = (e) => {
+      if (!isDraggingIgCrop) return;
+      isDraggingIgCrop = false;
+      igCropViewport.classList.remove('is-dragging');
+      try {
+        if (e && e.pointerId) igCropViewport.releasePointerCapture(e.pointerId);
+      } catch (_) {}
+    };
+
+    igCropViewport.addEventListener('pointerup', stopIgCropDrag);
+    igCropViewport.addEventListener('pointercancel', stopIgCropDrag);
+
+    // Mouse wheel zoom
+    igCropViewport.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const delta = e.deltaY < 0 ? 0.05 : -0.05;
+      const nextZoom = Math.round(Math.min(2.5, Math.max(1, currentCrops[activeCropMode].zoom + delta)) * 100) / 100;
+      currentCrops[activeCropMode].zoom = nextZoom;
+      updateCropperView();
+    }, { passive: false });
+  }
+
+  // Zoom range slider
+  if (igCropZoomSlider) {
+    igCropZoomSlider.addEventListener('input', () => {
+      const val = parseFloat(igCropZoomSlider.value) || 1;
+      currentCrops[activeCropMode].zoom = Math.round(val * 100) / 100;
+      updateCropperView();
+    });
+  }
+
+  // Tabs and preview box switching
+  function setCropMode(mode) {
+    if (mode !== 'thumb' && mode !== 'modal') return;
+    activeCropMode = mode;
+    updateCropperView();
+  }
+
+  cropTabThumb?.addEventListener('click', () => setCropMode('thumb'));
+  cropTabModal?.addEventListener('click', () => setCropMode('modal'));
+  igLivePreviewThumbWrap?.addEventListener('click', () => setCropMode('thumb'));
+  igLivePreviewModalWrap?.addEventListener('click', () => setCropMode('modal'));
+
+  btnResetActiveCrop?.addEventListener('click', () => {
+    currentCrops[activeCropMode] = { x: 50, y: 50, zoom: 1 };
+    updateCropperView();
+    showToast('Esta vista fue centrada');
+  });
+
+  btnClosePhotoCropper?.addEventListener('click', closePhotoCropper);
+  btnCancelPhotoCropper?.addEventListener('click', closePhotoCropper);
+  if (adminPhotoCropperModal) {
+    adminPhotoCropperModal.addEventListener('click', (e) => {
+      if (e.target === adminPhotoCropperModal) closePhotoCropper();
+    });
+  }
+
+  if (btnApplyPhotoCropper) {
+    btnApplyPhotoCropper.addEventListener('click', () => {
+      if (!cropperContext) return;
+      if (cropperContext.mode === 'direct-item') {
+        const targetSec = menuSections.find((s) => s.id === cropperContext.secId);
+        const item = targetSec?.items.find((i) => i.id === cropperContext.itemId);
+        if (item) {
+          item.imagePosition = `${currentCrops.thumb.x}% ${currentCrops.thumb.y}%`;
+          item.imageZoom = currentCrops.thumb.zoom;
+          item.modalImagePosition = `${currentCrops.modal.x}% ${currentCrops.modal.y}%`;
+          item.modalImageZoom = currentCrops.modal.zoom;
+
+          commitChangesInstant(`Encuadre de "${item.name}" guardado`);
+
+          const client = window.MeryStore.getClient();
+          if (client) {
+            client.from('menu_items').update({
+              image_position: item.imagePosition,
+              image_zoom: item.imageZoom,
+              modal_image_position: item.modalImagePosition,
+              modal_image_zoom: item.modalImageZoom,
+              updated_at: new Date().toISOString()
+            }).eq('id', item.id).then(() => {}).catch(() => {});
+          }
+        }
+        closePhotoCropper();
+      } else if (cropperContext.mode === 'item-modal') {
+        const thumbPos = `${currentCrops.thumb.x}% ${currentCrops.thumb.y}%`;
+        const modalPos = `${currentCrops.modal.x}% ${currentCrops.modal.y}%`;
+
+        if (itemFormImagePos) itemFormImagePos.value = thumbPos;
+        if (itemFormImageZoom) itemFormImageZoom.value = currentCrops.thumb.zoom;
+        if (itemFormModalImagePos) itemFormModalImagePos.value = modalPos;
+        if (itemFormModalImageZoom) itemFormModalImageZoom.value = currentCrops.modal.zoom;
+
+        applyCropToElement(itemFormPreview, currentCrops.thumb);
+        applyCropToElement(itemFormModalPreview, currentCrops.modal);
+
+        closePhotoCropper();
+        showToast('Encuadres aplicados al ítem');
+      }
+    });
+  }
+
+  // Retain stage pointerdown & quick interaction inside item modal for backwards compatibility
+  let isDraggingStage = false;
+  let dragStageStartX = 0;
+  let dragStageStartY = 0;
 
   if (itemPhotoCropStage) {
     itemPhotoCropStage.addEventListener('pointerdown', (e) => {
-      isDraggingCrop = true;
-      dragStartX = e.clientX;
-      dragStartY = e.clientY;
+      if (e.target.closest('button') || e.target.closest('label') || e.target.closest('input')) return;
+      isDraggingStage = true;
+      dragStageStartX = e.clientX;
+      dragStageStartY = e.clientY;
       const current = parseImagePosition(itemFormImagePos?.value || '50% 50%');
       cropStartPosX = current.x;
       cropStartPosY = current.y;
@@ -162,9 +411,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     itemPhotoCropStage.addEventListener('pointermove', (e) => {
-      if (!isDraggingCrop) return;
-      const dx = e.clientX - dragStartX;
-      const dy = e.clientY - dragStartY;
+      if (!isDraggingStage) return;
+      const dx = e.clientX - dragStageStartX;
+      const dy = e.clientY - dragStageStartY;
       const rect = itemPhotoCropStage.getBoundingClientRect();
       const stageW = rect.width || 128;
       const stageH = rect.height || 96;
@@ -173,22 +422,52 @@ document.addEventListener('DOMContentLoaded', () => {
       setImagePosition(nextX, nextY);
     });
 
-    const stopCropDrag = (e) => {
-      if (!isDraggingCrop) return;
-      isDraggingCrop = false;
+    const stopStageDrag = (e) => {
+      if (!isDraggingStage) return;
+      const dx = Math.abs(e.clientX - dragStageStartX);
+      const dy = Math.abs(e.clientY - dragStageStartY);
+      isDraggingStage = false;
       itemPhotoCropStage.classList.remove('is-dragging');
       try {
         if (e && e.pointerId) itemPhotoCropStage.releasePointerCapture(e.pointerId);
       } catch (_) {}
+
+      // If clicked without dragging, open cropper modal
+      if (dx < 6 && dy < 6 && !e.target.closest('button') && !e.target.closest('label')) {
+        openPhotoCropper({
+          imageUrl: itemFormImageUrl?.value || 'assets/img/ice-cube-previa.jpg',
+          thumbPos: itemFormImagePos?.value || '50% 50%',
+          thumbZoom: parseFloat(itemFormImageZoom?.value) || 1,
+          modalPos: itemFormModalImagePos?.value || '50% 50%',
+          modalZoom: parseFloat(itemFormModalImageZoom?.value) || 1,
+          context: { mode: 'item-modal' }
+        });
+      }
     };
 
-    itemPhotoCropStage.addEventListener('pointerup', stopCropDrag);
-    itemPhotoCropStage.addEventListener('pointercancel', stopCropDrag);
+    itemPhotoCropStage.addEventListener('pointerup', stopStageDrag);
+    itemPhotoCropStage.addEventListener('pointercancel', stopStageDrag);
   }
+
+  btnOpenPhotoCropper?.addEventListener('click', () => {
+    openPhotoCropper({
+      imageUrl: itemFormImageUrl?.value || 'assets/img/ice-cube-previa.jpg',
+      thumbPos: itemFormImagePos?.value || '50% 50%',
+      thumbZoom: parseFloat(itemFormImageZoom?.value) || 1,
+      modalPos: itemFormModalImagePos?.value || '50% 50%',
+      modalZoom: parseFloat(itemFormModalImageZoom?.value) || 1,
+      context: { mode: 'item-modal' }
+    });
+  });
 
   if (btnResetImagePos) {
     btnResetImagePos.addEventListener('click', () => {
       setImagePosition(50, 50);
+      if (itemFormImageZoom) itemFormImageZoom.value = 1;
+      if (itemFormModalImagePos) itemFormModalImagePos.value = '50% 50%';
+      if (itemFormModalImageZoom) itemFormModalImageZoom.value = 1;
+      applyCropToElement(itemFormPreview, { x: 50, y: 50, zoom: 1 });
+      applyCropToElement(itemFormModalPreview, { x: 50, y: 50, zoom: 1 });
       showToast('Encuadre centrado (50% 50%)');
     });
   }
@@ -445,7 +724,22 @@ document.addEventListener('DOMContentLoaded', () => {
         ${filteredItems.map((item) => `
           <article class="admin-item-card ${item.available === false ? 'unavailable' : ''}" data-item-id="${escapeHtml(item.id)}">
             <div class="admin-item-top">
-              <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" class="admin-item-thumb" style="object-position: ${item.imagePosition || '50% 50%'};" decoding="async" />
+              <div
+                class="admin-item-thumb-wrap"
+                data-action="crop-thumb"
+                data-sec-id="${escapeHtml(sec.id)}"
+                data-item-id="${escapeHtml(item.id)}"
+                title="Ajustar encuadre de la foto"
+              >
+                <img
+                  src="${escapeHtml(item.image)}"
+                  alt="${escapeHtml(item.name)}"
+                  class="admin-item-thumb"
+                  style="object-position: ${item.imagePosition || '50% 50%'}; transform-origin: ${item.imagePosition || '50% 50%'}; transform: scale(${item.imageZoom || 1});"
+                  decoding="async"
+                />
+                <span class="admin-item-thumb-badge">Encuadrar</span>
+              </div>
               <div class="admin-item-info">
                 <h3 class="admin-item-title">
                   ${escapeHtml(item.name)}
@@ -520,6 +814,25 @@ document.addEventListener('DOMContentLoaded', () => {
           e.preventDefault();
           input.closest('.admin-quick-price-row')?.querySelector('[data-action="quick-price"]')?.click();
         }
+      });
+    });
+
+    sectionsContainer.querySelectorAll('[data-action="crop-thumb"]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const secId = btn.getAttribute('data-sec-id');
+        const itemId = btn.getAttribute('data-item-id');
+        const targetSec = menuSections.find((s) => s.id === secId);
+        const item = targetSec?.items.find((i) => i.id === itemId);
+        if (!item) return;
+
+        openPhotoCropper({
+          imageUrl: item.image,
+          thumbPos: item.imagePosition || '50% 50%',
+          thumbZoom: typeof item.imageZoom === 'number' ? item.imageZoom : 1,
+          modalPos: item.modalImagePosition || item.imagePosition || '50% 50%',
+          modalZoom: typeof item.modalImageZoom === 'number' ? item.modalImageZoom : 1,
+          context: { mode: 'direct-item', secId, itemId }
+        });
       });
     });
 
@@ -819,10 +1132,25 @@ document.addEventListener('DOMContentLoaded', () => {
       itemFormName.value = item.name || '';
       itemFormBadge.value = item.badge || '★';
       itemFormImageUrl.value = item.image || 'assets/img/ice-cube-previa.jpg';
-      itemFormPreview.src = item.image || 'assets/img/ice-cube-previa.jpg';
       const pos = item.imagePosition || '50% 50%';
+      const zoom = typeof item.imageZoom === 'number' ? item.imageZoom : 1;
+      const modalPos = item.modalImagePosition || item.imagePosition || '50% 50%';
+      const modalZoom = typeof item.modalImageZoom === 'number' ? item.modalImageZoom : zoom;
+
       if (itemFormImagePos) itemFormImagePos.value = pos;
-      if (itemFormPreview) itemFormPreview.style.objectPosition = pos;
+      if (itemFormImageZoom) itemFormImageZoom.value = zoom;
+      if (itemFormModalImagePos) itemFormModalImagePos.value = modalPos;
+      if (itemFormModalImageZoom) itemFormModalImageZoom.value = modalZoom;
+
+      if (itemFormPreview) {
+        itemFormPreview.src = item.image || 'assets/img/ice-cube-previa.jpg';
+        applyCropToElement(itemFormPreview, { ...parseImagePosition(pos), zoom });
+      }
+      if (itemFormModalPreview) {
+        itemFormModalPreview.src = item.image || 'assets/img/ice-cube-previa.jpg';
+        applyCropToElement(itemFormModalPreview, { ...parseImagePosition(modalPos), zoom: modalZoom });
+      }
+
       itemFormShortDesc.value = item.desc || '';
       itemFormDetailCopy.value = item.detailCopy || item.desc || '';
       itemFormPairing.value = item.pairing || '';
@@ -834,9 +1162,21 @@ document.addEventListener('DOMContentLoaded', () => {
       itemFormName.value = '';
       itemFormBadge.value = '★';
       itemFormImageUrl.value = 'assets/img/ice-cube-previa.jpg';
-      itemFormPreview.src = 'assets/img/ice-cube-previa.jpg';
+
       if (itemFormImagePos) itemFormImagePos.value = '50% 50%';
-      if (itemFormPreview) itemFormPreview.style.objectPosition = '50% 50%';
+      if (itemFormImageZoom) itemFormImageZoom.value = 1;
+      if (itemFormModalImagePos) itemFormModalImagePos.value = '50% 50%';
+      if (itemFormModalImageZoom) itemFormModalImageZoom.value = 1;
+
+      if (itemFormPreview) {
+        itemFormPreview.src = 'assets/img/ice-cube-previa.jpg';
+        applyCropToElement(itemFormPreview, { x: 50, y: 50, zoom: 1 });
+      }
+      if (itemFormModalPreview) {
+        itemFormModalPreview.src = 'assets/img/ice-cube-previa.jpg';
+        applyCropToElement(itemFormModalPreview, { x: 50, y: 50, zoom: 1 });
+      }
+
       itemFormShortDesc.value = '';
       itemFormDetailCopy.value = '';
       itemFormPairing.value = '';
@@ -864,9 +1204,30 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         const uploadedUrl = await window.MeryStore.uploadDishImage(file);
         itemFormImageUrl.value = uploadedUrl;
-        itemFormPreview.src = uploadedUrl;
-        setImagePosition(50, 50);
-        showToast('Foto lista para guardar');
+        if (itemFormPreview) {
+          itemFormPreview.src = uploadedUrl;
+          applyCropToElement(itemFormPreview, { x: 50, y: 50, zoom: 1 });
+        }
+        if (itemFormModalPreview) {
+          itemFormModalPreview.src = uploadedUrl;
+          applyCropToElement(itemFormModalPreview, { x: 50, y: 50, zoom: 1 });
+        }
+        if (itemFormImagePos) itemFormImagePos.value = '50% 50%';
+        if (itemFormImageZoom) itemFormImageZoom.value = 1;
+        if (itemFormModalImagePos) itemFormModalImagePos.value = '50% 50%';
+        if (itemFormModalImageZoom) itemFormModalImageZoom.value = 1;
+
+        showToast('Foto cargada. Ajustá los encuadres');
+
+        // Immediately open the dedicated Instagram-style Cropper Modal
+        openPhotoCropper({
+          imageUrl: uploadedUrl,
+          thumbPos: '50% 50%',
+          thumbZoom: 1,
+          modalPos: '50% 50%',
+          modalZoom: 1,
+          context: { mode: 'item-modal' }
+        });
       } catch (_) {
         showToast('No se pudo procesar la imagen');
       }
@@ -896,6 +1257,9 @@ document.addEventListener('DOMContentLoaded', () => {
           .filter(Boolean),
         image: itemFormImageUrl.value.trim() || 'assets/img/ice-cube-previa.jpg',
         imagePosition: itemFormImagePos ? itemFormImagePos.value.trim() || '50% 50%' : '50% 50%',
+        imageZoom: itemFormImageZoom ? (parseFloat(itemFormImageZoom.value) || 1) : 1,
+        modalImagePosition: itemFormModalImagePos ? itemFormModalImagePos.value.trim() || '50% 50%' : '50% 50%',
+        modalImageZoom: itemFormModalImageZoom ? (parseFloat(itemFormModalImageZoom.value) || 1) : 1,
         available: true
       };
 
@@ -939,6 +1303,9 @@ document.addEventListener('DOMContentLoaded', () => {
           tags: itemData.tags,
           image_url: itemData.image,
           image_position: itemData.imagePosition,
+          image_zoom: itemData.imageZoom,
+          modal_image_position: itemData.modalImagePosition,
+          modal_image_zoom: itemData.modalImageZoom,
           available: itemData.available
         }, { onConflict: 'id' }).then(() => {}).catch(() => {});
       }

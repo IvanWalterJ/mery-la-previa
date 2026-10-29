@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="admin.css" />
+  <link rel="stylesheet" href="admin.css?v=4" />
 </head>
 <body>
 
@@ -243,27 +243,44 @@
         </div>
 
         <div class="admin-field">
-          <label>Foto del ítem y encuadre</label>
+          <label>Foto del ítem y encuadre dual</label>
           <div class="admin-photo-uploader">
-            <div id="itemPhotoCropStage" class="admin-photo-crop-stage" title="Arrastrá la imagen para acomodar el encuadre">
-              <img id="itemFormPreview" src="assets/img/ice-cube-previa.jpg" alt="Vista previa" class="admin-photo-preview" style="object-position: 50% 50%;" />
-              <span class="admin-crop-badge" aria-hidden="true">Encuadre arrastrable</span>
+            <div id="itemPhotoCropStage" class="admin-photo-crop-stage dual-preview-stage" title="Hacé clic para abrir el editor de encuadres estilo Instagram">
+              <div class="admin-dual-preview-item">
+                <span class="admin-dual-preview-label">Vista en lista</span>
+                <div class="admin-dual-thumb-wrap">
+                  <img id="itemFormPreview" src="assets/img/ice-cube-previa.jpg" alt="Vista previa en lista" class="admin-photo-preview" style="object-position: 50% 50%;" />
+                </div>
+              </div>
+              <div class="admin-dual-preview-item">
+                <span class="admin-dual-preview-label">Vista en ventana de detalle</span>
+                <div class="admin-dual-modal-wrap">
+                  <img id="itemFormModalPreview" src="assets/img/ice-cube-previa.jpg" alt="Vista previa en ventana de detalle" class="admin-photo-preview" style="object-position: 50% 50%;" />
+                </div>
+              </div>
+              <span class="admin-crop-badge" aria-hidden="true">Clic para encuadrar</span>
             </div>
             <div class="admin-photo-controls">
               <p class="admin-photo-hint">
-                Arrastrá la imagen con el mouse o el dedo para acomodar el encuadre.
+                Arrastrá la imagen con el mouse o el dedo para acomodar el encuadre. Podés calibrar de forma independiente la miniatura de la carta y la cabecera del detalle.
               </p>
               <div class="admin-photo-actions-row">
                 <label for="itemFormFile" class="admin-btn-outline admin-upload-label">
                   Subir o cambiar foto
                 </label>
-                <button type="button" id="btnResetImagePos" class="admin-btn-outline">
+                <button type="button" id="btnOpenPhotoCropper" class="admin-btn-gold">
+                  Ajustar encuadres
+                </button>
+                <button type="button" id="btnResetImagePos" class="admin-btn-outline" title="Restablecer encuadres al centro">
                   Centrar encuadre
                 </button>
               </div>
               <input type="file" id="itemFormFile" accept="image/*" hidden />
               <input type="hidden" id="itemFormImageUrl" value="assets/img/ice-cube-previa.jpg" />
               <input type="hidden" id="itemFormImagePos" value="50% 50%" />
+              <input type="hidden" id="itemFormImageZoom" value="1" />
+              <input type="hidden" id="itemFormModalImagePos" value="50% 50%" />
+              <input type="hidden" id="itemFormModalImageZoom" value="1" />
             </div>
           </div>
         </div>
@@ -351,8 +368,121 @@
     </div>
   </div>
 
+  <!-- ======================================================================
+       6. DEDICATED INSTAGRAM-STYLE DUAL PHOTO CROPPER MODAL
+       ====================================================================== -->
+  <div id="adminPhotoCropperModal" class="admin-modal-backdrop" hidden role="dialog" aria-modal="true" aria-labelledby="photoCropperHeading">
+    <div class="admin-modal-card ig-cropper-card">
+      <div class="admin-modal-header">
+        <div class="admin-modal-title-group">
+          <span class="diamond-dot"></span>
+          <h2 id="photoCropperHeading">Ajustar encuadre de la foto</h2>
+        </div>
+        <button type="button" id="btnClosePhotoCropper" class="admin-modal-close" aria-label="Cerrar">✕</button>
+      </div>
+
+      <!-- Mode Tabs (Miniatura 115:86 vs Detalle 580:250) -->
+      <div class="ig-crop-tabs" role="tablist">
+        <button
+          type="button"
+          id="cropTabThumb"
+          class="ig-crop-tab active"
+          role="tab"
+          aria-selected="true"
+          data-crop-mode="thumb"
+        >
+          <span class="ig-tab-num">1</span>
+          <span>1. Miniatura de la carta</span>
+          <span class="ig-tab-ratio">(115:86)</span>
+        </button>
+        <button
+          type="button"
+          id="cropTabModal"
+          class="ig-crop-tab"
+          role="tab"
+          aria-selected="false"
+          data-crop-mode="modal"
+        >
+          <span class="ig-tab-num">2</span>
+          <span>2. Ventana de detalle del plato</span>
+          <span class="ig-tab-ratio">(580:250)</span>
+        </button>
+      </div>
+
+      <div class="ig-crop-workspace">
+        <div class="ig-crop-viewport-container">
+          <!-- Viewport switches aspect ratio smoothly: mode-thumb (115/86) vs mode-modal (580/250) -->
+          <div id="igCropViewport" class="ig-crop-viewport mode-thumb" title="Arrastrá para encuadrar o usá la rueda del mouse para zoom">
+            <img id="igCropImage" src="assets/img/ice-cube-previa.jpg" alt="Foto para encuadrar" draggable="false" />
+            <div id="igCropGrid" class="ig-crop-grid" aria-hidden="true">
+              <span class="ig-grid-line ig-line-h1"></span>
+              <span class="ig-grid-line ig-line-h2"></span>
+              <span class="ig-grid-line ig-line-v1"></span>
+              <span class="ig-grid-line ig-line-v2"></span>
+            </div>
+            <div class="ig-crop-badge-overlay">
+              <span id="igActiveModeLabel">Miniatura de la carta (115 × 86)</span>
+            </div>
+          </div>
+        </div>
+
+        <p class="ig-crop-hint">
+          Arrastrá la foto con el mouse o dedo para acomodar el encuadre. Usá la barra de abajo o la rueda del mouse para hacer zoom.
+        </p>
+
+        <!-- Zoom Slider Row -->
+        <div class="ig-crop-controls-row">
+          <div class="ig-zoom-group">
+            <label for="igCropZoomSlider" class="ig-zoom-label">Zoom</label>
+            <input
+              type="range"
+              id="igCropZoomSlider"
+              class="ig-range-slider"
+              min="1"
+              max="2.5"
+              step="0.02"
+              value="1"
+            />
+            <span id="igCropZoomValue" class="ig-zoom-val-badge">1.00x</span>
+          </div>
+
+          <button type="button" id="btnResetActiveCrop" class="admin-btn-outline ig-btn-reset">
+            Centrar esta vista
+          </button>
+        </div>
+
+        <!-- Side-by-side Live Previews Strip at bottom of cropper -->
+        <div class="ig-previews-strip">
+          <span class="ig-previews-heading">Vista previa simultánea en tiempo real:</span>
+          <div class="ig-previews-grid">
+            <div id="igLivePreviewThumbWrap" class="ig-preview-item" data-switch-mode="thumb" title="Clic para editar encuadre de lista">
+              <span class="ig-preview-tag">Lista de la carta</span>
+              <div class="ig-preview-box ig-preview-thumb-box">
+                <img id="igLivePreviewThumb" src="assets/img/ice-cube-previa.jpg" alt="Vista previa en lista (Miniatura)" />
+              </div>
+              <span class="ig-preview-desc">Miniatura (115 × 86)</span>
+            </div>
+
+            <div id="igLivePreviewModalWrap" class="ig-preview-item" data-switch-mode="modal" title="Clic para editar encuadre de detalle">
+              <span class="ig-preview-tag">Ventana de detalle</span>
+              <div class="ig-preview-box ig-preview-modal-box">
+                <img id="igLivePreviewModal" src="assets/img/ice-cube-previa.jpg" alt="Vista previa al abrir plato (Detalle)" />
+              </div>
+              <span class="ig-preview-desc">Detalle (580 × 250)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-modal-footer ig-modal-footer">
+        <button type="button" id="btnCancelPhotoCropper" class="admin-btn-outline">Cancelar</button>
+        <button type="button" id="btnApplyPhotoCropper" class="admin-btn-gold">Aplicar encuadres</button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js"></script>
-  <script src="admin.js"></script>
+  <script src="supabase-config.js?v=4"></script>
+  <script src="admin.js?v=4"></script>
 </body>
 </html>

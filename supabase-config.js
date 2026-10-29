@@ -39,6 +39,9 @@ const DEFAULT_MENU_SECTIONS = [
         tags: ['Autor 11:11', 'Hielo Sellado en Vivo', 'Perfil Frutal & Especiado'],
         image: 'assets/img/ice-cube-previa.jpg',
         imagePosition: '50% 50%',
+        imageZoom: 1,
+        modalImagePosition: '50% 50%',
+        modalImageZoom: 1,
         available: true
       },
       {
@@ -52,6 +55,9 @@ const DEFAULT_MENU_SECTIONS = [
         tags: ['Ahumado en Barra', 'Cítrico & Herbal', 'Favorito 11:11'],
         image: 'assets/img/cocktails-neon.jpg',
         imagePosition: '50% 50%',
+        imageZoom: 1,
+        modalImagePosition: '50% 50%',
+        modalImageZoom: 1,
         available: true
       },
       {
@@ -65,6 +71,9 @@ const DEFAULT_MENU_SECTIONS = [
         tags: ['Fresco & Burbujeante', 'Copa Balón', 'Base Mery Jane'],
         image: 'assets/img/brand-tutto-passa.jpg',
         imagePosition: '50% 50%',
+        imageZoom: 1,
+        modalImagePosition: '50% 50%',
+        modalImageZoom: 1,
         available: true
       }
     ]
@@ -85,6 +94,9 @@ const DEFAULT_MENU_SECTIONS = [
         tags: ['Para Compartir (750g)', 'Brasas de Quebracho', 'Bandeja de Plata'],
         image: 'assets/img/steak-flash.jpg',
         imagePosition: '50% 50%',
+        imageZoom: 1,
+        modalImagePosition: '50% 50%',
+        modalImageZoom: 1,
         available: true
       },
       {
@@ -98,6 +110,9 @@ const DEFAULT_MENU_SECTIONS = [
         tags: ['Tapeo al Centro', 'Plancha de Hierro', 'Ajo Negro & Lima'],
         image: 'assets/img/cocktails-neon.jpg',
         imagePosition: '50% 50%',
+        imageZoom: 1,
+        modalImagePosition: '50% 50%',
+        modalImageZoom: 1,
         available: true
       },
       {
@@ -111,6 +126,9 @@ const DEFAULT_MENU_SECTIONS = [
         tags: ['Maduración 35 Días', '900g con Hueso', 'Edición Limitada'],
         image: 'assets/img/steak-flash.jpg',
         imagePosition: '50% 50%',
+        imageZoom: 1,
+        modalImagePosition: '50% 50%',
+        modalImageZoom: 1,
         available: true
       }
     ]
@@ -131,6 +149,9 @@ const DEFAULT_MENU_SECTIONS = [
         tags: ['Servicio en Frapera', 'Etiqueta Insignia', 'Fresco & Aromático'],
         image: 'assets/img/wine-mery.jpg',
         imagePosition: '50% 50%',
+        imageZoom: 1,
+        modalImagePosition: '50% 50%',
+        modalImageZoom: 1,
         available: true
       },
       {
@@ -144,6 +165,9 @@ const DEFAULT_MENU_SECTIONS = [
         tags: ['Pack 4 Botellas', 'Especial Cumpleaños', 'Incluye Extra Brut'],
         image: 'assets/img/brand-previa-zine.jpg',
         imagePosition: '50% 50%',
+        imageZoom: 1,
+        modalImagePosition: '50% 50%',
+        modalImageZoom: 1,
         available: true
       },
       {
@@ -157,6 +181,9 @@ const DEFAULT_MENU_SECTIONS = [
         tags: ['Valle de Uco', 'Orgánico', 'Taninos de Terciopelo'],
         image: 'assets/img/bottle-hero-isolated.jpg',
         imagePosition: '50% 50%',
+        imageZoom: 1,
+        modalImagePosition: '50% 50%',
+        modalImageZoom: 1,
         available: true
       }
     ]
@@ -240,7 +267,16 @@ const DEFAULT_MENU_SECTIONS = [
       if (!raw) return cloneDefaultSections();
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
+        return parsed.map((sec) => ({
+          ...sec,
+          items: (sec.items || []).map((it) => ({
+            ...it,
+            imagePosition: it.imagePosition || '50% 50%',
+            imageZoom: typeof it.imageZoom === 'number' ? it.imageZoom : 1,
+            modalImagePosition: it.modalImagePosition || it.imagePosition || '50% 50%',
+            modalImageZoom: typeof it.modalImageZoom === 'number' ? it.modalImageZoom : (typeof it.imageZoom === 'number' ? it.imageZoom : 1)
+          }))
+        }));
       }
     } catch (_) {}
     return cloneDefaultSections();
@@ -302,6 +338,9 @@ const DEFAULT_MENU_SECTIONS = [
             tags: Array.isArray(it.tags) ? it.tags : [],
             image: it.image_url || 'assets/img/ice-cube-previa.jpg',
             imagePosition: it.image_position || '50% 50%',
+            imageZoom: typeof it.image_zoom === 'number' ? it.image_zoom : (parseFloat(it.image_zoom) || 1),
+            modalImagePosition: it.modal_image_position || it.image_position || '50% 50%',
+            modalImageZoom: typeof it.modal_image_zoom === 'number' ? it.modal_image_zoom : (parseFloat(it.modal_image_zoom) || 1),
             available: it.available !== false,
             sort_order: it.sort_order ?? 1
           }))
@@ -405,6 +444,9 @@ const DEFAULT_MENU_SECTIONS = [
           tags: Array.isArray(it.tags) ? it.tags : [],
           image_url: it.image || 'assets/img/ice-cube-previa.jpg',
           image_position: it.imagePosition || '50% 50%',
+          image_zoom: typeof it.imageZoom === 'number' ? it.imageZoom : 1,
+          modal_image_position: it.modalImagePosition || it.imagePosition || '50% 50%',
+          modal_image_zoom: typeof it.modalImageZoom === 'number' ? it.modalImageZoom : 1,
           available: it.available !== false,
           sort_order: j + 1
         }, { onConflict: 'id' });

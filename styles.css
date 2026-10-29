@@ -742,15 +742,29 @@ html, body {
   transform: translateY(-1px);
 }
 
-.q-dish-thumb {
+.q-dish-thumb-wrap {
   width: 115px;
   height: 86px;
   border-radius: 10px;
-  object-fit: cover;
-  object-position: center;
+  overflow: hidden;
   border: 1px solid var(--q-border);
   background: #0c0d0c;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.q-dish-thumb-wrap .q-dish-thumb,
+.q-dish-thumb {
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  object-fit: cover;
+  object-position: center;
+  border: none;
+  background: #0c0d0c;
+  display: block;
 }
 
 .q-dish-body {
@@ -1289,9 +1303,14 @@ select.q-select option,
     padding: 12px;
   }
 
-  .q-dish-thumb {
+  .q-dish-thumb-wrap {
     width: 86px;
     height: 86px;
+  }
+
+  .q-dish-thumb {
+    width: 100%;
+    height: 100%;
   }
 
   .q-dish-header {
