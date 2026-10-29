@@ -1458,7 +1458,7 @@ const DEFAULT_MENU_SECTIONS = [
     const origin = (typeof window !== 'undefined' && window.location && window.location.origin)
       ? window.location.origin
       : (typeof location !== 'undefined' && location.origin ? location.origin : 'http://localhost:3000');
-    const portalLink = `${origin}/?reserva=${encodeURIComponent(reservation.id)}`;
+    const portalLink = `${origin}/pase.html?id=${encodeURIComponent(reservation.id)}`;
     const checkinUrl = `${origin}/admin?checkin=${encodeURIComponent(reservation.id)}`;
 
     const settings = getReservationSettings();
@@ -1473,13 +1473,13 @@ const DEFAULT_MENU_SECTIONS = [
           ? cleanPhone
           : (cleanPhone.startsWith('54') ? '549' + cleanPhone.slice(2) : (cleanPhone.startsWith('11') || cleanPhone.startsWith('15') ? '549' + cleanPhone : '549' + cleanPhone));
 
-        const messageText = `*MERY LA PREVIA — PASE DE ABORDAJE CONFIRMADO*\n\n` +
+        const messageText = `*MERY LA PREVIA — PASE DE ACCESO VIP CONFIRMADO*\n\n` +
           `¡Hola ${reservation.customer_name}! Tu reserva en Mery La Previa ya está registrada con el código *${reservation.id}*.\n\n` +
-          `• *Sector / Motivo:* ${reservation.res_type}\n` +
-          `• *Personas:* ${reservation.guests} personas\n` +
+          `• *Sector / Experiencia:* ${reservation.res_type}\n` +
+          `• *Mesa para:* ${reservation.guests} personas\n` +
           `• *Fecha:* ${reservation.res_day}\n` +
           `• *Horario:* ${reservation.res_time}\n` +
-          (reservation.is_birthday ? `• *Cumpleaños:* DNI ${reservation.birthday_dni} (¡Tenés brindis y beneficios especiales!)\n` : '') +
+          (reservation.is_birthday ? `• *Cumpleaños VIP:* DNI ${reservation.birthday_dni} (¡Tenés brindis y beneficios especiales!)\n` : '') +
           `\n` +
           (reservation.deposit_mode === 'con_sena'
             ? `*LUGAR ASEGURADO CON SEÑA:*\n` +
@@ -1488,12 +1488,12 @@ const DEFAULT_MENU_SECTIONS = [
               `• *CBU:* ${settings.depositCbu}\n` +
               `• *Titular:* ${settings.depositHolder}\n` +
               (settings.depositPaymentLink ? `• *Link Mercado Pago:* ${settings.depositPaymentLink}\n` : '') +
-              `\nSubí tu comprobante directamente en tu portal exclusivo:\n${portalLink}\n`
-            : `*RESERVA SIN SEÑA:*\n` +
-              `Tu mesa queda sujeta a disponibilidad con 15 minutos de tolerancia en puerta.\n` +
-              `Podés ver tu Pase QR aquí: ${portalLink}\n`
+              `\nAccedé a tu Pase VIP y subí tu comprobante directamente en tu enlace exclusivo:\n${portalLink}\n`
+            : `*RESERVA SIMPLE:*\n` +
+              `Tu mesa queda sujeta a disponibilidad con 15 minutos de tolerancia en recepción.\n` +
+              `Podés ver tu Pase de Acceso VIP aquí:\n${portalLink}\n`
           ) +
-          `\nPresentá este Pase de Abordaje al recepcionista al llegar a Mery La Previa. ¡Nos vemos en la previa!`;
+          `\nPresentá este Pase de Acceso VIP en la recepción al llegar a Mery La Previa para ingresar sin fila. ¡Nos vemos en la previa!`;
 
         fetch(`${serverUrl}/message/sendText/${instanceName}`, {
           method: 'POST',

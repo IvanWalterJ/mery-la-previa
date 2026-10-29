@@ -1628,6 +1628,11 @@ select.q-select option,
   border-radius: 8px;
 }
 
+.bp-proof-preview-wrap[hidden],
+#bpProofPreviewWrap[hidden] {
+  display: none !important;
+}
+
 .bp-proof-img {
   width: 48px;
   height: 48px;
@@ -2188,3 +2193,240 @@ select.q-select option,
     padding: 18px 18px 22px;
   }
 }
+
+/* ==========================================================================
+   8. RESERVATION CONFIRMATION & SUCCESS MODALS (S10)
+   ========================================================================== */
+.res-modal-backdrop {
+  z-index: 450;
+}
+
+.res-modal-card {
+  max-width: 520px;
+  width: 100%;
+  border-radius: 20px;
+  background: #111311;
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8), 0 0 35px rgba(212, 175, 55, 0.12);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.res-confirm-content {
+  padding: 32px 28px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.res-confirm-header {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.res-badge-pill {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(212, 175, 55, 0.12);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  color: var(--q-gold);
+  font-size: 0.68rem;
+  letter-spacing: 0.15em;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.res-confirm-title {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  color: var(--q-cream);
+  font-weight: 500;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.res-confirm-subtitle {
+  font-size: 0.85rem;
+  color: var(--q-cream-muted);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.res-confirm-grid {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.res-confirm-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.88rem;
+  gap: 12px;
+}
+
+.res-confirm-label {
+  color: var(--q-cream-muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.res-confirm-val {
+  color: var(--q-cream);
+  font-weight: 600;
+  text-align: right;
+  word-break: break-word;
+}
+
+.res-confirm-row-full {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  text-align: left;
+}
+
+.res-confirm-row-full .res-confirm-val {
+  text-align: left;
+}
+
+.res-confirm-deposit-box {
+  margin-top: 4px;
+  padding: 10px 12px;
+  background: rgba(212, 175, 55, 0.08);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 10px;
+}
+
+.res-confirm-deposit-val {
+  color: var(--q-gold);
+}
+
+.res-confirm-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.res-btn-confirm {
+  background: var(--q-gold);
+  border-color: var(--q-gold);
+  color: #0d0e0d;
+}
+
+.res-btn-confirm:hover {
+  background: #e6c875;
+  border-color: #e6c875;
+}
+
+.res-btn-edit {
+  text-align: center;
+}
+
+/* Success Modal */
+.res-success-card {
+  max-width: 480px;
+  text-align: center;
+}
+
+.res-success-content {
+  padding: 38px 30px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.res-success-icon-wrap {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: rgba(212, 175, 55, 0.12);
+  border: 2px solid rgba(212, 175, 55, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 25px rgba(212, 175, 55, 0.2);
+}
+
+.res-success-title {
+  font-family: var(--font-serif);
+  font-size: 1.6rem;
+  color: var(--q-cream);
+  margin: 0;
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+.res-success-code-box {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px dashed rgba(212, 175, 55, 0.45);
+  border-radius: 12px;
+  padding: 12px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+}
+
+.res-success-code-label {
+  font-size: 0.68rem;
+  letter-spacing: 0.15em;
+  color: var(--q-cream-muted);
+  text-transform: uppercase;
+}
+
+.res-success-code {
+  font-family: monospace;
+  font-size: 1.8rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--q-gold);
+}
+
+.res-success-desc {
+  font-size: 0.9rem;
+  color: var(--q-cream-muted);
+  line-height: 1.5;
+  margin: 0;
+  max-width: 380px;
+}
+
+.res-success-desc strong {
+  color: var(--q-cream);
+}
+
+.res-success-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  margin-top: 6px;
+}
+
+.res-btn-open-pass {
+  display: inline-block;
+  text-align: center;
+  text-decoration: none;
+  background: var(--q-gold);
+  border-color: var(--q-gold);
+  color: #0d0e0d;
+}
+
+.res-btn-open-pass:hover {
+  background: #e6c875;
+  border-color: #e6c875;
+  color: #0d0e0d;
+}
+

@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="admin.css?v=8" />
+  <link rel="stylesheet" href="admin.css?v=9" />
 </head>
 <body>
 
@@ -577,6 +577,9 @@
           <button type="button" id="btnToggleQrCamera" class="admin-btn-outline admin-btn-camera">
             Usar cámara del celular / lector
           </button>
+          <p class="admin-hint-text" style="font-size: 0.78rem; color: #a09f98; margin: 8px 0 0; text-align: center; line-height: 1.4;">
+            💡 En producción o red Wi-Fi compartida, al apuntar la cámara nativa del celular al QR del pase se abre directamente este validador (<code>/admin?checkin=MLP-XXXX</code>). En entorno local (localhost), los celulares no resuelven "localhost", por lo que podés usar esta cámara integrada o ingresar el código manualmente.
+          </p>
         </div>
 
         <!-- Scan Result Card -->
@@ -627,7 +630,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js?v=8"></script>
-  <script src="admin.js?v=8"></script>
+  <script src="supabase-config.js?v=9"></script>
+  <script src="admin.js?v=9"></script>
 </body>
 </html>

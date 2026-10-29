@@ -1736,7 +1736,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderReservationsWorkspace();
           }
         } else if (action === 'view-pass') {
-          window.open(`index.html?reserva=${encodeURIComponent(target.id)}`, '_blank', 'noopener');
+          window.open(`pase.html?id=${encodeURIComponent(target.id)}`, '_blank', 'noopener');
         } else if (action === 'delete-res') {
           openConfirmModal({
             title: `¿Eliminar reserva ${target.id}?`,

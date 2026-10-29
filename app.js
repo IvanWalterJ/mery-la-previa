@@ -793,6 +793,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (bpProofPreviewWrap && bpProofPreviewImg) {
       if (res.proof_url) {
         bpProofPreviewWrap.hidden = false;
+        bpProofPreviewWrap.style.display = 'flex';
         bpProofPreviewImg.src = res.proof_url;
         if (bpProofStatusMsg) {
           bpProofStatusMsg.textContent = res.deposit_status === 'confirmada'
@@ -801,6 +802,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       } else {
         bpProofPreviewWrap.hidden = true;
+        bpProofPreviewWrap.style.display = 'none';
         bpProofPreviewImg.src = '';
       }
     }
@@ -1007,61 +1009,183 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Handle Reservation Form Submission
+  // --- Reservation Recheck Confirmation Modal & Success Modal (S10) ---
+  const resConfirmModal = document.getElementById('qitchenResConfirmModal');
+  const btnCloseConfirmModal = document.getElementById('btnCloseConfirmModal');
+  const btnEditResData = document.getElementById('btnEditResData');
+  const btnConfirmResFinal = document.getElementById('btnConfirmResFinal');
+
+  const resSuccessModal = document.getElementById('qitchenResSuccessModal');
+  const btnCloseSuccessModal = document.getElementById('btnCloseSuccessModal');
+  const btnCloseSuccessModalCross = document.getElementById('btnCloseSuccessModalCross');
+  const btnOpenDigitalPass = document.getElementById('btnOpenDigitalPass');
+  const successResCode = document.getElementById('successResCode');
+
+  let pendingReservationData = null;
+
+  function closeResConfirmModal() {
+    if (!resConfirmModal) return;
+    resConfirmModal.classList.remove('open');
+    resConfirmModal.setAttribute('aria-hidden', 'true');
+  }
+
+  function closeResSuccessModal() {
+    if (!resSuccessModal) return;
+    resSuccessModal.classList.remove('open');
+    resSuccessModal.setAttribute('aria-hidden', 'true');
+  }
+
+  if (btnCloseConfirmModal) btnCloseConfirmModal.addEventListener('click', closeResConfirmModal);
+  if (btnEditResData) btnEditResData.addEventListener('click', closeResConfirmModal);
+  if (resConfirmModal) {
+    resConfirmModal.addEventListener('click', (e) => {
+      if (e.target === resConfirmModal) closeResConfirmModal();
+    });
+  }
+
+  if (btnCloseSuccessModal) btnCloseSuccessModal.addEventListener('click', closeResSuccessModal);
+  if (btnCloseSuccessModalCross) btnCloseSuccessModalCross.addEventListener('click', closeResSuccessModal);
+  if (resSuccessModal) {
+    resSuccessModal.addEventListener('click', (e) => {
+      if (e.target === resSuccessModal) closeResSuccessModal();
+    });
+  }
+
+  // Handle Final Reservation Confirmation
+  if (btnConfirmResFinal) {
+    btnConfirmResFinal.addEventListener('click', () => {
+      if (!pendingReservationData) return;
+
+      const originalBtnText = btnConfirmResFinal.textContent;
+      btnConfirmResFinal.disabled = true;
+      btnConfirmResFinal.textContent = 'Confirmando reserva...';
+
+      try {
+        let createdRes = null;
+        if (window.MeryStore && typeof window.MeryStore.createReservation === 'function') {
+          createdRes = window.MeryStore.createReservation(pendingReservationData);
+        }
+
+        if (createdRes) {
+          closeResConfirmModal();
+
+          if (successResCode) successResCode.textContent = createdRes.id;
+          if (btnOpenDigitalPass) {
+            btnOpenDigitalPass.href = `pase.html?id=${encodeURIComponent(createdRes.id)}`;
+          }
+
+          if (resSuccessModal) {
+            resSuccessModal.classList.add('open');
+            resSuccessModal.setAttribute('aria-hidden', 'false');
+          }
+
+          // Reset reservation form
+          if (resForm) resForm.reset();
+          if (typeof updateBirthdayFieldsVisibility === 'function') {
+            updateBirthdayFieldsVisibility();
+          }
+        }
+      } catch (err) {
+        alert('Error al confirmar la reserva: ' + (err.message || err));
+      } finally {
+        btnConfirmResFinal.disabled = false;
+        btnConfirmResFinal.textContent = originalBtnText;
+      }
+    });
+  }
+
+  // Handle Reservation Form Submission -> Intercept, validate & open Recheck Modal
   if (resForm) {
     resForm.addEventListener('submit', (e) => {
       e.preventDefault();
 
-      const name = document.getElementById('resName')?.value || '';
-      const email = document.getElementById('resEmail')?.value || '';
-      const phone = document.getElementById('resPhone')?.value || '';
+      const name = document.getElementById('resName')?.value.trim() || '';
+      const email = document.getElementById('resEmail')?.value.trim() || '';
+      const phone = document.getElementById('resPhone')?.value.trim() || '';
       const motivo = document.getElementById('resType')?.value || 'Mesa Cena + Previa';
       const guests = document.getElementById('resGuests')?.value || '4';
       const day = document.getElementById('resDay')?.value || 'Viernes 13/11';
       const time = document.getElementById('resTime')?.value || '20:30 hs (Cena)';
       const depositMode = document.getElementById('resDepositMode')?.value || 'con_sena';
-      const dni = document.getElementById('resDni')?.value || '';
-      const birthDate = document.getElementById('resBirthDate')?.value || '';
+      const dni = document.getElementById('resDni')?.value.trim() || '';
+      const birthDate = document.getElementById('resBirthDate')?.value.trim() || '';
 
       const isBirthday = (motivo === 'Cumpleaños VIP');
 
-      let createdRes = null;
-      if (window.MeryStore && typeof window.MeryStore.createReservation === 'function') {
-        createdRes = window.MeryStore.createReservation({
-          customer_name: name,
-          customer_email: email,
-          customer_phone: phone,
-          res_type: motivo,
-          is_birthday: isBirthday,
-          birthday_dni: dni,
-          birthday_date: birthDate,
-          guests: Number(guests) || 2,
-          res_day: day,
-          res_time: time,
-          deposit_mode: depositMode
-        });
+      if (!name || !phone || !email) {
+        alert('Por favor, completá los campos obligatorios (Nombre, Celular y Correo).');
+        return;
       }
 
-      if (createdRes) {
-        openBoardingPassModal(createdRes);
+      if (isBirthday && (!dni || !birthDate)) {
+        alert('Para reservas de Cumpleaños VIP, ingresá el DNI y la Fecha de Cumpleaños.');
+        return;
+      }
+
+      pendingReservationData = {
+        customer_name: name,
+        customer_email: email,
+        customer_phone: phone,
+        res_type: motivo,
+        is_birthday: isBirthday,
+        birthday_dni: dni,
+        birthday_date: birthDate,
+        guests: Number(guests) || 2,
+        res_day: day,
+        res_time: time,
+        deposit_mode: depositMode
+      };
+
+      // Populate Recheck Confirmation Modal
+      const confirmResName = document.getElementById('confirmResName');
+      const confirmResPhone = document.getElementById('confirmResPhone');
+      const confirmResEmail = document.getElementById('confirmResEmail');
+      const confirmResDateTime = document.getElementById('confirmResDateTime');
+      const confirmResGuests = document.getElementById('confirmResGuests');
+      const confirmResType = document.getElementById('confirmResType');
+      const confirmResBirthdayRow = document.getElementById('confirmResBirthdayRow');
+      const confirmResDni = document.getElementById('confirmResDni');
+      const confirmResBirthDate = document.getElementById('confirmResBirthDate');
+      const confirmResDeposit = document.getElementById('confirmResDeposit');
+
+      if (confirmResName) confirmResName.textContent = name;
+      if (confirmResPhone) confirmResPhone.textContent = phone;
+      if (confirmResEmail) confirmResEmail.textContent = email;
+      if (confirmResDateTime) confirmResDateTime.textContent = `${day} • ${time}`;
+      if (confirmResGuests) confirmResGuests.textContent = `${guests} ${guests === '1' ? 'persona' : 'personas'}`;
+      if (confirmResType) confirmResType.textContent = motivo;
+
+      if (confirmResBirthdayRow) {
+        if (isBirthday) {
+          confirmResBirthdayRow.hidden = false;
+          if (confirmResDni) confirmResDni.textContent = dni || '-';
+          if (confirmResBirthDate) confirmResBirthDate.textContent = birthDate || '-';
+        } else {
+          confirmResBirthdayRow.hidden = true;
+        }
+      }
+
+      const settings = window.MeryStore ? window.MeryStore.getReservationSettings() : {};
+      if (confirmResDeposit) {
+        if (depositMode === 'con_sena') {
+          confirmResDeposit.textContent = `Lugar asegurado con seña (${settings.depositAmount || '$15.000'})`;
+        } else {
+          confirmResDeposit.textContent = 'Reserva simple sin seña (Sujeta a disponibilidad)';
+        }
+      }
+
+      // Open Recheck Modal
+      if (resConfirmModal) {
+        resConfirmModal.classList.add('open');
+        resConfirmModal.setAttribute('aria-hidden', 'false');
       }
     });
   }
 
-  // --- Automatic URL Lookup for Customer Portal (?reserva=MLP-XXXX) ---
+  // --- Automatic URL Lookup & Redirect to Dedicated Pass Page (?reserva=MLP-XXXX) ---
   const searchParams = new URLSearchParams(window.location.search);
-  const reservaParam = searchParams.get('reserva');
-  if (reservaParam && window.MeryStore) {
-    const list = window.MeryStore.getReservations();
-    const found = list.find((r) => r.id.toLowerCase() === reservaParam.trim().toLowerCase());
-    if (found) {
-      // Dismiss intro curtain immediately
-      const curtain = document.getElementById('neonIntroCurtain');
-      if (curtain) {
-        curtain.classList.add('curtain-out');
-        setTimeout(() => curtain.remove(), 400);
-      }
-      openBoardingPassModal(found);
-    }
+  const reservaParam = searchParams.get('reserva') || searchParams.get('id');
+  if (reservaParam) {
+    window.location.replace(`pase.html?id=${encodeURIComponent(reservaParam.trim())}`);
   }
 });

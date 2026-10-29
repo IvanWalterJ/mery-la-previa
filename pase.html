@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pase de Acceso VIP — Mery La Previa • Wine Bar & Nightclub</title>
+  <meta name="description" content="Pase digital exclusivo de acceso VIP para Mery La Previa. Presentá este código QR en la recepción al llegar." />
+  <meta name="theme-color" content="#0d0e0d" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Forum&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="pase.css?v=9" />
+</head>
+<body class="pass-body">
+
+  <div class="pass-page-wrapper">
+    <!-- Top Minimal Navigation -->
+    <header class="pass-topbar">
+      <a href="index.html" class="pass-back-link" title="Volver a Mery La Previa">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+        <span>Volver a la web</span>
+      </a>
+      <div class="pass-topbar-brand">
+        <span class="pass-brand-dot"></span>
+        <span class="pass-brand-name">MERY LA PREVIA</span>
+      </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="pass-main">
+      <!-- VIP Club Access Card -->
+      <article class="vip-pass-card" id="vipPassCard">
+        <!-- Card Top Bar: Monogram & Status Badge -->
+        <div class="vip-pass-header">
+          <div class="vip-pass-brand-group">
+            <div class="vip-pass-monogram">
+              <span>M</span>
+            </div>
+            <div class="vip-pass-titles">
+              <span class="vip-pass-kicker">WINE BAR & NIGHTCLUB</span>
+              <h1 class="vip-pass-venue-name">Mery La Previa</h1>
+            </div>
+          </div>
+          <div class="vip-pass-badge-wrap">
+            <span id="passStatusBadge" class="pass-badge pass-badge-pending">
+              Pendiente de comprobante de seña
+            </span>
+          </div>
+        </div>
+
+        <!-- VIP Access Title & Code Strip -->
+        <div class="vip-pass-code-banner">
+          <div class="vip-pass-title-sub">
+            <span class="vip-diamond-sym">◆</span>
+            <span class="vip-pass-type-label">PASE DE ACCESO VIP</span>
+          </div>
+          <div class="vip-pass-code-display">
+            <span class="vip-code-label">CÓDIGO DE RESERVA</span>
+            <span id="passCode" class="pass-code">MLP-8492</span>
+          </div>
+        </div>
+
+        <!-- Reservation Details Grid -->
+        <div class="vip-pass-grid">
+          <div class="vip-grid-cell">
+            <span class="vip-grid-label">Titular de la reserva</span>
+            <strong id="passName" class="vip-grid-val">-</strong>
+          </div>
+          <div class="vip-grid-cell">
+            <span class="vip-grid-label">Sector / Experiencia</span>
+            <strong id="passType" class="vip-grid-val">-</strong>
+          </div>
+          <div class="vip-grid-cell">
+            <span class="vip-grid-label">Mesa para</span>
+            <strong id="passGuests" class="vip-grid-val">-</strong>
+          </div>
+          <div class="vip-grid-cell">
+            <span class="vip-grid-label">Fecha y Horario</span>
+            <strong id="passDateTime" class="vip-grid-val">-</strong>
+          </div>
+          <div id="passBirthdayRow" class="vip-grid-cell vip-grid-cell-full vip-birthday-cell" hidden>
+            <span class="vip-grid-label">🎂 Cumpleaños VIP</span>
+            <span class="vip-grid-val">
+              DNI: <strong id="passDni">-</strong> • Fecha: <strong id="passBirthDate">-</strong>
+              <span class="vip-bday-tag">(Brindis y beneficios especiales en barra)</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- Elegant Perforated / Divider Notch -->
+        <div class="vip-pass-divider" aria-hidden="true">
+          <span class="vip-notch vip-notch-left"></span>
+          <span class="vip-divider-line"></span>
+          <span class="vip-notch vip-notch-right"></span>
+        </div>
+
+        <!-- Scannable Access QR Section -->
+        <div class="vip-pass-qr-section">
+          <div class="vip-pass-qr-frame">
+            <canvas id="passQrCanvas" width="220" height="220" class="vip-pass-qr-canvas"></canvas>
+          </div>
+          <p class="vip-pass-qr-instruction">
+            Presentá este código QR en la recepción al llegar para ingresar sin fila.
+          </p>
+          <div class="vip-pass-security-pill">
+            <span>ACCESO EXCLUSIVO • CABINA 13:11 • LONGCHAMPS</span>
+          </div>
+        </div>
+
+        <!-- Deposit & Proof Upload Zone (Only when deposit_mode === 'con_sena') -->
+        <section id="passDepositSection" class="vip-deposit-section" hidden>
+          <div class="vip-deposit-header">
+            <div class="vip-deposit-title-box">
+              <span class="vip-deposit-icon">◇</span>
+              <h2 class="vip-deposit-heading">Asegurar mesa con seña</h2>
+            </div>
+            <span id="passDepositAmount" class="vip-deposit-amount">$15.000</span>
+          </div>
+
+          <p class="vip-deposit-instructions">
+            Para garantizar tu mesa durante toda la noche, realizá la transferencia y adjuntá tu comprobante:
+          </p>
+
+          <div class="vip-bank-card">
+            <div class="vip-bank-row">
+              <span class="vip-bank-label">Alias:</span>
+              <strong id="passDepositAlias" class="vip-bank-data">MERY.LAPREVIA.MP</strong>
+              <button type="button" class="vip-btn-copy" data-copy-target="passDepositAlias">Copiar</button>
+            </div>
+            <div class="vip-bank-row">
+              <span class="vip-bank-label">CBU:</span>
+              <strong id="passDepositCbu" class="vip-bank-data">0000003100098765432100</strong>
+              <button type="button" class="vip-btn-copy" data-copy-target="passDepositCbu">Copiar</button>
+            </div>
+            <div class="vip-bank-row">
+              <span class="vip-bank-label">Titular:</span>
+              <strong id="passDepositHolder" class="vip-bank-data">Mery La Previa S.R.L.</strong>
+            </div>
+          </div>
+
+          <div class="vip-mp-action-wrap">
+            <a id="passPaymentLink" href="https://mpago.la/mery-la-previa" target="_blank" rel="noopener" class="vip-btn-mp">
+              Pagar con Mercado Pago →
+            </a>
+          </div>
+
+          <!-- Proof Upload Zone -->
+          <div class="vip-proof-zone">
+            <span class="vip-proof-zone-label">COMPROBANTE DE TRANSFERENCIA</span>
+            <input type="file" id="passProofFileInput" accept="image/*" style="display: none;" />
+            <button type="button" id="btnUploadProof" class="vip-btn-upload">
+              Adjuntar comprobante de pago
+            </button>
+
+            <!-- STRICTLY HIDDEN when !res.proof_url -->
+            <div id="passProofPreviewWrap" class="pass-proof-preview-wrap" hidden style="display: none;">
+              <img id="passProofPreviewImg" src="" alt="Comprobante de seña" class="pass-proof-img" />
+              <div class="pass-proof-meta">
+                <span id="passProofStatusMsg" class="pass-proof-status-msg">
+                  ✓ Comprobante recibido — Ya notificamos al equipo
+                </span>
+                <span class="pass-proof-time-note">Revisión en el panel de recepción en curso</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Pass Action Buttons (PNG Download & Share) -->
+        <div class="vip-pass-actions">
+          <button type="button" id="btnDownloadPassPng" class="vip-btn-primary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span>Descargar Pase VIP (PNG)</span>
+          </button>
+          <button type="button" id="btnSharePassWhatsapp" class="vip-btn-secondary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="18" cy="5" r="3"></circle>
+              <circle cx="6" cy="12" r="3"></circle>
+              <circle cx="18" cy="19" r="3"></circle>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+            </svg>
+            <span>Compartir por WhatsApp</span>
+          </button>
+        </div>
+      </article>
+
+      <!-- Bottom Helpful Information -->
+      <footer class="pass-footer-note">
+        <p>¿Tenés alguna consulta o querés modificar tu reserva?</p>
+        <p class="pass-contact-links">
+          <span>WhatsApp de Atención: <strong>+54 9 11 3918-0284</strong></span> •
+          <span>Longchamps, Buenos Aires</span>
+        </p>
+      </footer>
+    </main>
+  </div>
+
+  <!-- Notification Toast -->
+  <div id="passToast" class="pass-toast" hidden></div>
+
+  <!-- Scripts -->
+  <script src="supabase-config.js?v=9"></script>
+  <script src="pase.js?v=9"></script>
+</body>
+</html>

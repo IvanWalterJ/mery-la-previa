@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Forum&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=8" />
+  <link rel="stylesheet" href="styles.css?v=9" />
 </head>
 <body>
 
@@ -490,7 +490,113 @@
     </div>
   </div>
 
-  <!-- 5. AIRPORT BOARDING PASS & CUSTOMER DEPOSIT PORTAL MODAL (S9) -->
+  <!-- 5. RESERVATION RECHECK CONFIRMATION MODAL (S10) -->
+  <div id="qitchenResConfirmModal" class="q-dish-modal-backdrop res-modal-backdrop" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="confirmResModalTitle">
+    <div class="q-dish-modal-card res-modal-card">
+      <button type="button" id="btnCloseConfirmModal" class="q-dish-modal-close" aria-label="Cerrar ventana de confirmación">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <line x1="6" y1="6" x2="18" y2="18" />
+          <line x1="18" y1="6" x2="6" y2="18" />
+        </svg>
+      </button>
+
+      <div class="res-confirm-content">
+        <div class="res-confirm-header">
+          <span class="res-badge-pill">REVISIÓN DE DATOS</span>
+          <h3 id="confirmResModalTitle" class="res-confirm-title">Revisá los datos de tu reserva</h3>
+          <p class="res-confirm-subtitle">Verificá que todo esté correcto antes de confirmar tu lugar.</p>
+        </div>
+
+        <div class="res-confirm-grid">
+          <div class="res-confirm-row">
+            <span class="res-confirm-label">Titular</span>
+            <strong id="confirmResName" class="res-confirm-val">-</strong>
+          </div>
+          <div class="res-confirm-row">
+            <span class="res-confirm-label">Teléfono</span>
+            <strong id="confirmResPhone" class="res-confirm-val">-</strong>
+          </div>
+          <div class="res-confirm-row">
+            <span class="res-confirm-label">Correo</span>
+            <strong id="confirmResEmail" class="res-confirm-val">-</strong>
+          </div>
+          <div class="res-confirm-row">
+            <span class="res-confirm-label">Fecha y Horario</span>
+            <strong id="confirmResDateTime" class="res-confirm-val">-</strong>
+          </div>
+          <div class="res-confirm-row">
+            <span class="res-confirm-label">Personas</span>
+            <strong id="confirmResGuests" class="res-confirm-val">-</strong>
+          </div>
+          <div class="res-confirm-row">
+            <span class="res-confirm-label">Sector / Motivo</span>
+            <strong id="confirmResType" class="res-confirm-val">-</strong>
+          </div>
+          <div id="confirmResBirthdayRow" class="res-confirm-row res-confirm-row-full" hidden>
+            <span class="res-confirm-label">🎂 Cumpleaños VIP</span>
+            <div class="res-confirm-val">
+              DNI: <strong id="confirmResDni">-</strong> • Fecha: <strong id="confirmResBirthDate">-</strong>
+            </div>
+          </div>
+          <div class="res-confirm-row res-confirm-row-full res-confirm-deposit-box">
+            <span class="res-confirm-label">Modalidad seleccionada</span>
+            <strong id="confirmResDeposit" class="res-confirm-val res-confirm-deposit-val">-</strong>
+          </div>
+        </div>
+
+        <div class="res-confirm-actions">
+          <button type="button" id="btnConfirmResFinal" class="q-btn-submit res-btn-confirm">
+            Confirmar reserva definitiva →
+          </button>
+          <button type="button" id="btnEditResData" class="q-btn-secondary res-btn-edit">
+            Modificar datos
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. RESERVATION SUCCESS MODAL (S10) -->
+  <div id="qitchenResSuccessModal" class="q-dish-modal-backdrop res-modal-backdrop" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="successResTitle">
+    <div class="q-dish-modal-card res-modal-card res-success-card">
+      <button type="button" id="btnCloseSuccessModalCross" class="q-dish-modal-close" aria-label="Cerrar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <line x1="6" y1="6" x2="18" y2="18" />
+          <line x1="18" y1="6" x2="6" y2="18" />
+        </svg>
+      </button>
+
+      <div class="res-success-content">
+        <div class="res-success-icon-wrap">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#d4af37" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
+
+        <h3 id="successResTitle" class="res-success-title">¡Tu reserva fue recibida con éxito!</h3>
+
+        <div class="res-success-code-box">
+          <span class="res-success-code-label">CÓDIGO DE RESERVA</span>
+          <span id="successResCode" class="res-success-code">MLP-8492</span>
+        </div>
+
+        <p class="res-success-desc">
+          Te enviamos la confirmación con tu Pase de Acceso VIP a tu <strong>WhatsApp</strong> y correo electrónico.
+        </p>
+
+        <div class="res-success-actions">
+          <a id="btnOpenDigitalPass" href="pase.html" target="_blank" rel="noopener" class="q-btn-submit res-btn-open-pass">
+            Abrir mi Pase de Acceso Digital ↗
+          </a>
+          <button type="button" id="btnCloseSuccessModal" class="q-btn-secondary">
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. AIRPORT BOARDING PASS & CUSTOMER DEPOSIT PORTAL MODAL (S9) -->
   <div id="qitchenBoardingPassModal" class="q-dish-modal-backdrop bp-modal-backdrop" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="bpModalTitle">
     <div class="q-dish-modal-card bp-modal-card">
       <button type="button" id="btnCloseBoardingPass" class="q-dish-modal-close" aria-label="Cerrar Pase de Abordaje">
@@ -640,7 +746,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js?v=8"></script>
-  <script src="app.js?v=8"></script>
+  <script src="supabase-config.js?v=9"></script>
+  <script src="app.js?v=9"></script>
 </body>
 </html>
