@@ -2065,16 +2065,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
             <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:4px;">
               <button type="button" id="btnGenEvolutionQr" class="admin-btn-gold">
-                Generar / Ver QR de vinculación WhatsApp
+                Generar / Actualizar QR de WhatsApp
               </button>
+              <a
+                href="https://n8n-hotdetailing-evolution-api.rsssbm.easypanel.host/manager"
+                target="_blank"
+                rel="noopener"
+                class="admin-btn-outline"
+                style="text-decoration:none;"
+              >
+                Abrir Evolution Manager ↗
+              </a>
             </div>
 
-            <div id="evolutionQrPreviewBox" class="admin-qr-preview-box" hidden>
-              <span id="evolutionQrStatusTitle" style="font-size:0.86rem; color:var(--q-cream); font-weight:600;">Escanear QR desde WhatsApp en el teléfono del bar:</span>
-              <img id="evolutionQrImg" alt="QR WhatsApp Evolution API" style="width:220px; height:220px; border-radius:10px; background:#fff; padding:8px; display:none;" />
-              <canvas id="evolutionQrCanvas" class="admin-qr-preview-canvas" width="200" height="200"></canvas>
+            <div id="evolutionQrPreviewBox" class="admin-qr-preview-box">
+              <span id="evolutionQrStatusTitle" style="font-size:0.86rem; color:var(--q-cream); font-weight:600;">Cargando código QR oficial desde Evolution API...</span>
+              <img id="evolutionQrImg" alt="QR WhatsApp Evolution API" style="width:230px; height:230px; border-radius:10px; background:#fff; padding:8px; display:none;" />
+              <canvas id="evolutionQrCanvas" class="admin-qr-preview-canvas" width="200" height="200" style="display:none;"></canvas>
               <p style="font-size:0.78rem; color:var(--q-cream-muted); margin:0;">
-                Abrí WhatsApp > Dispositivos vinculados > Vincular dispositivo y apuntá a este código QR.
+                Abrí WhatsApp en tu teléfono &gt; Dispositivos vinculados &gt; Vincular un dispositivo y escaneá este QR.
               </p>
             </div>
           </form>
@@ -2194,80 +2203,104 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // Generate/View Evolution QR
+    // Generate/View Evolution QR (auto-loads on opening workspace & resets instance if QR limit was reached)
     const btnGenQr = sectionsContainer.querySelector('#btnGenEvolutionQr');
     const qrPreviewBox = sectionsContainer.querySelector('#evolutionQrPreviewBox');
     const qrImgEl = sectionsContainer.querySelector('#evolutionQrImg');
     const qrCanvasEl = sectionsContainer.querySelector('#evolutionQrCanvas');
     const qrStatusTitle = sectionsContainer.querySelector('#evolutionQrStatusTitle');
 
-    if (btnGenQr && qrPreviewBox) {
-      btnGenQr.addEventListener('click', async () => {
-        qrPreviewBox.hidden = false;
-        const serverUrl = sectionsContainer.querySelector('#cfgEvolutionServerUrl')?.value.trim() || '';
-        const apiKey = sectionsContainer.querySelector('#cfgEvolutionApiKey')?.value.trim() || '';
-        const instanceName = sectionsContainer.querySelector('#cfgEvolutionInstanceName')?.value.trim() || 'mery-la-previa';
+    async function loadRealEvolutionQr(forceReset = false) {
+      if (!qrPreviewBox) return;
+      qrPreviewBox.hidden = false;
+      const serverUrl = (sectionsContainer.querySelector('#cfgEvolutionServerUrl')?.value.trim() || 'https://n8n-hotdetailing-evolution-api.rsssbm.easypanel.host').replace(/\/+$/, '');
+      const apiKey = sectionsContainer.querySelector('#cfgEvolutionApiKey')?.value.trim() || '429683C4C977415CAAFCCE10F7D57E11';
+      const instanceName = sectionsContainer.querySelector('#cfgEvolutionInstanceName')?.value.trim() || 'mery-la-previa';
 
-        let base64Qr = '';
-        let connectionPayload = `https://wa.me/?evolution_instance=${instanceName}&ts=${Date.now()}`;
+      if (qrStatusTitle) qrStatusTitle.textContent = 'Obteniendo código QR oficial desde Evolution API...';
 
-        if (serverUrl && apiKey) {
-          showToast('Conectando con Evolution API...');
-          try {
-            const cleanUrl = serverUrl.replace(/\/+$/, '');
-            // Check connection state first
-            const stateResp = await fetch(`${cleanUrl}/instance/connectionState/${instanceName}`, {
+      let base64Qr = '';
+      try {
+        const stateResp = await fetch(`${serverUrl}/instance/connectionState/${instanceName}`, {
+          headers: { apikey: apiKey }
+        });
+
+        if (stateResp.ok) {
+          const stateData = await stateResp.json();
+          if (stateData?.instance?.state === 'open') {
+            if (qrStatusTitle) qrStatusTitle.textContent = `✓ WhatsApp vinculado y conectado en la instancia "${instanceName}"`;
+            if (qrImgEl) qrImgEl.style.display = 'none';
+            if (qrCanvasEl) qrCanvasEl.style.display = 'none';
+            showToast('✓ WhatsApp conectado y listo para enviar reservas');
+            return;
+          }
+        }
+
+        if (stateResp.status === 404 || forceReset) {
+          if (forceReset && stateResp.status !== 404) {
+            await fetch(`${serverUrl}/instance/delete/${instanceName}`, {
+              method: 'DELETE',
               headers: { apikey: apiKey }
-            });
-            if (stateResp.status === 404) {
-              // Create instance automatically if not created yet
-              const createResp = await fetch(`${cleanUrl}/instance/create`, {
+            }).catch(() => {});
+          }
+          const createResp = await fetch(`${serverUrl}/instance/create`, {
+            method: 'POST',
+            headers: { apikey: apiKey, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ instanceName, integration: 'WHATSAPP-BAILEYS', qrcode: true })
+          });
+          if (createResp.ok) {
+            const createData = await createResp.json();
+            base64Qr = createData?.qrcode?.base64 || '';
+          }
+        }
+
+        if (!base64Qr) {
+          const resp = await fetch(`${serverUrl}/instance/connect/${instanceName}`, {
+            headers: { apikey: apiKey }
+          });
+          if (resp.ok) {
+            const data = await resp.json();
+            base64Qr = data?.base64 || data?.qrcode?.base64 || '';
+            // If QR limit (30) expired on Baileys, recreate instance to get a fresh QR
+            if (!base64Qr || (typeof data?.count === 'number' && data.count >= 28)) {
+              await fetch(`${serverUrl}/instance/delete/${instanceName}`, {
+                method: 'DELETE',
+                headers: { apikey: apiKey }
+              }).catch(() => {});
+              const recreateResp = await fetch(`${serverUrl}/instance/create`, {
                 method: 'POST',
                 headers: { apikey: apiKey, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ instanceName, integration: 'WHATSAPP-BAILEYS', qrcode: true })
               });
-              if (createResp.ok) {
-                const createData = await createResp.json();
-                base64Qr = createData?.qrcode?.base64 || '';
-              }
-            } else if (stateResp.ok) {
-              const stateData = await stateResp.json();
-              if (stateData?.instance?.state === 'open') {
-                if (qrStatusTitle) qrStatusTitle.textContent = '✓ WhatsApp conectado y activo en la instancia ' + instanceName;
-                if (qrImgEl) qrImgEl.style.display = 'none';
-                if (qrCanvasEl) qrCanvasEl.style.display = 'none';
-                showToast('✓ El WhatsApp del bar ya está vinculado y activo');
-                return;
+              if (recreateResp.ok) {
+                const recreateData = await recreateResp.json();
+                base64Qr = recreateData?.qrcode?.base64 || '';
               }
             }
-
-            if (!base64Qr) {
-              const resp = await fetch(`${cleanUrl}/instance/connect/${instanceName}`, {
-                headers: { apikey: apiKey }
-              });
-              if (resp.ok) {
-                const data = await resp.json();
-                base64Qr = data?.base64 || data?.qrcode?.base64 || '';
-                if (data?.code) connectionPayload = data.code;
-              }
-            }
-          } catch (err) {
-            console.warn('Evolution API connect fallback:', err.message || err);
           }
         }
+      } catch (err) {
+        console.warn('Evolution API QR notice:', err.message || err);
+      }
 
-        if (base64Qr && qrImgEl) {
-          qrImgEl.src = base64Qr;
-          qrImgEl.style.display = 'block';
-          if (qrCanvasEl) qrCanvasEl.style.display = 'none';
-          showToast('✓ QR oficial de WhatsApp generado desde Evolution API');
-        } else if (window.MeryStore && typeof window.MeryStore.renderQrCode === 'function') {
-          if (qrImgEl) qrImgEl.style.display = 'none';
-          if (qrCanvasEl) qrCanvasEl.style.display = 'block';
-          window.MeryStore.renderQrCode('evolutionQrCanvas', connectionPayload, { size: 200 });
-        }
-      });
+      if (base64Qr && qrImgEl) {
+        qrImgEl.src = base64Qr;
+        qrImgEl.style.display = 'block';
+        if (qrCanvasEl) qrCanvasEl.style.display = 'none';
+        if (qrStatusTitle) qrStatusTitle.textContent = `Escaneá este QR con WhatsApp (Instancia: ${instanceName}):`;
+      } else if (window.MeryStore && typeof window.MeryStore.renderQrCode === 'function') {
+        if (qrImgEl) qrImgEl.style.display = 'none';
+        if (qrCanvasEl) qrCanvasEl.style.display = 'block';
+        window.MeryStore.renderQrCode('evolutionQrCanvas', `evolution:${instanceName}`, { size: 200 });
+      }
     }
+
+    if (btnGenQr) {
+      btnGenQr.addEventListener('click', () => loadRealEvolutionQr(true));
+    }
+
+    // Auto-load real QR immediately when opening the WhatsApp workspace
+    loadRealEvolutionQr(false);
   }
 
   // --- Real-time Subscription to Reservation Updates ---
