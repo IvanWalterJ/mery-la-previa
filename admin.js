@@ -678,6 +678,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     categoryPillsEl.querySelectorAll('.admin-cat-pill').forEach((btn) => {
       btn.addEventListener('click', () => {
+        stopWaPolling();
         activeTab = 'category';
         btnNavVideos?.classList.remove('active');
         btnNavReservations?.classList.remove('active');
@@ -692,6 +693,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (btnNavVideos) {
     btnNavVideos.addEventListener('click', () => {
+      stopWaPolling();
       activeTab = 'videos';
       categoryPillsEl?.querySelectorAll('.admin-cat-pill').forEach((p) => {
         p.classList.remove('active');
@@ -707,6 +709,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (btnNavReservations) {
     btnNavReservations.addEventListener('click', () => {
+      stopWaPolling();
       activeTab = 'reservations';
       categoryPillsEl?.querySelectorAll('.admin-cat-pill').forEach((p) => {
         p.classList.remove('active');
@@ -1998,95 +2001,157 @@ document.addEventListener('DOMContentLoaded', () => {
   // ===========================================================================
   // 8. S9: WHATSAPP (EVOLUTION API) & DEPOSIT SETTINGS WORKSPACE
   // ===========================================================================
-  function renderWhatsappWorkspace() {
+  let waPollTimer = null;
+
+  function stopWaPolling() {
+    if (waPollTimer) {
+      clearInterval(waPollTimer);
+      waPollTimer = null;
+    }
+  }
+
+  function formatWaPhone(jidOrPhone) {
+    if (!jidOrPhone) return '';
+    const num = jidOrPhone.split('@')[0].replace(/\D/g, '');
+    if (num.startsWith('549')) {
+      const area = num.slice(3, 5);
+      const p1 = num.slice(5, 9);
+      const p2 = num.slice(9);
+      return `+54 9 ${area} ${p1}-${p2}`;
+    }
+    if (num.length >= 10) {
+      return `+${num}`;
+    }
+    return num;
+  }
+
+  async function fetchWhatsappStatus() {
+    const settings = window.MeryStore ? window.MeryStore.getReservationSettings() : {};
+    const serverUrl = (settings.evolutionServerUrl || 'https://mery-la-previa-evolution-api.rsssbm.easypanel.host').replace(/\/+$/, '');
+    const apiKey = settings.evolutionApiKey || '429683C4C977415CAAFCCE10F7D57E11';
+    const instanceName = settings.evolutionInstanceName || 'mery-la-previa';
+
+    try {
+      const resp = await fetch(`${serverUrl}/instance/fetchInstances?instanceName=${instanceName}`, {
+        headers: { apikey: apiKey }
+      });
+      if (resp.ok) {
+        const list = await resp.json();
+        const inst = Array.isArray(list) ? list[0] : null;
+        if (inst && (inst.connectionStatus === 'open' || inst.status === 'open')) {
+          return {
+            connected: true,
+            phone: formatWaPhone(inst.ownerJid || inst.number),
+            name: inst.profileName || '',
+            pic: inst.profilePicUrl || ''
+          };
+        }
+      }
+    } catch (_) {}
+    return { connected: false };
+  }
+
+  async function renderWhatsappWorkspace() {
     if (!sectionsContainer) return;
     activeTab = 'whatsapp';
+    stopWaPolling();
 
-    if (activeCategoryTitle) activeCategoryTitle.textContent = 'WhatsApp y Señas (QR)';
-    if (activeCategoryCount) activeCategoryCount.textContent = 'Vinculación de instancia aislada mery-la-previa y datos bancarios';
+    if (activeCategoryTitle) activeCategoryTitle.textContent = 'WhatsApp y Señas';
+    if (activeCategoryCount) activeCategoryCount.textContent = 'Vinculación de la línea del bar y datos de seña para clientes';
     if (btnRenameActiveCat) btnRenameActiveCat.hidden = true;
     if (btnDeleteActiveCat) btnDeleteActiveCat.hidden = true;
     if (btnNewDish) btnNewDish.hidden = true;
     if (adminSearchInput?.parentElement) adminSearchInput.parentElement.hidden = true;
 
     const settings = window.MeryStore ? window.MeryStore.getReservationSettings() : {};
+    const serverUrl = (settings.evolutionServerUrl || 'https://mery-la-previa-evolution-api.rsssbm.easypanel.host').replace(/\/+$/, '');
+    const apiKey = settings.evolutionApiKey || '429683C4C977415CAAFCCE10F7D57E11';
+    const instanceName = settings.evolutionInstanceName || 'mery-la-previa';
 
+    // Show initial loading notice while checking status
     sectionsContainer.innerHTML = `
       <div class="admin-whatsapp-view">
-        <!-- Card 1: Evolution API Multi-Instance -->
         <article class="admin-settings-card">
           <div class="admin-modal-title-group">
             <span class="diamond-dot"></span>
-            <h3 class="admin-settings-title">Integración WhatsApp con Evolution API</h3>
+            <h3 class="admin-settings-title">WhatsApp del Bar</h3>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px; padding:20px; color:var(--q-cream-muted);">
+            <div class="admin-spinner"></div>
+            <span>Verificando estado de conexión con WhatsApp...</span>
+          </div>
+        </article>
+      </div>
+    `;
+
+    const status = await fetchWhatsappStatus();
+    if (activeTab !== 'whatsapp') return;
+
+    sectionsContainer.innerHTML = `
+      <div class="admin-whatsapp-view">
+        <!-- Card 1: WhatsApp Status -->
+        <article class="admin-settings-card">
+          <div class="admin-modal-title-group">
+            <span class="diamond-dot"></span>
+            <h3 class="admin-settings-title">WhatsApp del Bar</h3>
           </div>
 
-          <p class="admin-settings-intro">
-            Mery La Previa utiliza una instancia dedicada aislada (<strong>mery-la-previa</strong>) en tu servidor de Evolution API existente, garantizando 100% de aislamiento respecto a HotDetailing y otros negocios.
-            Al confirmarse una reserva, el sistema enviará automáticamente el Pase de Abordaje y el enlace para subir el comprobante.
-          </p>
-
-          <span class="admin-instance-badge">Instancia aislada: ${escapeHtml(settings.evolutionInstanceName || 'mery-la-previa')}</span>
-
-          <form id="adminEvolutionForm" class="admin-modal-form" style="display:flex; flex-direction:column; gap:14px;">
-            <div class="admin-form-grid-2">
-              <div class="admin-field">
-                <label for="cfgEvolutionServerUrl">URL del Servidor Evolution API</label>
-                <input
-                  type="url"
-                  id="cfgEvolutionServerUrl"
-                  class="admin-input"
-                  placeholder="https://evolution.tudominio.com"
-                  value="${escapeHtml(settings.evolutionServerUrl || '')}"
-                />
+          ${status.connected ? `
+            <div class="admin-wa-connected-box">
+              <div class="admin-wa-profile-group">
+                ${status.pic ? `<img src="${escapeHtml(status.pic)}" alt="WhatsApp Avatar" class="admin-wa-avatar" />` : `
+                  <div class="admin-wa-avatar-placeholder">
+                    <span>📱</span>
+                  </div>
+                `}
+                <div class="admin-wa-details">
+                  <div class="admin-wa-status-badge">
+                    <span class="live-dot"></span>
+                    <span>Conectado y operativo</span>
+                  </div>
+                  <span class="admin-wa-phone">${escapeHtml(status.phone || 'Línea de WhatsApp vinculada')}</span>
+                  ${status.name ? `<span class="admin-wa-profile-name">${escapeHtml(status.name)}</span>` : ''}
+                  <p class="admin-wa-meta">
+                    Las confirmaciones de reserva, pases de abordaje QR y notificaciones a los clientes se envían automáticamente desde este número de WhatsApp.
+                  </p>
+                </div>
               </div>
 
-              <div class="admin-field">
-                <label for="cfgEvolutionApiKey">API Key Global</label>
-                <input
-                  type="password"
-                  id="cfgEvolutionApiKey"
-                  class="admin-input"
-                  placeholder="••••••••••••••••••••••••••••••••"
-                  value="${escapeHtml(settings.evolutionApiKey || '')}"
-                />
+              <div class="admin-wa-status-actions">
+                <button type="button" id="btnDisconnectWa" class="admin-btn-outline admin-btn-danger">
+                  Desconectar WhatsApp
+                </button>
               </div>
             </div>
-
-            <div class="admin-field">
-              <label for="cfgEvolutionInstanceName">Nombre de Instancia (Instancia única de Mery La Previa)</label>
-              <input
-                type="text"
-                id="cfgEvolutionInstanceName"
-                class="admin-input"
-                placeholder="mery-la-previa"
-                value="${escapeHtml(settings.evolutionInstanceName || 'mery-la-previa')}"
-              />
-            </div>
-
-            <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:4px;">
-              <button type="button" id="btnGenEvolutionQr" class="admin-btn-gold">
-                Generar / Actualizar QR de WhatsApp
-              </button>
-              <a
-                href="https://mery-la-previa-evolution-api.rsssbm.easypanel.host/manager"
-                target="_blank"
-                rel="noopener"
-                class="admin-btn-outline"
-                style="text-decoration:none;"
-              >
-                Abrir Evolution Manager ↗
-              </a>
-            </div>
-
-            <div id="evolutionQrPreviewBox" class="admin-qr-preview-box">
-              <span id="evolutionQrStatusTitle" style="font-size:0.86rem; color:var(--q-cream); font-weight:600;">Cargando código QR oficial desde Evolution API...</span>
-              <img id="evolutionQrImg" alt="QR WhatsApp Evolution API" style="width:230px; height:230px; border-radius:10px; background:#fff; padding:8px; display:none;" />
-              <canvas id="evolutionQrCanvas" class="admin-qr-preview-canvas" width="200" height="200" style="display:none;"></canvas>
-              <p style="font-size:0.78rem; color:var(--q-cream-muted); margin:0;">
-                Abrí WhatsApp en tu teléfono &gt; Dispositivos vinculados &gt; Vincular un dispositivo y escaneá este QR.
+          ` : `
+            <div class="admin-wa-disconnected-box">
+              <div class="admin-wa-status-badge" style="color: var(--q-gold);">
+                <span class="live-dot" style="background: var(--q-gold); box-shadow: 0 0 8px var(--q-gold);"></span>
+                <span>Esperando vinculación</span>
+              </div>
+              <p class="admin-settings-intro" style="text-align: center; max-width: 500px;">
+                Escaneá este código QR con la aplicación de WhatsApp en el teléfono del bar para habilitar los envíos automáticos de reservas y pases de abordaje.
               </p>
+
+              <div class="admin-wa-qr-box">
+                <img id="evolutionQrImg" alt="Código QR WhatsApp" class="admin-wa-qr-img" style="display:none;" />
+                <div id="evolutionQrLoader" class="admin-wa-qr-loader">
+                  <div class="admin-spinner"></div>
+                  <span>Generando código QR oficial...</span>
+                </div>
+              </div>
+
+              <div class="admin-wa-steps-list">
+                <span>1. Abrí WhatsApp en el teléfono del bar</span>
+                <span>2. Andá a <strong>Dispositivos vinculados</strong> > <strong>Vincular un dispositivo</strong></span>
+                <span>3. Apuntá la cámara a este código QR</span>
+              </div>
+
+              <button type="button" id="btnRefreshQr" class="admin-btn-outline" style="margin-top: 6px;">
+                Actualizar código QR
+              </button>
             </div>
-          </form>
+          `}
         </article>
 
         <!-- Card 2: Deposit Bank & Mercado Pago Settings -->
@@ -2097,7 +2162,7 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
 
           <p class="admin-settings-intro">
-            Estos datos se muestran en el Pase de Abordaje y portal del cliente para que puedan realizar la transferencia y adjuntar su comprobante de pago.
+            Estos datos se muestran en el Pase de Abordaje y en el portal del cliente para que puedan realizar la transferencia y adjuntar su comprobante de pago.
           </p>
 
           <form id="adminDepositSettingsForm" class="admin-modal-form" style="display:flex; flex-direction:column; gap:14px;">
@@ -2164,7 +2229,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             <div style="margin-top:8px;">
               <button type="submit" id="btnSaveDepositSettings" class="admin-btn-gold">
-                Guardar cambios de WhatsApp y Señas
+                Guardar datos de seña
               </button>
             </div>
           </form>
@@ -2172,15 +2237,84 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
     `;
 
-    // Save Settings
+    // Wire disconnect button if connected
+    const btnDisconnect = sectionsContainer.querySelector('#btnDisconnectWa');
+    if (btnDisconnect) {
+      btnDisconnect.addEventListener('click', () => {
+        openConfirmModal({
+          title: '¿Desconectar WhatsApp?',
+          message: 'Vas a desvincular la línea de WhatsApp del bar. Los clientes no recibirán mensajes automáticos hasta que vuelvas a vincular un teléfono.',
+          confirmLabel: 'Sí, desconectar',
+          onConfirm: async () => {
+            showToast('Desconectando WhatsApp...');
+            try {
+              await fetch(`${serverUrl}/instance/logout/${instanceName}`, {
+                method: 'DELETE',
+                headers: { apikey: apiKey }
+              });
+            } catch (_) {}
+            showToast('WhatsApp desvinculado');
+            renderWhatsappWorkspace();
+          }
+        });
+      });
+    }
+
+    // Wire QR loading & auto-polling if disconnected
+    if (!status.connected) {
+      const qrImg = sectionsContainer.querySelector('#evolutionQrImg');
+      const qrLoader = sectionsContainer.querySelector('#evolutionQrLoader');
+      const btnRefresh = sectionsContainer.querySelector('#btnRefreshQr');
+
+      async function fetchQrCode() {
+        if (qrLoader) qrLoader.style.display = 'flex';
+        if (qrImg) qrImg.style.display = 'none';
+
+        try {
+          const resp = await fetch(`${serverUrl}/instance/connect/${instanceName}`, {
+            headers: { apikey: apiKey }
+          });
+          if (resp.ok) {
+            const data = await resp.json();
+            const b64 = data?.base64 || data?.qrcode?.base64 || '';
+            if (b64 && qrImg) {
+              qrImg.src = b64;
+              qrImg.style.display = 'block';
+              if (qrLoader) qrLoader.style.display = 'none';
+            }
+          }
+        } catch (_) {}
+      }
+
+      if (btnRefresh) {
+        btnRefresh.addEventListener('click', () => {
+          showToast('Actualizando código QR...');
+          fetchQrCode();
+        });
+      }
+
+      fetchQrCode();
+
+      // Start polling for connection
+      waPollTimer = setInterval(async () => {
+        if (activeTab !== 'whatsapp') {
+          stopWaPolling();
+          return;
+        }
+        const check = await fetchWhatsappStatus();
+        if (check.connected) {
+          stopWaPolling();
+          showToast('✓ WhatsApp conectado con éxito');
+          renderWhatsappWorkspace();
+        }
+      }, 3500);
+    }
+
+    // Save Deposit Settings
     const formEl = sectionsContainer.querySelector('#adminDepositSettingsForm');
     if (formEl) {
       formEl.addEventListener('submit', (e) => {
         e.preventDefault();
-        const serverUrl = sectionsContainer.querySelector('#cfgEvolutionServerUrl')?.value.trim() || '';
-        const apiKey = sectionsContainer.querySelector('#cfgEvolutionApiKey')?.value.trim() || '';
-        const instanceName = sectionsContainer.querySelector('#cfgEvolutionInstanceName')?.value.trim() || 'mery-la-previa';
-
         const alias = sectionsContainer.querySelector('#cfgDepositAlias')?.value.trim() || 'MERY.LAPREVIA.MP';
         const cbu = sectionsContainer.querySelector('#cfgDepositCbu')?.value.trim() || '0000003100098765432100';
         const holder = sectionsContainer.querySelector('#cfgDepositHolder')?.value.trim() || 'Mery La Previa S.R.L.';
@@ -2189,118 +2323,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (window.MeryStore && typeof window.MeryStore.saveReservationSettings === 'function') {
           window.MeryStore.saveReservationSettings({
-            evolutionServerUrl: serverUrl,
-            evolutionApiKey: apiKey,
-            evolutionInstanceName: instanceName,
             depositAlias: alias,
             depositCbu: cbu,
             depositHolder: holder,
             depositAmount: amount,
             depositPaymentLink: paymentLink
           });
-          showToast('Configuración de WhatsApp y señas guardada correctamente');
+          showToast('✓ Datos de seña guardados correctamente');
         }
       });
     }
-
-    // Generate/View Evolution QR (auto-loads on opening workspace & resets instance if QR limit was reached)
-    const btnGenQr = sectionsContainer.querySelector('#btnGenEvolutionQr');
-    const qrPreviewBox = sectionsContainer.querySelector('#evolutionQrPreviewBox');
-    const qrImgEl = sectionsContainer.querySelector('#evolutionQrImg');
-    const qrCanvasEl = sectionsContainer.querySelector('#evolutionQrCanvas');
-    const qrStatusTitle = sectionsContainer.querySelector('#evolutionQrStatusTitle');
-
-    async function loadRealEvolutionQr(forceReset = false) {
-      if (!qrPreviewBox) return;
-      qrPreviewBox.hidden = false;
-      const serverUrl = (sectionsContainer.querySelector('#cfgEvolutionServerUrl')?.value.trim() || 'https://mery-la-previa-evolution-api.rsssbm.easypanel.host').replace(/\/+$/, '');
-      const apiKey = sectionsContainer.querySelector('#cfgEvolutionApiKey')?.value.trim() || '429683C4C977415CAAFCCE10F7D57E11';
-      const instanceName = sectionsContainer.querySelector('#cfgEvolutionInstanceName')?.value.trim() || 'mery-la-previa';
-
-      if (qrStatusTitle) qrStatusTitle.textContent = 'Obteniendo código QR oficial desde Evolution API...';
-
-      let base64Qr = '';
-      try {
-        const stateResp = await fetch(`${serverUrl}/instance/connectionState/${instanceName}`, {
-          headers: { apikey: apiKey }
-        });
-
-        if (stateResp.ok) {
-          const stateData = await stateResp.json();
-          if (stateData?.instance?.state === 'open') {
-            if (qrStatusTitle) qrStatusTitle.textContent = `✓ WhatsApp vinculado y conectado en la instancia "${instanceName}"`;
-            if (qrImgEl) qrImgEl.style.display = 'none';
-            if (qrCanvasEl) qrCanvasEl.style.display = 'none';
-            showToast('✓ WhatsApp conectado y listo para enviar reservas');
-            return;
-          }
-        }
-
-        if (stateResp.status === 404 || forceReset) {
-          if (forceReset && stateResp.status !== 404) {
-            await fetch(`${serverUrl}/instance/delete/${instanceName}`, {
-              method: 'DELETE',
-              headers: { apikey: apiKey }
-            }).catch(() => {});
-          }
-          const createResp = await fetch(`${serverUrl}/instance/create`, {
-            method: 'POST',
-            headers: { apikey: apiKey, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ instanceName, integration: 'WHATSAPP-BAILEYS', qrcode: true })
-          });
-          if (createResp.ok) {
-            const createData = await createResp.json();
-            base64Qr = createData?.qrcode?.base64 || '';
-          }
-        }
-
-        if (!base64Qr) {
-          const resp = await fetch(`${serverUrl}/instance/connect/${instanceName}`, {
-            headers: { apikey: apiKey }
-          });
-          if (resp.ok) {
-            const data = await resp.json();
-            base64Qr = data?.base64 || data?.qrcode?.base64 || '';
-            // If QR limit (30) expired on Baileys, recreate instance to get a fresh QR
-            if (!base64Qr || (typeof data?.count === 'number' && data.count >= 28)) {
-              await fetch(`${serverUrl}/instance/delete/${instanceName}`, {
-                method: 'DELETE',
-                headers: { apikey: apiKey }
-              }).catch(() => {});
-              const recreateResp = await fetch(`${serverUrl}/instance/create`, {
-                method: 'POST',
-                headers: { apikey: apiKey, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ instanceName, integration: 'WHATSAPP-BAILEYS', qrcode: true })
-              });
-              if (recreateResp.ok) {
-                const recreateData = await recreateResp.json();
-                base64Qr = recreateData?.qrcode?.base64 || '';
-              }
-            }
-          }
-        }
-      } catch (err) {
-        console.warn('Evolution API QR notice:', err.message || err);
-      }
-
-      if (base64Qr && qrImgEl) {
-        qrImgEl.src = base64Qr;
-        qrImgEl.style.display = 'block';
-        if (qrCanvasEl) qrCanvasEl.style.display = 'none';
-        if (qrStatusTitle) qrStatusTitle.textContent = `Escaneá este QR con WhatsApp (Instancia: ${instanceName}):`;
-      } else if (window.MeryStore && typeof window.MeryStore.renderQrCode === 'function') {
-        if (qrImgEl) qrImgEl.style.display = 'none';
-        if (qrCanvasEl) qrCanvasEl.style.display = 'block';
-        window.MeryStore.renderQrCode('evolutionQrCanvas', `evolution:${instanceName}`, { size: 200 });
-      }
-    }
-
-    if (btnGenQr) {
-      btnGenQr.addEventListener('click', () => loadRealEvolutionQr(true));
-    }
-
-    // Auto-load real QR immediately when opening the WhatsApp workspace
-    loadRealEvolutionQr(false);
   }
 
   // --- Real-time Subscription to Reservation Updates ---

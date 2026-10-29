@@ -2078,15 +2078,162 @@ body:has(.admin-modal-backdrop:not([hidden])) {
   line-height: 1.5;
 }
 
-.admin-instance-badge {
-  display: inline-block;
-  background: rgba(212, 175, 55, 0.12);
+/* WhatsApp Connected Card */
+.admin-wa-connected-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 20px 24px;
+  border-radius: 12px;
+  background: rgba(74, 222, 128, 0.05);
+  border: 1px solid rgba(74, 222, 128, 0.32);
+}
+
+.admin-wa-profile-group {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+  flex: 1 1 300px;
+}
+
+.admin-wa-avatar {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--q-success);
+  background: #171917;
+  flex-shrink: 0;
+}
+
+.admin-wa-avatar-placeholder {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: rgba(74, 222, 128, 0.12);
+  border: 1.5px solid var(--q-success);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.admin-wa-details {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.admin-wa-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--q-success);
+}
+
+.admin-wa-status-badge .live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--q-success);
+  box-shadow: 0 0 8px var(--q-success);
+}
+
+.admin-wa-phone {
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--q-cream);
+}
+
+.admin-wa-profile-name {
+  font-size: 0.86rem;
   color: var(--q-gold);
-  padding: 3px 10px;
-  border-radius: 6px;
-  font-family: monospace;
-  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.admin-wa-meta {
+  font-size: 0.82rem;
+  color: var(--q-cream-muted);
+  line-height: 1.45;
   margin-top: 4px;
+}
+
+.admin-wa-status-actions {
+  display: flex;
+  align-items: center;
+}
+
+/* WhatsApp Disconnected / QR Card */
+.admin-wa-disconnected-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+  padding: 28px 20px;
+  border-radius: 12px;
+  background: #0d0f0d;
+  border: 1px dashed var(--q-border-strong);
+}
+
+.admin-wa-qr-box {
+  position: relative;
+  width: 230px;
+  height: 230px;
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 8px;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-wa-qr-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.admin-wa-qr-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: #111;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.admin-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid rgba(0, 0, 0, 0.15);
+  border-top-color: #0b0c0b;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.admin-wa-steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.82rem;
+  color: var(--q-cream-muted);
+  max-width: 440px;
 }
 
 .admin-qr-preview-box {
