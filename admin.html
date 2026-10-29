@@ -87,6 +87,32 @@
        2. SELF-MANAGED ADMIN WORKSPACE (Left Sidebar + Ordered Category Panel)
        ====================================================================== -->
   <div id="adminDashboardScreen" class="admin-shell" hidden>
+    <!-- Mobile Top Header Bar (<900px) -->
+    <header class="admin-mobile-topbar">
+      <div class="admin-mobile-brand">
+        <span class="admin-mobile-brand-title">Mery La Previa</span>
+        <span class="admin-live-badge" title="Los cambios impactan al instante en la carta">
+          <span class="live-dot"></span>
+          <span>En vivo</span>
+        </span>
+      </div>
+      <button
+        type="button"
+        id="btnAdminMobileMenu"
+        class="admin-mobile-menu-btn"
+        aria-label="Abrir o cerrar menú"
+        aria-expanded="false"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <line x1="4" y1="7" x2="20" y2="7" />
+          <line x1="4" y1="12" x2="20" y2="12" />
+          <line x1="4" y1="17" x2="20" y2="17" />
+        </svg>
+      </button>
+    </header>
+
+    <div id="adminSidebarBackdrop" class="admin-sidebar-backdrop" hidden></div>
+
     <!-- Left Sidebar -->
     <aside id="adminSidebar" class="admin-sidebar" aria-label="Menú lateral de categorías">
       <div class="admin-sidebar-top">
@@ -110,6 +136,17 @@
           <button type="button" id="btnNewCategory" class="admin-sidebar-add-btn">
             <span>+ Nueva categoría</span>
           </button>
+        </div>
+
+        <div class="admin-sidebar-section">
+          <div class="admin-sidebar-label-row">
+            <span class="admin-sidebar-label">Multimedia</span>
+          </div>
+          <nav class="admin-sidebar-nav" aria-label="Multimedia y videos">
+            <button type="button" id="btnNavVideos" class="admin-cat-pill">
+              <span>Videos de secciones</span>
+            </button>
+          </nav>
         </div>
       </div>
 
@@ -206,18 +243,27 @@
         </div>
 
         <div class="admin-field">
-          <label>Foto del ítem</label>
+          <label>Foto del ítem y encuadre</label>
           <div class="admin-photo-uploader">
-            <img id="itemFormPreview" src="assets/img/ice-cube-previa.jpg" alt="Vista previa" class="admin-photo-preview" />
+            <div id="itemPhotoCropStage" class="admin-photo-crop-stage" title="Arrastrá la imagen para acomodar el encuadre">
+              <img id="itemFormPreview" src="assets/img/ice-cube-previa.jpg" alt="Vista previa" class="admin-photo-preview" style="object-position: 50% 50%;" />
+              <span class="admin-crop-badge" aria-hidden="true">Encuadre arrastrable</span>
+            </div>
             <div class="admin-photo-controls">
               <p class="admin-photo-hint">
-                Seleccioná una imagen desde tu celular o computadora. Se ajusta y optimiza automáticamente para la carta.
+                Arrastrá la imagen con el mouse o el dedo para acomodar el encuadre.
               </p>
-              <label for="itemFormFile" class="admin-btn-outline admin-upload-label">
-                Subir o cambiar foto
-              </label>
+              <div class="admin-photo-actions-row">
+                <label for="itemFormFile" class="admin-btn-outline admin-upload-label">
+                  Subir o cambiar foto
+                </label>
+                <button type="button" id="btnResetImagePos" class="admin-btn-outline">
+                  Centrar encuadre
+                </button>
+              </div>
               <input type="file" id="itemFormFile" accept="image/*" hidden />
               <input type="hidden" id="itemFormImageUrl" value="assets/img/ice-cube-previa.jpg" />
+              <input type="hidden" id="itemFormImagePos" value="50% 50%" />
             </div>
           </div>
         </div>

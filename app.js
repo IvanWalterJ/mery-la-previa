@@ -140,15 +140,38 @@ document.addEventListener('DOMContentLoaded', () => {
   // 2. Qitchen Fullscreen Hamburger Menu Overlay Controls
   function toggleOverlay(openState) {
     if (!menuOverlay) return;
-    menuOverlay.classList.toggle('open', openState);
-    menuOverlay.setAttribute('aria-hidden', String(!openState));
+    const shouldOpen = typeof openState === 'boolean'
+      ? openState
+      : !menuOverlay.classList.contains('open');
+    menuOverlay.classList.toggle('open', shouldOpen);
+    menuOverlay.setAttribute('aria-hidden', String(!shouldOpen));
+    if (btnOpenOverlay) {
+      btnOpenOverlay.classList.toggle('is-active', shouldOpen);
+      btnOpenOverlay.setAttribute('aria-expanded', String(shouldOpen));
+    }
   }
 
   if (btnOpenOverlay) {
-    btnOpenOverlay.addEventListener('click', () => toggleOverlay(true));
+    btnOpenOverlay.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = menuOverlay ? menuOverlay.classList.contains('open') : false;
+      toggleOverlay(!isOpen);
+    });
   }
+
   if (btnCloseOverlay) {
-    btnCloseOverlay.addEventListener('click', () => toggleOverlay(false));
+    btnCloseOverlay.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleOverlay(false);
+    });
+  }
+
+  if (menuOverlay) {
+    menuOverlay.addEventListener('click', (e) => {
+      if (!e.target.closest('.q-overlay-nav')) {
+        toggleOverlay(false);
+      }
+    });
   }
 
   document.querySelectorAll('[data-overlay-goto]').forEach((btn) => {
@@ -182,9 +205,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!dishModal || !item) return;
     activeModalDish = { item, categoryTitle };
 
+    const modalCard = dishModal.querySelector('.q-dish-modal-card');
+    if (modalCard) modalCard.scrollTop = 0;
+    dishModal.scrollTop = 0;
+
     if (dishModalImage) {
       dishModalImage.src = item.image || 'assets/img/ice-cube-previa.jpg';
       dishModalImage.alt = item.name || 'Detalle del plato';
+      dishModalImage.style.objectPosition = item.imagePosition || '50% 50%';
     }
     if (dishModalCategory) {
       dishModalCategory.textContent = categoryTitle || 'LA CARTA';
@@ -224,6 +252,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     dishModal.classList.add('open');
     dishModal.setAttribute('aria-hidden', 'false');
+
+    requestAnimationFrame(() => {
+      if (modalCard) modalCard.scrollTop = 0;
+      dishModal.scrollTop = 0;
+      if (btnCloseDishModal && typeof btnCloseDishModal.focus === 'function') {
+        try {
+          btnCloseDishModal.focus({ preventScroll: true });
+        } catch (_) {
+          btnCloseDishModal.focus();
+        }
+      }
+    });
   }
 
   function closeDishModal() {
@@ -324,7 +364,7 @@ document.addEventListener('DOMContentLoaded', () => {
               data-item-idx="${idx}"
               aria-label="Ver detalle de ${escapeHtml(item.name)}"
             >
-              <img class="q-dish-thumb" src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" loading="lazy" />
+              <img class="q-dish-thumb" src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" style="object-position: ${escapeHtml(item.imagePosition || '50% 50%')};" loading="lazy" />
               <div class="q-dish-body">
                 <div class="q-dish-header">
                   <div class="q-dish-title-wrap">
@@ -397,6 +437,45 @@ document.addEventListener('DOMContentLoaded', () => {
         renderQitchenMenu();
       }
     });
+
+    function applySiteVideos(videos) {
+      if (!videos) return;
+      if (videos.intro && neonIntroVideo) {
+        if (neonIntroVideo.getAttribute('src') !== videos.intro) {
+          neonIntroVideo.setAttribute('src', videos.intro);
+          neonIntroVideo.load();
+        }
+      }
+      if (videos.main) {
+        VIEW_CONFIG.home.video = videos.main;
+        VIEW_CONFIG.menu.video = videos.main;
+        VIEW_CONFIG.reservation.video = videos.main;
+      }
+      if (videos.previa) {
+        VIEW_CONFIG.about.video = videos.previa;
+      }
+      if (showcaseVideo && currentView && VIEW_CONFIG[currentView]) {
+        const activeCfg = VIEW_CONFIG[currentView];
+        if (showcaseVideo.getAttribute('src') !== activeCfg.video) {
+          showcaseVideo.setAttribute('src', activeCfg.video);
+          showcaseVideo.load();
+          showcaseVideo.play().catch(() => {});
+        }
+      }
+    }
+
+    if (typeof window.MeryStore.getSiteVideos === 'function') {
+      const maybePromise = window.MeryStore.getSiteVideos();
+      if (maybePromise && typeof maybePromise.then === 'function') {
+        maybePromise.then(applySiteVideos).catch(() => {});
+      } else if (maybePromise) {
+        applySiteVideos(maybePromise);
+      }
+    }
+
+    if (typeof window.MeryStore.subscribeToVideoChanges === 'function') {
+      window.MeryStore.subscribeToVideoChanges(applySiteVideos);
+    }
   }
 
   // 5. Directional Slide View Transition + Left Video Swap
@@ -441,20 +520,54 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     const rightCol = document.getElementById('qitchenRightCol');
     if (rightCol) rightCol.scrollTop = 0;
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
+
+    if (window.innerWidth <= 1024) {
+      if (targetView !== 'home' && rightCol) {
+        rightCol.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      }
+    } else {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }
   }
 
   function navigateView(targetView) {
-    if (targetView === currentView) return;
-
-    if (!document.startViewTransition) {
-      updateDOMView(targetView);
+    if (targetView === currentView) {
+      if (window.innerWidth <= 1024 && targetView !== 'home') {
+        const rightCol = document.getElementById('qitchenRightCol');
+        if (rightCol) {
+          rightCol.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
       return;
     }
 
-    document.startViewTransition(() => updateDOMView(targetView));
+    const scrollToActiveSection = () => {
+      if (window.innerWidth <= 1024 && targetView !== 'home') {
+        const rightCol = document.getElementById('qitchenRightCol');
+        if (rightCol) {
+          rightCol.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
+    };
+
+    if (!document.startViewTransition) {
+      updateDOMView(targetView);
+      scrollToActiveSection();
+      return;
+    }
+
+    const vt = document.startViewTransition(() => updateDOMView(targetView));
+    if (vt && vt.finished) {
+      vt.finished.then(scrollToActiveSection).catch(scrollToActiveSection);
+    } else {
+      setTimeout(scrollToActiveSection, 50);
+    }
   }
 
   document.querySelectorAll('[data-goto]').forEach((el) => {

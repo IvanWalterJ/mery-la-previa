@@ -29,11 +29,14 @@ CREATE TABLE IF NOT EXISTS public.menu_items (
   pairing_note TEXT NOT NULL DEFAULT '',
   tags JSONB NOT NULL DEFAULT '[]'::jsonb,
   image_url TEXT NOT NULL DEFAULT 'assets/img/ice-cube-previa.jpg',
+  image_position TEXT NOT NULL DEFAULT '50% 50%',
   available BOOLEAN NOT NULL DEFAULT true,
   sort_order INTEGER NOT NULL DEFAULT 1,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+ALTER TABLE public.menu_items ADD COLUMN IF NOT EXISTS image_position TEXT NOT NULL DEFAULT '50% 50%';
 
 -- 3. ROW LEVEL SECURITY (Lectura pública en vivo, escritura solo usuarios logueados)
 ALTER TABLE public.menu_categories ENABLE ROW LEVEL SECURITY;

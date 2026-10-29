@@ -5,12 +5,21 @@
  * 1. Ejecutá el archivo `supabase/schema.sql` en el SQL Editor de tu proyecto Supabase.
  * 2. Pegá tu SUPABASE_URL y SUPABASE_ANON_KEY abajo (o configuralos desde /admin.html -> Conexión Supabase).
  */
-const DEFAULT_SUPABASE_URL = '';
-const DEFAULT_SUPABASE_ANON_KEY = '';
+const DEFAULT_SUPABASE_URL = 'https://auuwueojsqpyukfzmgcj.supabase.co';
+const DEFAULT_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF1dXd1ZW9qc3FweXVrZnptZ2NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMyMjg3NDcsImV4cCI6MjEwODgwNDc0N30.xKBbM5wjhJ3sdHGDH3Q_2O4Rr2xm-vDrCT5Ssmoq0wo';
 
 const STORAGE_KEY_MENU = 'mery_menu_sections_v2';
 const STORAGE_KEY_SUPA_CFG = 'mery_supabase_config_v1';
+const STORAGE_KEY_VIDEOS = 'mery_site_videos_v1';
 const BROADCAST_CHANNEL_NAME = 'mery_la_previa_realtime_v1';
+const IDB_NAME = 'mery_media_idb_v1';
+const IDB_STORE = 'media';
+
+const DEFAULT_SITE_VIDEOS = {
+  intro: 'assets/video/neon-intro-mery.mp4',
+  main: 'assets/video/bottle-360-loop.mp4',
+  previa: 'assets/video/ice-cube-1311.mp4'
+};
 
 // Initial curated menu with rich detail copy for the Dish Detail Modal
 const DEFAULT_MENU_SECTIONS = [
@@ -29,6 +38,7 @@ const DEFAULT_MENU_SECTIONS = [
         pairing: 'Ideal para abrir la noche en barra a las 20:30 hs o acompañar mollejas crocantes.',
         tags: ['Autor 11:11', 'Hielo Sellado en Vivo', 'Perfil Frutal & Especiado'],
         image: 'assets/img/ice-cube-previa.jpg',
+        imagePosition: '50% 50%',
         available: true
       },
       {
@@ -41,6 +51,7 @@ const DEFAULT_MENU_SECTIONS = [
         pairing: 'Perfecto para la transición entre la cena y el primer set de DJ.',
         tags: ['Ahumado en Barra', 'Cítrico & Herbal', 'Favorito 11:11'],
         image: 'assets/img/cocktails-neon.jpg',
+        imagePosition: '50% 50%',
         available: true
       },
       {
@@ -53,6 +64,7 @@ const DEFAULT_MENU_SECTIONS = [
         pairing: 'Refrescante de principio a fin, pensado para brindar en grupo en el sector living.',
         tags: ['Fresco & Burbujeante', 'Copa Balón', 'Base Mery Jane'],
         image: 'assets/img/brand-tutto-passa.jpg',
+        imagePosition: '50% 50%',
         available: true
       }
     ]
@@ -72,6 +84,7 @@ const DEFAULT_MENU_SECTIONS = [
         pairing: 'Pensado para compartir entre 2 a 3 personas junto a un Mery Jane Reserva Malbec Orgánico.',
         tags: ['Para Compartir (750g)', 'Brasas de Quebracho', 'Bandeja de Plata'],
         image: 'assets/img/steak-flash.jpg',
+        imagePosition: '50% 50%',
         available: true
       },
       {
@@ -84,6 +97,7 @@ const DEFAULT_MENU_SECTIONS = [
         pairing: 'El tapeo obligado para abrir la mesa mientras llegan los primeros tragos de autor.',
         tags: ['Tapeo al Centro', 'Plancha de Hierro', 'Ajo Negro & Lima'],
         image: 'assets/img/cocktails-neon.jpg',
+        imagePosition: '50% 50%',
         available: true
       },
       {
@@ -96,6 +110,7 @@ const DEFAULT_MENU_SECTIONS = [
         pairing: 'Corte de colección para mesas que buscan una cena potente antes del club.',
         tags: ['Maduración 35 Días', '900g con Hueso', 'Edición Limitada'],
         image: 'assets/img/steak-flash.jpg',
+        imagePosition: '50% 50%',
         available: true
       }
     ]
@@ -115,6 +130,7 @@ const DEFAULT_MENU_SECTIONS = [
         pairing: 'Versátil y magnético: acompaña tanto tapeo caliente como brindis de medianoche.',
         tags: ['Servicio en Frapera', 'Etiqueta Insignia', 'Fresco & Aromático'],
         image: 'assets/img/wine-mery.jpg',
+        imagePosition: '50% 50%',
         available: true
       },
       {
@@ -127,6 +143,7 @@ const DEFAULT_MENU_SECTIONS = [
         pairing: 'Recomendado para grupos de 6 a 12 amigos en previa o cumpleaños.',
         tags: ['Pack 4 Botellas', 'Especial Cumpleaños', 'Incluye Extra Brut'],
         image: 'assets/img/brand-previa-zine.jpg',
+        imagePosition: '50% 50%',
         available: true
       },
       {
@@ -139,6 +156,7 @@ const DEFAULT_MENU_SECTIONS = [
         pairing: 'El compañero indiscutido del Ojo de Bife en Bandeja Imperial y el T-Bone Madurado.',
         tags: ['Valle de Uco', 'Orgánico', 'Taninos de Terciopelo'],
         image: 'assets/img/bottle-hero-isolated.jpg',
+        imagePosition: '50% 50%',
         available: true
       }
     ]
@@ -283,6 +301,7 @@ const DEFAULT_MENU_SECTIONS = [
             pairing: it.pairing_note || '',
             tags: Array.isArray(it.tags) ? it.tags : [],
             image: it.image_url || 'assets/img/ice-cube-previa.jpg',
+            imagePosition: it.image_position || '50% 50%',
             available: it.available !== false,
             sort_order: it.sort_order ?? 1
           }))
@@ -385,6 +404,7 @@ const DEFAULT_MENU_SECTIONS = [
           pairing_note: it.pairing || '',
           tags: Array.isArray(it.tags) ? it.tags : [],
           image_url: it.image || 'assets/img/ice-cube-previa.jpg',
+          image_position: it.imagePosition || '50% 50%',
           available: it.available !== false,
           sort_order: j + 1
         }, { onConflict: 'id' });
@@ -393,17 +413,66 @@ const DEFAULT_MENU_SECTIONS = [
     return { ok: true };
   }
 
+  function compressImageToWebP(file, maxDim = 1200, quality = 0.86) {
+    return new Promise((resolve, reject) => {
+      if (typeof document === 'undefined' || typeof Image === 'undefined') {
+        return resolve({ blob: file, dataUrl: '' });
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          let { width, height } = img;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(img, 0, 0, width, height);
+          }
+          const dataUrl = canvas.toDataURL('image/webp', quality);
+          if (typeof canvas.toBlob === 'function') {
+            canvas.toBlob((blob) => {
+              resolve({ blob: blob || file, dataUrl });
+            }, 'image/webp', quality);
+          } else {
+            resolve({ blob: file, dataUrl });
+          }
+        };
+        img.onerror = () => resolve({ blob: file, dataUrl: e.target.result });
+        img.src = e.target.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
   async function uploadDishImage(file) {
     if (!file) throw new Error('No se seleccionó ningún archivo');
+    const { blob, dataUrl } = await compressImageToWebP(file, 1200, 0.86);
     const client = getClient();
 
     if (client) {
       try {
-        const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '');
-        const fileName = `dishes/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+        const fileName = `dishes/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.webp`;
         const { error: uploadError } = await client.storage
           .from('menu-images')
-          .upload(fileName, file, { cacheControl: '3600', upsert: true });
+          .upload(fileName, blob, {
+            contentType: 'image/webp',
+            cacheControl: '31536000',
+            upsert: true
+          });
 
         if (!uploadError) {
           const { data } = client.storage.from('menu-images').getPublicUrl(fileName);
@@ -416,40 +485,236 @@ const DEFAULT_MENU_SECTIONS = [
       }
     }
 
-    // Fallback: client-side resized DataURL so photo upload works immediately even offline
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          const maxDim = 900;
-          let { width, height } = img;
-          if (width > maxDim || height > maxDim) {
-            if (width > height) {
-              height = Math.round((height * maxDim) / width);
-              width = maxDim;
-            } else {
-              width = Math.round((width * maxDim) / height);
-              height = maxDim;
-            }
+    return dataUrl || 'assets/img/ice-cube-previa.jpg';
+  }
+
+  // ---------------------------------------------------------------------------
+  // OPTIMIZED SECTION VIDEOS MANAGEMENT (Supabase Storage + IndexedDB fallback)
+  // ---------------------------------------------------------------------------
+  function openMediaDB() {
+    return new Promise((resolve) => {
+      if (typeof indexedDB === 'undefined') return resolve(null);
+      try {
+        const req = indexedDB.open(IDB_NAME, 1);
+        req.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains(IDB_STORE)) {
+            db.createObjectStore(IDB_STORE, { keyPath: 'key' });
           }
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL('image/jpeg', 0.84));
         };
-        img.onerror = () => resolve(e.target.result);
-        img.src = e.target.result;
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => resolve(null);
+      } catch (_) {
+        resolve(null);
+      }
     });
+  }
+
+  async function saveBlobToIDB(key, blob) {
+    const db = await openMediaDB();
+    if (!db) return false;
+    return new Promise((resolve) => {
+      try {
+        const tx = db.transaction(IDB_STORE, 'readwrite');
+        const store = tx.objectStore(IDB_STORE);
+        store.put({ key, blob, updatedAt: Date.now() });
+        tx.oncomplete = () => resolve(true);
+        tx.onerror = () => resolve(false);
+      } catch (_) {
+        resolve(false);
+      }
+    });
+  }
+
+  async function getBlobFromIDB(key) {
+    const db = await openMediaDB();
+    if (!db) return null;
+    return new Promise((resolve) => {
+      try {
+        const tx = db.transaction(IDB_STORE, 'readonly');
+        const store = tx.objectStore(IDB_STORE);
+        const req = store.get(key);
+        req.onsuccess = () => resolve(req.result ? req.result.blob : null);
+        req.onerror = () => resolve(null);
+      } catch (_) {
+        resolve(null);
+      }
+    });
+  }
+
+  async function deleteBlobFromIDB(key) {
+    const db = await openMediaDB();
+    if (!db) return false;
+    return new Promise((resolve) => {
+      try {
+        const tx = db.transaction(IDB_STORE, 'readwrite');
+        const store = tx.objectStore(IDB_STORE);
+        store.delete(key);
+        tx.oncomplete = () => resolve(true);
+        tx.onerror = () => resolve(false);
+      } catch (_) {
+        resolve(false);
+      }
+    });
+  }
+
+  async function getSiteVideos() {
+    let current = { ...DEFAULT_SITE_VIDEOS };
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_VIDEOS);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') {
+          current = { ...current, ...parsed };
+        }
+      }
+    } catch (_) {}
+
+    // Check IndexedDB binary blobs for offline / local-stored videos
+    for (const slotKey of ['intro', 'main', 'previa']) {
+      try {
+        const blob = await getBlobFromIDB(`video_${slotKey}`);
+        if (blob && typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function') {
+          current[slotKey] = URL.createObjectURL(blob);
+        }
+      } catch (_) {}
+    }
+
+    return current;
+  }
+
+  function saveSiteVideos(videos, notify = true) {
+    try {
+      const cleanToStore = {};
+      for (const [k, v] of Object.entries(videos || {})) {
+        if (typeof v === 'string' && !v.startsWith('blob:')) {
+          cleanToStore[k] = v;
+        }
+      }
+      localStorage.setItem(STORAGE_KEY_VIDEOS, JSON.stringify(cleanToStore));
+
+      if (notify && broadcastChannel) {
+        broadcastChannel.postMessage({
+          type: 'VIDEOS_UPDATED',
+          videos,
+          timestamp: Date.now()
+        });
+      }
+    } catch (err) {
+      console.warn('Error saving site videos:', err);
+    }
+  }
+
+  function subscribeToVideoChanges(onUpdate) {
+    if (typeof onUpdate !== 'function') return () => {};
+
+    const handleBroadcast = (event) => {
+      if (event.data && event.data.type === 'VIDEOS_UPDATED' && event.data.videos) {
+        onUpdate(event.data.videos);
+      }
+    };
+    if (broadcastChannel) {
+      broadcastChannel.addEventListener('message', handleBroadcast);
+    }
+
+    const handleStorage = (event) => {
+      if (event.key === STORAGE_KEY_VIDEOS && event.newValue) {
+        try {
+          const parsed = JSON.parse(event.newValue);
+          if (parsed) onUpdate({ ...DEFAULT_SITE_VIDEOS, ...parsed });
+        } catch (_) {}
+      }
+    };
+    global.addEventListener('storage', handleStorage);
+
+    return () => {
+      if (broadcastChannel) broadcastChannel.removeEventListener('message', handleBroadcast);
+      global.removeEventListener('storage', handleStorage);
+    };
+  }
+
+  async function uploadSectionVideo(slotKey, file) {
+    if (!file) throw new Error('No se seleccionó ningún archivo de video');
+    const validSlot = ['intro', 'main', 'previa'].includes(slotKey);
+    if (!validSlot) throw new Error('Slot de video inválido: ' + slotKey);
+
+    const client = getClient();
+    const ext = (file.name.split('.').pop() || 'mp4').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const mimeType = file.type || (ext === 'webm' ? 'video/webm' : 'video/mp4');
+
+    if (client) {
+      try {
+        const fileName = `videos/${slotKey}-${Date.now()}.${ext}`;
+        const { error: uploadError } = await client.storage
+          .from('menu-images')
+          .upload(fileName, file, {
+            contentType: mimeType,
+            cacheControl: '31536000',
+            upsert: true
+          });
+
+        if (!uploadError) {
+          const { data } = client.storage.from('menu-images').getPublicUrl(fileName);
+          if (data && data.publicUrl) {
+            const currentVideos = await getSiteVideos();
+            currentVideos[slotKey] = data.publicUrl;
+            saveSiteVideos(currentVideos, true);
+            await deleteBlobFromIDB(`video_${slotKey}`);
+            return { ok: true, url: data.publicUrl };
+          }
+        }
+      } catch (err) {
+        console.warn('Supabase video upload fallback to IndexedDB blob:', err.message || err);
+      }
+    }
+
+    // Binary Blob storage in IndexedDB (never in localStorage to prevent 5MB storage limits/bloat)
+    await saveBlobToIDB(`video_${slotKey}`, file);
+    const objectUrl = typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function'
+      ? URL.createObjectURL(file)
+      : '';
+    const currentVideos = await getSiteVideos();
+    currentVideos[slotKey] = objectUrl;
+
+    if (broadcastChannel) {
+      broadcastChannel.postMessage({
+        type: 'VIDEOS_UPDATED',
+        videos: currentVideos,
+        timestamp: Date.now()
+      });
+    }
+
+    return { ok: true, url: objectUrl };
+  }
+
+  async function restoreSectionVideo(slotKey) {
+    await deleteBlobFromIDB(`video_${slotKey}`);
+    const current = await getSiteVideos();
+    current[slotKey] = DEFAULT_SITE_VIDEOS[slotKey] || '';
+
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_VIDEOS);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        delete parsed[slotKey];
+        localStorage.setItem(STORAGE_KEY_VIDEOS, JSON.stringify(parsed));
+      }
+    } catch (_) {}
+
+    if (broadcastChannel) {
+      broadcastChannel.postMessage({
+        type: 'VIDEOS_UPDATED',
+        videos: current,
+        timestamp: Date.now()
+      });
+    }
+
+    return { ok: true, url: current[slotKey] };
   }
 
   global.MeryStore = {
     DEFAULT_MENU_SECTIONS,
+    DEFAULT_SITE_VIDEOS,
     getSupabaseConfig,
     setSupabaseConfig,
     isSupabaseConfigured,
@@ -459,6 +724,12 @@ const DEFAULT_MENU_SECTIONS = [
     fetchMenuSections,
     subscribeToMenuChanges,
     seedSupabaseIfEmpty,
-    uploadDishImage
+    uploadDishImage,
+    uploadSectionVideo,
+    restoreSectionVideo,
+    getSiteVideos,
+    saveSiteVideos,
+    subscribeToVideoChanges,
+    deleteBlobFromIDB
   };
 })(window);

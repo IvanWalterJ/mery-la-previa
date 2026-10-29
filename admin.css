@@ -250,6 +250,55 @@ html, body {
   background: var(--q-bg);
 }
 
+/* Mobile Topbar (<900px) */
+.admin-mobile-topbar {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: rgba(13, 14, 13, 0.96);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--q-border);
+}
+
+.admin-mobile-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-mobile-brand-title {
+  font-family: 'Forum', serif;
+  font-size: 1.15rem;
+  letter-spacing: 0.06em;
+  color: var(--q-cream);
+}
+
+.admin-mobile-menu-btn {
+  appearance: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid var(--q-border);
+  background: rgba(239, 231, 210, 0.04);
+  color: var(--q-cream);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.admin-mobile-menu-btn:hover,
+.admin-mobile-menu-btn.is-active {
+  background: rgba(239, 231, 210, 0.14);
+  border-color: var(--q-cream);
+}
+
+.admin-sidebar-backdrop {
+  display: none;
+}
+
 /* Left Sidebar */
 .admin-sidebar {
   background: var(--q-surface);
@@ -837,7 +886,7 @@ html, body {
 
 .admin-photo-uploader {
   display: grid;
-  grid-template-columns: 112px minmax(0, 1fr);
+  grid-template-columns: 128px minmax(0, 1fr);
   gap: 16px;
   align-items: center;
   padding: 12px;
@@ -846,12 +895,49 @@ html, body {
   background: #171917;
 }
 
+.admin-photo-crop-stage {
+  position: relative;
+  width: 128px;
+  height: 96px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--q-border);
+  background: #0c0d0c;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-photo-crop-stage:active,
+.admin-photo-crop-stage.is-dragging {
+  cursor: grabbing;
+  border-color: var(--q-gold);
+}
+
+.admin-crop-badge {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.65rem;
+  color: var(--q-cream);
+  background: rgba(10, 11, 10, 0.78);
+  backdrop-filter: blur(4px);
+  padding: 1px 6px;
+  border-radius: 4px;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
 .admin-photo-preview {
-  width: 112px;
-  height: 88px;
+  width: 100%;
+  height: 100%;
   border-radius: 8px;
   object-fit: cover;
-  border: 1px solid var(--q-border);
+  pointer-events: none;
 }
 
 .admin-photo-controls {
@@ -861,10 +947,80 @@ html, body {
   gap: 10px;
 }
 
+.admin-photo-actions-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
 .admin-photo-hint {
   font-size: 0.8rem;
   color: var(--q-cream-muted);
   line-height: 1.4;
+}
+
+/* ==========================================================================
+   6. SECTION VIDEOS MANAGEMENT WORKSPACE
+   ========================================================================== */
+.admin-videos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.admin-video-card {
+  background: var(--q-surface);
+  border: 1px solid var(--q-border);
+  border-radius: 14px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.admin-video-preview-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #000;
+  border: 1px solid var(--q-border);
+}
+
+.admin-video-player {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.admin-video-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.admin-video-title {
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: var(--q-cream);
+}
+
+.admin-video-desc {
+  font-size: 0.82rem;
+  color: var(--q-cream-muted);
+  line-height: 1.4;
+}
+
+.admin-video-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: auto;
+  align-items: center;
 }
 
 .admin-upload-label {
@@ -904,13 +1060,54 @@ html, body {
 @media (max-width: 900px) {
   .admin-shell {
     grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .admin-mobile-topbar {
+    display: flex;
+    position: sticky;
+    top: 0;
+    z-index: 250;
+  }
+
+  .admin-sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 240;
+    background: rgba(4, 5, 4, 0.72);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+
+  .admin-sidebar-backdrop[hidden] {
+    display: none !important;
   }
 
   .admin-sidebar {
-    position: static;
+    position: fixed;
+    top: 60px;
+    left: 12px;
+    bottom: 12px;
     height: auto;
-    border-right: none;
-    border-bottom: 1px solid var(--q-border);
+    max-height: calc(100vh - 72px);
+    width: min(290px, calc(100vw - 24px));
+    z-index: 245;
+    background: #0d0e0d;
+    border: 1px solid var(--q-border-strong);
+    border-radius: 16px;
+    transform: translateX(-110%);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.22s ease, opacity 0.22s ease;
+    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.85);
+  }
+
+  .admin-sidebar.mobile-open {
+    transform: translateX(0);
+    opacity: 1;
+    pointer-events: auto;
   }
 
   .admin-main {

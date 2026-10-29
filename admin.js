@@ -32,9 +32,55 @@ document.addEventListener('DOMContentLoaded', () => {
   const activeCategoryCount = document.getElementById('activeCategoryCount');
   const btnRenameActiveCat = document.getElementById('btnRenameActiveCat');
   const btnDeleteActiveCat = document.getElementById('btnDeleteActiveCat');
+  const btnNewDish = document.getElementById('btnNewDish');
+  const btnNavVideos = document.getElementById('btnNavVideos');
   const adminSearchInput = document.getElementById('adminSearchInput');
   const sectionsContainer = document.getElementById('adminSectionsContainer');
   const toastEl = document.getElementById('adminToast');
+
+  // Mobile Drawer & Topbar controls
+  const btnAdminMobileMenu = document.getElementById('btnAdminMobileMenu');
+  const adminSidebar = document.getElementById('adminSidebar');
+  const adminSidebarBackdrop = document.getElementById('adminSidebarBackdrop');
+
+  function toggleAdminMobileMenu(forceState) {
+    if (!adminSidebar) return;
+    const shouldOpen = typeof forceState === 'boolean'
+      ? forceState
+      : !adminSidebar.classList.contains('mobile-open');
+    adminSidebar.classList.toggle('mobile-open', shouldOpen);
+    if (adminSidebarBackdrop) {
+      adminSidebarBackdrop.hidden = !shouldOpen;
+    }
+    if (btnAdminMobileMenu) {
+      btnAdminMobileMenu.setAttribute('aria-expanded', String(shouldOpen));
+      btnAdminMobileMenu.classList.toggle('is-active', shouldOpen);
+    }
+  }
+
+  function closeAdminMobileMenu() {
+    toggleAdminMobileMenu(false);
+  }
+
+  if (btnAdminMobileMenu) {
+    btnAdminMobileMenu.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleAdminMobileMenu();
+    });
+  }
+
+  if (adminSidebarBackdrop) {
+    adminSidebarBackdrop.addEventListener('click', () => {
+      closeAdminMobileMenu();
+    });
+  }
+
+  document.addEventListener('click', (e) => {
+    if (!adminSidebar || !adminSidebar.classList.contains('mobile-open')) return;
+    if (!adminSidebar.contains(e.target) && !btnAdminMobileMenu?.contains(e.target)) {
+      closeAdminMobileMenu();
+    }
+  });
 
   // Item Modal controls
   const itemModal = document.getElementById('adminItemModal');
@@ -45,9 +91,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const itemFormPrice = document.getElementById('itemFormPrice');
   const itemFormName = document.getElementById('itemFormName');
   const itemFormBadge = document.getElementById('itemFormBadge');
+  const itemPhotoCropStage = document.getElementById('itemPhotoCropStage');
   const itemFormPreview = document.getElementById('itemFormPreview');
   const itemFormFile = document.getElementById('itemFormFile');
   const itemFormImageUrl = document.getElementById('itemFormImageUrl');
+  const itemFormImagePos = document.getElementById('itemFormImagePos');
+  const btnResetImagePos = document.getElementById('btnResetImagePos');
   const itemFormShortDesc = document.getElementById('itemFormShortDesc');
   const itemFormDetailCopy = document.getElementById('itemFormDetailCopy');
   const itemFormPairing = document.getElementById('itemFormPairing');
@@ -70,9 +119,79 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let menuSections = window.MeryStore.getLocalSections();
   let activeCategoryId = menuSections[0]?.id || 'cocktails';
+  let activeTab = 'category'; // 'category' | 'videos'
   let searchQuery = '';
   let toastTimer = null;
   let pendingConfirmCallback = null;
+
+  // Draggable photo repositioning / framing logic
+  let isDraggingCrop = false;
+  let dragStartX = 0;
+  let dragStartY = 0;
+  let cropStartPosX = 50;
+  let cropStartPosY = 50;
+
+  function parseImagePosition(posStr) {
+    if (!posStr) return { x: 50, y: 50 };
+    const parts = String(posStr).split(/\s+/);
+    const x = parseFloat(parts[0]) || 50;
+    const y = parseFloat(parts[1]) || 50;
+    return { x, y };
+  }
+
+  function setImagePosition(x, y) {
+    const clampedX = Math.round(Math.min(100, Math.max(0, x)));
+    const clampedY = Math.round(Math.min(100, Math.max(0, y)));
+    const val = `${clampedX}% ${clampedY}%`;
+    if (itemFormImagePos) itemFormImagePos.value = val;
+    if (itemFormPreview) itemFormPreview.style.objectPosition = val;
+  }
+
+  if (itemPhotoCropStage) {
+    itemPhotoCropStage.addEventListener('pointerdown', (e) => {
+      isDraggingCrop = true;
+      dragStartX = e.clientX;
+      dragStartY = e.clientY;
+      const current = parseImagePosition(itemFormImagePos?.value || '50% 50%');
+      cropStartPosX = current.x;
+      cropStartPosY = current.y;
+      itemPhotoCropStage.classList.add('is-dragging');
+      try {
+        itemPhotoCropStage.setPointerCapture(e.pointerId);
+      } catch (_) {}
+    });
+
+    itemPhotoCropStage.addEventListener('pointermove', (e) => {
+      if (!isDraggingCrop) return;
+      const dx = e.clientX - dragStartX;
+      const dy = e.clientY - dragStartY;
+      const rect = itemPhotoCropStage.getBoundingClientRect();
+      const stageW = rect.width || 128;
+      const stageH = rect.height || 96;
+      const nextX = cropStartPosX - (dx / stageW) * 100;
+      const nextY = cropStartPosY - (dy / stageH) * 100;
+      setImagePosition(nextX, nextY);
+    });
+
+    const stopCropDrag = (e) => {
+      if (!isDraggingCrop) return;
+      isDraggingCrop = false;
+      itemPhotoCropStage.classList.remove('is-dragging');
+      try {
+        if (e && e.pointerId) itemPhotoCropStage.releasePointerCapture(e.pointerId);
+      } catch (_) {}
+    };
+
+    itemPhotoCropStage.addEventListener('pointerup', stopCropDrag);
+    itemPhotoCropStage.addEventListener('pointercancel', stopCropDrag);
+  }
+
+  if (btnResetImagePos) {
+    btnResetImagePos.addEventListener('click', () => {
+      setImagePosition(50, 50);
+      showToast('Encuadre centrado (50% 50%)');
+    });
+  }
 
   function showToast(msg) {
     if (!toastEl) return;
@@ -188,6 +307,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (btnLogout) {
     btnLogout.addEventListener('click', () => {
+      closeAdminMobileMenu();
       openConfirmModal({
         title: '¿Cerrar sesión?',
         message: 'Vas a salir del panel de administración de Mery La Previa.',
@@ -245,10 +365,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     categoryPillsEl.querySelectorAll('.admin-cat-pill').forEach((btn) => {
       btn.addEventListener('click', () => {
+        activeTab = 'category';
+        btnNavVideos?.classList.remove('active');
         activeCategoryId = btn.getAttribute('data-cat') || menuSections[0]?.id;
         renderAdminSidebar();
         renderActiveCategoryWorkspace();
+        closeAdminMobileMenu();
       });
+    });
+  }
+
+  if (btnNavVideos) {
+    btnNavVideos.addEventListener('click', () => {
+      activeTab = 'videos';
+      categoryPillsEl?.querySelectorAll('.admin-cat-pill').forEach((p) => {
+        p.classList.remove('active');
+        p.setAttribute('aria-selected', 'false');
+      });
+      btnNavVideos.classList.add('active');
+      renderVideosWorkspace();
+      closeAdminMobileMenu();
     });
   }
 
@@ -261,6 +397,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderActiveCategoryWorkspace() {
     if (!sectionsContainer) return;
+    activeTab = 'category';
+    btnNavVideos?.classList.remove('active');
+    if (btnRenameActiveCat) btnRenameActiveCat.hidden = false;
+    if (btnNewDish) btnNewDish.hidden = false;
+    if (adminSearchInput?.parentElement) adminSearchInput.parentElement.hidden = false;
+
     const sec = menuSections.find((s) => s.id === activeCategoryId) || menuSections[0];
 
     if (!sec) {
@@ -303,7 +445,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ${filteredItems.map((item) => `
           <article class="admin-item-card ${item.available === false ? 'unavailable' : ''}" data-item-id="${escapeHtml(item.id)}">
             <div class="admin-item-top">
-              <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" class="admin-item-thumb" decoding="async" />
+              <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" class="admin-item-thumb" style="object-position: ${item.imagePosition || '50% 50%'};" decoding="async" />
               <div class="admin-item-info">
                 <h3 class="admin-item-title">
                   ${escapeHtml(item.name)}
@@ -498,6 +640,166 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // 4b. SECTION VIDEOS MANAGEMENT WORKSPACE (Intro Neon, Bottle 360°, Previa 13/11)
+  const SECTION_VIDEO_CONFIGS = [
+    {
+      key: 'intro',
+      title: 'Video de inicio (Cartel Neón)',
+      desc: 'Se reproduce en el telón de apertura inicial con sonido al hacer clic en INGRESAR.',
+      defaultUrl: 'assets/video/neon-intro-mery.mp4'
+    },
+    {
+      key: 'main',
+      title: 'Video principal y La Carta (Botella 360°)',
+      desc: 'Video en bucle que acompaña la portada de inicio, el menú y la vista de reservas.',
+      defaultUrl: 'assets/video/bottle-360-loop.mp4'
+    },
+    {
+      key: 'previa',
+      title: 'Video sección La Previa 13/11',
+      desc: 'Video ambientado con sonido que se activa en la sección "Tenemos Previa 13/11".',
+      defaultUrl: 'assets/video/ice-cube-1311.mp4'
+    }
+  ];
+
+  async function renderVideosWorkspace() {
+    if (!sectionsContainer) return;
+    activeTab = 'videos';
+
+    if (activeCategoryTitle) activeCategoryTitle.textContent = 'Videos de secciones';
+    if (activeCategoryCount) {
+      activeCategoryCount.textContent = '3 videos configurables para la experiencia inmersiva';
+    }
+    if (btnRenameActiveCat) btnRenameActiveCat.hidden = true;
+    if (btnDeleteActiveCat) btnDeleteActiveCat.hidden = true;
+    if (btnNewDish) btnNewDish.hidden = true;
+    if (adminSearchInput?.parentElement) adminSearchInput.parentElement.hidden = true;
+
+    let currentVideos = {
+      intro: 'assets/video/neon-intro-mery.mp4',
+      main: 'assets/video/bottle-360-loop.mp4',
+      previa: 'assets/video/ice-cube-1311.mp4'
+    };
+
+    if (window.MeryStore && typeof window.MeryStore.getSiteVideos === 'function') {
+      try {
+        currentVideos = await window.MeryStore.getSiteVideos();
+      } catch (_) {}
+    }
+
+    sectionsContainer.innerHTML = `
+      <div class="admin-videos-grid">
+        ${SECTION_VIDEO_CONFIGS.map((slot) => {
+          const videoSrc = currentVideos[slot.key] || slot.defaultUrl;
+          return `
+            <article class="admin-video-card" data-slot="${escapeHtml(slot.key)}">
+              <div class="admin-video-preview-wrap">
+                <video
+                  class="admin-video-player"
+                  src="${escapeHtml(videoSrc)}"
+                  muted
+                  loop
+                  playsinline
+                  preload="metadata"
+                ></video>
+              </div>
+
+              <div class="admin-video-meta">
+                <h3 class="admin-video-title">${escapeHtml(slot.title)}</h3>
+                <p class="admin-video-desc">${escapeHtml(slot.desc)}</p>
+              </div>
+
+              <div class="admin-video-actions">
+                <label for="videoFile_${escapeHtml(slot.key)}" class="admin-btn-outline admin-upload-label">
+                  Subir o cambiar video
+                </label>
+                <input
+                  type="file"
+                  id="videoFile_${escapeHtml(slot.key)}"
+                  accept="video/mp4,video/webm"
+                  data-slot="${escapeHtml(slot.key)}"
+                  hidden
+                />
+                <button
+                  type="button"
+                  class="admin-btn-outline"
+                  data-action="restore-video"
+                  data-slot="${escapeHtml(slot.key)}"
+                >
+                  Restaurar original
+                </button>
+              </div>
+            </article>
+          `;
+        }).join('')}
+      </div>
+    `;
+
+    // Start video playback safely in background previews
+    sectionsContainer.querySelectorAll('.admin-video-player').forEach((v) => {
+      v.play().catch(() => {});
+    });
+
+    // Upload video handler
+    sectionsContainer.querySelectorAll('input[type="file"][data-slot]').forEach((input) => {
+      input.addEventListener('change', async (e) => {
+        const file = e.target.files && e.target.files[0];
+        const slotKey = input.getAttribute('data-slot');
+        const slotConfig = SECTION_VIDEO_CONFIGS.find((s) => s.key === slotKey);
+        if (!file || !slotKey) return;
+
+        showToast('Subiendo y optimizando video...');
+        try {
+          const res = await window.MeryStore.uploadSectionVideo(slotKey, file);
+          if (res && res.url) {
+            const card = input.closest('.admin-video-card');
+            const videoEl = card?.querySelector('.admin-video-player');
+            if (videoEl) {
+              videoEl.src = res.url;
+              videoEl.load();
+              videoEl.play().catch(() => {});
+            }
+            showToast(`Video de "${slotConfig?.title || slotKey}" actualizado`);
+          }
+        } catch (err) {
+          showToast('Error al procesar el video: ' + (err.message || 'formato no soportado'));
+        }
+      });
+    });
+
+    // Restore original video confirmation handler
+    sectionsContainer.querySelectorAll('[data-action="restore-video"]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const slotKey = btn.getAttribute('data-slot');
+        const slotConfig = SECTION_VIDEO_CONFIGS.find((s) => s.key === slotKey);
+        if (!slotConfig) return;
+
+        openConfirmModal({
+          title: '¿Restaurar video original?',
+          message: `Vas a restablecer el video por defecto para "${slotConfig.title}". Esta acción impacta al instante en la web pública.`,
+          confirmLabel: 'Sí, restaurar',
+          onConfirm: async () => {
+            try {
+              if (window.MeryStore && typeof window.MeryStore.restoreSectionVideo === 'function') {
+                const res = await window.MeryStore.restoreSectionVideo(slotKey);
+                const card = btn.closest('.admin-video-card');
+                const videoEl = card?.querySelector('.admin-video-player');
+                if (videoEl) {
+                  videoEl.src = res.url || slotConfig.defaultUrl;
+                  videoEl.load();
+                  videoEl.play().catch(() => {});
+                }
+                showToast(`Video de "${slotConfig.title}" restaurado`);
+              }
+            } catch (err) {
+              showToast('No se pudo restaurar el video');
+            }
+          }
+        });
+      });
+    });
+  }
+
   // 5. ITEM MODAL (Create / Edit Dish + Clean Photo Upload)
   function populateCategorySelect(selectedId) {
     if (!itemFormCategory) return;
@@ -518,6 +820,9 @@ document.addEventListener('DOMContentLoaded', () => {
       itemFormBadge.value = item.badge || '★';
       itemFormImageUrl.value = item.image || 'assets/img/ice-cube-previa.jpg';
       itemFormPreview.src = item.image || 'assets/img/ice-cube-previa.jpg';
+      const pos = item.imagePosition || '50% 50%';
+      if (itemFormImagePos) itemFormImagePos.value = pos;
+      if (itemFormPreview) itemFormPreview.style.objectPosition = pos;
       itemFormShortDesc.value = item.desc || '';
       itemFormDetailCopy.value = item.detailCopy || item.desc || '';
       itemFormPairing.value = item.pairing || '';
@@ -530,6 +835,8 @@ document.addEventListener('DOMContentLoaded', () => {
       itemFormBadge.value = '★';
       itemFormImageUrl.value = 'assets/img/ice-cube-previa.jpg';
       itemFormPreview.src = 'assets/img/ice-cube-previa.jpg';
+      if (itemFormImagePos) itemFormImagePos.value = '50% 50%';
+      if (itemFormPreview) itemFormPreview.style.objectPosition = '50% 50%';
       itemFormShortDesc.value = '';
       itemFormDetailCopy.value = '';
       itemFormPairing.value = '';
@@ -558,6 +865,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const uploadedUrl = await window.MeryStore.uploadDishImage(file);
         itemFormImageUrl.value = uploadedUrl;
         itemFormPreview.src = uploadedUrl;
+        setImagePosition(50, 50);
         showToast('Foto lista para guardar');
       } catch (_) {
         showToast('No se pudo procesar la imagen');
@@ -587,6 +895,7 @@ document.addEventListener('DOMContentLoaded', () => {
           .map((t) => t.trim())
           .filter(Boolean),
         image: itemFormImageUrl.value.trim() || 'assets/img/ice-cube-previa.jpg',
+        imagePosition: itemFormImagePos ? itemFormImagePos.value.trim() || '50% 50%' : '50% 50%',
         available: true
       };
 
@@ -629,6 +938,7 @@ document.addEventListener('DOMContentLoaded', () => {
           pairing_note: itemData.pairing,
           tags: itemData.tags,
           image_url: itemData.image,
+          image_position: itemData.imagePosition,
           available: itemData.available
         }, { onConflict: 'id' }).then(() => {}).catch(() => {});
       }
@@ -653,7 +963,10 @@ document.addEventListener('DOMContentLoaded', () => {
     categoryModal.hidden = true;
   }
 
-  document.getElementById('btnNewCategory')?.addEventListener('click', () => openCategoryModal(null));
+  document.getElementById('btnNewCategory')?.addEventListener('click', () => {
+    closeAdminMobileMenu();
+    openCategoryModal(null);
+  });
   document.getElementById('btnCloseCatModal')?.addEventListener('click', closeCategoryModal);
   document.getElementById('btnCancelCatModal')?.addEventListener('click', closeCategoryModal);
 
