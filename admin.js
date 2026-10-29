@@ -1,4 +1,4 @@
-// MERY LA PREVIA — Self-Managed Admin Panel Controller (Auth + Real-Time CRUD + Photo Upload)
+// Mery La Previa — Fast Self-Managed Admin Controller (0ms Optimistic UI + Left Sidebar + Unified Custom Popups)
 const SESSION_AUTH_KEY = 'mery_admin_authenticated_v1';
 
 function escapeHtml(str) {
@@ -18,7 +18,7 @@ function slugify(text) {
     .replace(/^-+|-+$/g, '') || `item-${Date.now()}`;
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', () => {
   const loginScreen = document.getElementById('adminLoginScreen');
   const dashboardScreen = document.getElementById('adminDashboardScreen');
   const loginForm = document.getElementById('adminLoginForm');
@@ -27,17 +27,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   const loginErrorMsg = document.getElementById('loginErrorMsg');
   const btnLogout = document.getElementById('btnLogout');
 
-  // Supabase Setup Drawer controls
-  const btnToggleSupaSetup = document.getElementById('btnToggleSupaSetup');
-  const btnOpenSupaModal = document.getElementById('btnOpenSupaModal');
-  const supaSetupDrawer = document.getElementById('supaSetupDrawer');
-  const cfgSupaUrl = document.getElementById('cfgSupaUrl');
-  const cfgSupaKey = document.getElementById('cfgSupaKey');
-  const btnSaveSupaCfg = document.getElementById('btnSaveSupaCfg');
-  const supaCfgStatus = document.getElementById('supaCfgStatus');
-  const realtimeStatusText = document.getElementById('realtimeStatusText');
-
   const categoryPillsEl = document.getElementById('adminCategoryPills');
+  const activeCategoryTitle = document.getElementById('activeCategoryTitle');
+  const activeCategoryCount = document.getElementById('activeCategoryCount');
+  const btnRenameActiveCat = document.getElementById('btnRenameActiveCat');
+  const btnDeleteActiveCat = document.getElementById('btnDeleteActiveCat');
+  const adminSearchInput = document.getElementById('adminSearchInput');
   const sectionsContainer = document.getElementById('adminSectionsContainer');
   const toastEl = document.getElementById('adminToast');
 
@@ -65,9 +60,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   const catFormSlug = document.getElementById('catFormSlug');
   const catFormTitle = document.getElementById('catFormTitle');
 
+  // Unified Custom Confirmation Modal controls
+  const confirmModal = document.getElementById('adminConfirmModal');
+  const confirmModalHeading = document.getElementById('confirmModalHeading');
+  const confirmModalMessage = document.getElementById('confirmModalMessage');
+  const btnCloseConfirmModal = document.getElementById('btnCloseConfirmModal');
+  const btnCancelConfirmModal = document.getElementById('btnCancelConfirmModal');
+  const btnAcceptConfirmModal = document.getElementById('btnAcceptConfirmModal');
+
   let menuSections = window.MeryStore.getLocalSections();
-  let activeCategoryFilter = 'all';
+  let activeCategoryId = menuSections[0]?.id || 'cocktails';
+  let searchQuery = '';
   let toastTimer = null;
+  let pendingConfirmCallback = null;
 
   function showToast(msg) {
     if (!toastEl) return;
@@ -76,84 +81,83 @@ document.addEventListener('DOMContentLoaded', async () => {
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => {
       toastEl.hidden = true;
-    }, 3200);
+    }, 2600);
   }
 
-  function updateConnectionStatusUI() {
-    const cfg = window.MeryStore.getSupabaseConfig();
-    if (cfgSupaUrl) cfgSupaUrl.value = cfg.url || '';
-    if (cfgSupaKey) cfgSupaKey.value = cfg.anonKey || '';
-    const connected = window.MeryStore.isSupabaseConfigured();
-    if (realtimeStatusText) {
-      realtimeStatusText.textContent = connected
-        ? 'SUPABASE REALTIME ACTIVO'
-        : 'MODO LOCAL EN TIEMPO REAL';
-    }
+  // 1. UNIFIED VISUAL CONFIRMATION POPUP (Custom modal for logout & delete)
+  function openConfirmModal({ title, message, confirmLabel = 'Confirmar', onConfirm }) {
+    if (!confirmModal) return;
+    if (confirmModalHeading) confirmModalHeading.textContent = title || 'Confirmar acción';
+    if (confirmModalMessage) confirmModalMessage.textContent = message || '¿Querés continuar?';
+    if (btnAcceptConfirmModal) btnAcceptConfirmModal.textContent = confirmLabel;
+    pendingConfirmCallback = typeof onConfirm === 'function' ? onConfirm : null;
+    confirmModal.hidden = false;
   }
 
-  updateConnectionStatusUI();
+  function closeConfirmModal() {
+    if (!confirmModal) return;
+    confirmModal.hidden = true;
+    pendingConfirmCallback = null;
+  }
 
-  if (btnToggleSupaSetup && supaSetupDrawer) {
-    btnToggleSupaSetup.addEventListener('click', () => {
-      supaSetupDrawer.hidden = !supaSetupDrawer.hidden;
+  if (btnCloseConfirmModal) btnCloseConfirmModal.addEventListener('click', closeConfirmModal);
+  if (btnCancelConfirmModal) btnCancelConfirmModal.addEventListener('click', closeConfirmModal);
+  if (btnAcceptConfirmModal) {
+    btnAcceptConfirmModal.addEventListener('click', () => {
+      const fn = pendingConfirmCallback;
+      closeConfirmModal();
+      if (fn) fn();
     });
   }
 
-  if (btnOpenSupaModal) {
-    btnOpenSupaModal.addEventListener('click', () => {
-      const cfg = window.MeryStore.getSupabaseConfig();
-      const url = window.prompt('Pegá la Project URL de Supabase (ej. https://xxxx.supabase.co):', cfg.url || '');
-      if (url === null) return;
-      const key = window.prompt('Pegá la anon public key de Supabase:', cfg.anonKey || '');
-      if (key === null) return;
-      window.MeryStore.setSupabaseConfig(url, key);
-      updateConnectionStatusUI();
-      if (window.MeryStore.isSupabaseConfigured()) {
-        window.MeryStore.seedSupabaseIfEmpty().then(() => {
-          showToast('✓ Conectado a Supabase y carta sincronizada');
-        });
-      } else {
-        showToast('Guardado en modo local instantáneo');
-      }
+  // Close any open modal on Escape or backdrop click
+  [itemModal, categoryModal, confirmModal].forEach((modal) => {
+    if (!modal) return;
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) modal.hidden = true;
     });
-  }
+  });
 
-  if (btnSaveSupaCfg) {
-    btnSaveSupaCfg.addEventListener('click', async () => {
-      const url = cfgSupaUrl?.value || '';
-      const key = cfgSupaKey?.value || '';
-      window.MeryStore.setSupabaseConfig(url, key);
-      updateConnectionStatusUI();
-      if (supaCfgStatus) {
-        supaCfgStatus.textContent = window.MeryStore.isSupabaseConfigured()
-          ? '✓ Conexión Supabase lista'
-          : 'Modo local activo';
-      }
-    });
-  }
-
-  // 1. AUTHENTICATION FLOW (Supabase Auth signInWithPassword — No Public Sign-Up)
-  async function checkActiveSession() {
-    const client = window.MeryStore.getClient();
-    if (client) {
-      const { data } = await client.auth.getSession();
-      if (data && data.session) {
-        enterDashboard();
-        return;
-      }
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (confirmModal && !confirmModal.hidden) closeConfirmModal();
+      else if (itemModal && !itemModal.hidden) closeItemModal();
+      else if (categoryModal && !categoryModal.hidden) closeCategoryModal();
     }
-    if (sessionStorage.getItem(SESSION_AUTH_KEY) === 'true') {
-      enterDashboard();
-    }
-  }
+  });
 
-  async function enterDashboard() {
+  // 2. AUTHENTICATION FLOW (Instant entry + custom logout confirmation)
+  function enterDashboard() {
     loginScreen.hidden = true;
     dashboardScreen.hidden = false;
-    updateConnectionStatusUI();
-    menuSections = await window.MeryStore.fetchMenuSections();
-    renderAdminFilters();
-    renderAdminSections();
+    if (!menuSections.some((s) => s.id === activeCategoryId) && menuSections.length > 0) {
+      activeCategoryId = menuSections[0].id;
+    }
+    renderAdminSidebar();
+    renderActiveCategoryWorkspace();
+
+    // Background non-blocking sync if remote backend is configured
+    window.MeryStore.fetchMenuSections().then((fresh) => {
+      if (Array.isArray(fresh) && fresh.length > 0) {
+        menuSections = fresh;
+        if (!menuSections.some((s) => s.id === activeCategoryId)) {
+          activeCategoryId = menuSections[0].id;
+        }
+        renderAdminSidebar();
+        renderActiveCategoryWorkspace();
+      }
+    }).catch(() => {});
+  }
+
+  if (sessionStorage.getItem(SESSION_AUTH_KEY) === 'true') {
+    enterDashboard();
+  } else {
+    const client = window.MeryStore.getClient();
+    if (client) {
+      client.auth.getSession().then(({ data }) => {
+        if (data && data.session) enterDashboard();
+      }).catch(() => {});
+    }
   }
 
   if (loginForm) {
@@ -163,7 +167,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const email = (loginEmail?.value || '').trim();
       const password = loginPassword?.value || '';
-
       if (!email || !password) return;
 
       const client = window.MeryStore.getClient();
@@ -171,187 +174,215 @@ document.addEventListener('DOMContentLoaded', async () => {
         const { error } = await client.auth.signInWithPassword({ email, password });
         if (error) {
           if (loginErrorMsg) {
-            loginErrorMsg.textContent = 'Credenciales inválidas. Recordá que los usuarios se dan de alta manualmente desde Supabase Auth.';
+            loginErrorMsg.textContent = 'Correo o contraseña incorrectos.';
             loginErrorMsg.hidden = false;
           }
           return;
         }
-        await window.MeryStore.seedSupabaseIfEmpty();
-        sessionStorage.setItem(SESSION_AUTH_KEY, 'true');
-        await enterDashboard();
-        return;
       }
 
-      // Local immediate preview login before Supabase URL is pasted
       sessionStorage.setItem(SESSION_AUTH_KEY, 'true');
-      await enterDashboard();
+      enterDashboard();
     });
   }
 
   if (btnLogout) {
-    btnLogout.addEventListener('click', async () => {
-      const client = window.MeryStore.getClient();
-      if (client) {
-        await client.auth.signOut().catch(() => {});
-      }
-      sessionStorage.removeItem(SESSION_AUTH_KEY);
-      dashboardScreen.hidden = true;
-      loginScreen.hidden = false;
+    btnLogout.addEventListener('click', () => {
+      openConfirmModal({
+        title: '¿Cerrar sesión?',
+        message: 'Vas a salir del panel de administración de Mery La Previa.',
+        confirmLabel: 'Sí, cerrar sesión',
+        onConfirm: () => {
+          sessionStorage.removeItem(SESSION_AUTH_KEY);
+          dashboardScreen.hidden = true;
+          loginScreen.hidden = false;
+          const client = window.MeryStore.getClient();
+          if (client) client.auth.signOut().catch(() => {});
+        }
+      });
     });
   }
 
-  // 2. REALTIME SYNC persistence helper
-  async function persistAndBroadcast(toastMessage) {
+  // 3. 0ms INSTANT OPTIMISTIC PERSISTENCE (No blocking loops!)
+  function commitChangesInstant(toastMessage) {
     window.MeryStore.saveLocalSections(menuSections, true);
-
-    const client = window.MeryStore.getClient();
-    if (client) {
-      try {
-        await window.MeryStore.seedSupabaseIfEmpty();
-      } catch (err) {
-        console.warn('Supabase sync notice:', err);
-      }
-    }
-
-    renderAdminFilters();
-    renderAdminSections();
+    renderAdminSidebar();
+    renderActiveCategoryWorkspace();
     if (toastMessage) showToast(toastMessage);
   }
 
   window.MeryStore.subscribeToMenuChanges((updatedSections) => {
     if (Array.isArray(updatedSections) && updatedSections.length > 0) {
       menuSections = updatedSections;
-      renderAdminFilters();
-      renderAdminSections();
+      if (!menuSections.some((s) => s.id === activeCategoryId)) {
+        activeCategoryId = menuSections[0]?.id || '';
+      }
+      renderAdminSidebar();
+      renderActiveCategoryWorkspace();
     }
   });
 
-  // 3. RENDER CATEGORY FILTER PILLS & SECTIONS
-  function renderAdminFilters() {
+  // 4. LEFT SIDEBAR & FOCUSED SINGLE-CATEGORY WORKSPACE
+  function renderAdminSidebar() {
     if (!categoryPillsEl) return;
-    const validIds = menuSections.map((s) => s.id);
-    if (activeCategoryFilter !== 'all' && !validIds.includes(activeCategoryFilter)) {
-      activeCategoryFilter = 'all';
-    }
 
-    categoryPillsEl.innerHTML = [
-      `<button type="button" class="admin-cat-pill ${activeCategoryFilter === 'all' ? 'active' : ''}" data-cat="all">Todas (${menuSections.length})</button>`,
-      ...menuSections.map((sec) => `
-        <button type="button" class="admin-cat-pill ${activeCategoryFilter === sec.id ? 'active' : ''}" data-cat="${escapeHtml(sec.id)}">
-          ${escapeHtml(sec.title)} (${(sec.items || []).length})
+    categoryPillsEl.innerHTML = menuSections.map((sec) => {
+      const count = (sec.items || []).length;
+      const isActive = sec.id === activeCategoryId;
+      return `
+        <button
+          type="button"
+          class="admin-cat-pill ${isActive ? 'active' : ''}"
+          data-cat="${escapeHtml(sec.id)}"
+          role="tab"
+          aria-selected="${isActive}"
+        >
+          <span>${escapeHtml(sec.title)}</span>
+          <span class="admin-cat-pill-count">${count}</span>
         </button>
-      `)
-    ].join('');
+      `;
+    }).join('');
 
     categoryPillsEl.querySelectorAll('.admin-cat-pill').forEach((btn) => {
       btn.addEventListener('click', () => {
-        activeCategoryFilter = btn.getAttribute('data-cat') || 'all';
-        renderAdminFilters();
-        renderAdminSections();
+        activeCategoryId = btn.getAttribute('data-cat') || menuSections[0]?.id;
+        renderAdminSidebar();
+        renderActiveCategoryWorkspace();
       });
     });
   }
 
-  function renderAdminSections() {
+  if (adminSearchInput) {
+    adminSearchInput.addEventListener('input', () => {
+      searchQuery = adminSearchInput.value.trim().toLowerCase();
+      renderActiveCategoryWorkspace();
+    });
+  }
+
+  function renderActiveCategoryWorkspace() {
     if (!sectionsContainer) return;
-    const visibleSections = activeCategoryFilter === 'all'
-      ? menuSections
-      : menuSections.filter((s) => s.id === activeCategoryFilter);
+    const sec = menuSections.find((s) => s.id === activeCategoryId) || menuSections[0];
 
-    sectionsContainer.innerHTML = visibleSections.map((sec) => `
-      <article class="admin-section-block" data-sec-id="${escapeHtml(sec.id)}">
-        <div class="admin-section-header">
-          <div class="admin-section-title-group">
-            <h2 class="admin-section-title">${escapeHtml(sec.title)}</h2>
-            <span class="admin-section-count">${(sec.items || []).length} ítems</span>
-          </div>
-          <div class="admin-topbar-actions">
-            <button type="button" class="admin-btn-outline" data-action="add-in-cat" data-sec-id="${escapeHtml(sec.id)}">
-              + Agregar en ${escapeHtml(sec.title)}
-            </button>
-            <button type="button" class="admin-btn-outline" data-action="rename-cat" data-sec-id="${escapeHtml(sec.id)}">
-              Renombrar
-            </button>
-            ${menuSections.length > 1 ? `
-              <button type="button" class="admin-btn-outline admin-btn-danger" data-action="delete-cat" data-sec-id="${escapeHtml(sec.id)}">
-                Eliminar Categoría
-              </button>
-            ` : ''}
-          </div>
+    if (!sec) {
+      if (activeCategoryTitle) activeCategoryTitle.textContent = 'Sin categorías';
+      if (activeCategoryCount) activeCategoryCount.textContent = 'Creá una categoría desde el panel izquierdo';
+      sectionsContainer.innerHTML = '';
+      return;
+    }
+
+    activeCategoryId = sec.id;
+    const allItems = sec.items || [];
+    const filteredItems = searchQuery
+      ? allItems.filter((it) =>
+          (it.name || '').toLowerCase().includes(searchQuery) ||
+          (it.desc || '').toLowerCase().includes(searchQuery)
+        )
+      : allItems;
+
+    if (activeCategoryTitle) activeCategoryTitle.textContent = sec.title;
+    if (activeCategoryCount) {
+      activeCategoryCount.textContent = `${allItems.length} ${allItems.length === 1 ? 'ítem cargado' : 'ítems cargados'} en esta categoría`;
+    }
+    if (btnDeleteActiveCat) {
+      btnDeleteActiveCat.hidden = menuSections.length <= 1;
+    }
+
+    if (filteredItems.length === 0) {
+      sectionsContainer.innerHTML = `
+        <div class="admin-empty-state">
+          <p>${searchQuery ? 'No se encontraron ítems con esa búsqueda.' : 'Todavía no hay ítems en esta categoría.'}</p>
+          <button type="button" class="admin-btn-gold" id="btnEmptyAddDish">+ Agregar primer ítem</button>
         </div>
+      `;
+      document.getElementById('btnEmptyAddDish')?.addEventListener('click', () => openItemModal(sec.id, null));
+      return;
+    }
 
-        <div class="admin-items-grid">
-          ${(sec.items || []).map((item) => `
-            <div class="admin-item-card ${item.available === false ? 'unavailable' : ''}" data-item-id="${escapeHtml(item.id)}">
-              <div class="admin-item-top">
-                <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" class="admin-item-thumb" />
-                <div class="admin-item-info">
-                  <h3 class="admin-item-title">${escapeHtml(item.name)} <span style="color:var(--q-gold)">${escapeHtml(item.badge || '★')}</span></h3>
-                  <p class="admin-item-desc">${escapeHtml(item.desc)}</p>
-                </div>
+    sectionsContainer.innerHTML = `
+      <div class="admin-items-grid">
+        ${filteredItems.map((item) => `
+          <article class="admin-item-card ${item.available === false ? 'unavailable' : ''}" data-item-id="${escapeHtml(item.id)}">
+            <div class="admin-item-top">
+              <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" class="admin-item-thumb" decoding="async" />
+              <div class="admin-item-info">
+                <h3 class="admin-item-title">
+                  ${escapeHtml(item.name)}
+                  <span class="admin-item-badge">${escapeHtml(item.badge || '★')}</span>
+                </h3>
+                <p class="admin-item-desc">${escapeHtml(item.desc)}</p>
               </div>
+            </div>
 
-              <div class="admin-quick-price-row">
-                <span class="admin-quick-price-label">Precio:</span>
+            <div class="admin-quick-price-row">
+              <div class="admin-quick-price-group">
+                <span class="admin-quick-price-label">Precio</span>
                 <input
                   type="text"
                   class="admin-quick-price-input"
                   value="${escapeHtml(item.price)}"
-                  data-price-input="${escapeHtml(item.id)}"
                   aria-label="Precio de ${escapeHtml(item.name)}"
                 />
-                <button
-                  type="button"
-                  class="admin-btn-quick-save"
-                  data-action="quick-price"
-                  data-sec-id="${escapeHtml(sec.id)}"
-                  data-item-id="${escapeHtml(item.id)}"
-                >
-                  Guardar Precio
-                </button>
               </div>
+              <button
+                type="button"
+                class="admin-btn-quick-save"
+                data-action="quick-price"
+                data-sec-id="${escapeHtml(sec.id)}"
+                data-item-id="${escapeHtml(item.id)}"
+              >
+                Guardar precio
+              </button>
+            </div>
 
-              <div class="admin-item-actions">
+            <div class="admin-item-actions">
+              <button
+                type="button"
+                class="admin-availability-btn ${item.available !== false ? 'on' : ''}"
+                data-action="toggle-avail"
+                data-sec-id="${escapeHtml(sec.id)}"
+                data-item-id="${escapeHtml(item.id)}"
+              >
+                ${item.available !== false ? '● Disponible' : '○ Agotado'}
+              </button>
+
+              <div style="display:flex; gap:8px;">
                 <button
                   type="button"
-                  class="admin-availability-btn ${item.available !== false ? 'on' : ''}"
-                  data-action="toggle-avail"
+                  class="admin-btn-outline"
+                  data-action="edit-item"
                   data-sec-id="${escapeHtml(sec.id)}"
                   data-item-id="${escapeHtml(item.id)}"
                 >
-                  ${item.available !== false ? '● Disponible' : '○ Agotado / Oculto'}
+                  Editar
                 </button>
-
-                <div style="display:flex; gap:6px;">
-                  <button
-                    type="button"
-                    class="admin-btn-outline"
-                    data-action="edit-item"
-                    data-sec-id="${escapeHtml(sec.id)}"
-                    data-item-id="${escapeHtml(item.id)}"
-                  >
-                    Editar / Foto
-                  </button>
-                  <button
-                    type="button"
-                    class="admin-btn-outline admin-btn-danger"
-                    data-action="delete-item"
-                    data-sec-id="${escapeHtml(sec.id)}"
-                    data-item-id="${escapeHtml(item.id)}"
-                  >
-                    Borrar
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  class="admin-btn-outline admin-btn-danger"
+                  data-action="delete-item"
+                  data-sec-id="${escapeHtml(sec.id)}"
+                  data-item-id="${escapeHtml(item.id)}"
+                >
+                  Eliminar
+                </button>
               </div>
             </div>
-          `).join('')}
-        </div>
-      </article>
-    `).join('');
+          </article>
+        `).join('')}
+      </div>
+    `;
 
-    // Wire actions inside sectionsContainer
+    // Instant Quick Price Save (also supports Enter key inside the price input)
+    sectionsContainer.querySelectorAll('.admin-quick-price-input').forEach((input) => {
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          input.closest('.admin-quick-price-row')?.querySelector('[data-action="quick-price"]')?.click();
+        }
+      });
+    });
+
     sectionsContainer.querySelectorAll('[data-action="quick-price"]').forEach((btn) => {
-      btn.addEventListener('click', async () => {
+      btn.addEventListener('click', () => {
         const secId = btn.getAttribute('data-sec-id');
         const itemId = btn.getAttribute('data-item-id');
         const card = btn.closest('.admin-item-card');
@@ -359,39 +390,46 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!input) return;
 
         let rawPrice = input.value.trim();
-        if (rawPrice && !rawPrice.startsWith('$')) rawPrice = `$${rawPrice}`;
+        if (!rawPrice) return;
+        if (!rawPrice.startsWith('$')) rawPrice = `$${rawPrice}`;
+        input.value = rawPrice;
 
-        const sec = menuSections.find((s) => s.id === secId);
-        const item = sec?.items.find((i) => i.id === itemId);
-        if (item && rawPrice) {
-          item.price = rawPrice;
-          const client = window.MeryStore.getClient();
-          if (client) {
-            await client.from('menu_items').update({ price: rawPrice, updated_at: new Date().toISOString() }).eq('id', itemId);
-          }
-          await persistAndBroadcast(`✓ Precio de "${item.name}" actualizado a ${rawPrice} en tiempo real`);
+        const targetSec = menuSections.find((s) => s.id === secId);
+        const item = targetSec?.items.find((i) => i.id === itemId);
+        if (!item) return;
+
+        item.price = rawPrice;
+        window.MeryStore.saveLocalSections(menuSections, true);
+        showToast(`Precio de "${item.name}" actualizado a ${rawPrice}`);
+
+        const client = window.MeryStore.getClient();
+        if (client) {
+          client.from('menu_items').update({ price: rawPrice, updated_at: new Date().toISOString() }).eq('id', itemId).then(() => {}).catch(() => {});
         }
       });
     });
 
     sectionsContainer.querySelectorAll('[data-action="toggle-avail"]').forEach((btn) => {
-      btn.addEventListener('click', async () => {
+      btn.addEventListener('click', () => {
         const secId = btn.getAttribute('data-sec-id');
         const itemId = btn.getAttribute('data-item-id');
-        const sec = menuSections.find((s) => s.id === secId);
-        const item = sec?.items.find((i) => i.id === itemId);
+        const targetSec = menuSections.find((s) => s.id === secId);
+        const item = targetSec?.items.find((i) => i.id === itemId);
         if (!item) return;
 
         item.available = item.available === false;
+        const card = btn.closest('.admin-item-card');
+        if (card) card.classList.toggle('unavailable', !item.available);
+        btn.classList.toggle('on', item.available);
+        btn.textContent = item.available ? '● Disponible' : '○ Agotado';
+
+        window.MeryStore.saveLocalSections(menuSections, true);
+        showToast(item.available ? `"${item.name}" disponible en la carta` : `"${item.name}" marcado como agotado`);
+
         const client = window.MeryStore.getClient();
         if (client) {
-          await client.from('menu_items').update({ available: item.available, updated_at: new Date().toISOString() }).eq('id', itemId);
+          client.from('menu_items').update({ available: item.available, updated_at: new Date().toISOString() }).eq('id', itemId).then(() => {}).catch(() => {});
         }
-        await persistAndBroadcast(
-          item.available
-            ? `✓ "${item.name}" activado en la carta`
-            : `"${item.name}" marcado como agotado`
-        );
       });
     });
 
@@ -399,62 +437,68 @@ document.addEventListener('DOMContentLoaded', async () => {
       btn.addEventListener('click', () => {
         const secId = btn.getAttribute('data-sec-id');
         const itemId = btn.getAttribute('data-item-id');
-        const sec = menuSections.find((s) => s.id === secId);
-        const item = sec?.items.find((i) => i.id === itemId);
-        if (sec && item) openItemModal(sec.id, item);
+        const targetSec = menuSections.find((s) => s.id === secId);
+        const item = targetSec?.items.find((i) => i.id === itemId);
+        if (targetSec && item) openItemModal(targetSec.id, item);
       });
     });
 
     sectionsContainer.querySelectorAll('[data-action="delete-item"]').forEach((btn) => {
-      btn.addEventListener('click', async () => {
+      btn.addEventListener('click', () => {
         const secId = btn.getAttribute('data-sec-id');
         const itemId = btn.getAttribute('data-item-id');
-        const sec = menuSections.find((s) => s.id === secId);
-        const item = sec?.items.find((i) => i.id === itemId);
-        if (!sec || !item) return;
-        if (!window.confirm(`¿Eliminar "${item.name}" de la carta?`)) return;
+        const targetSec = menuSections.find((s) => s.id === secId);
+        const item = targetSec?.items.find((i) => i.id === itemId);
+        if (!targetSec || !item) return;
 
-        sec.items = sec.items.filter((i) => i.id !== itemId);
-        const client = window.MeryStore.getClient();
-        if (client) {
-          await client.from('menu_items').delete().eq('id', itemId);
-        }
-        await persistAndBroadcast(`"${item.name}" eliminado de la carta`);
-      });
-    });
-
-    sectionsContainer.querySelectorAll('[data-action="add-in-cat"]').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        openItemModal(btn.getAttribute('data-sec-id'), null);
-      });
-    });
-
-    sectionsContainer.querySelectorAll('[data-action="rename-cat"]').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const secId = btn.getAttribute('data-sec-id');
-        const sec = menuSections.find((s) => s.id === secId);
-        if (sec) openCategoryModal(sec);
-      });
-    });
-
-    sectionsContainer.querySelectorAll('[data-action="delete-cat"]').forEach((btn) => {
-      btn.addEventListener('click', async () => {
-        const secId = btn.getAttribute('data-sec-id');
-        const sec = menuSections.find((s) => s.id === secId);
-        if (!sec) return;
-        if (!window.confirm(`¿Eliminar la categoría "${sec.title}" y sus platos?`)) return;
-
-        menuSections = menuSections.filter((s) => s.id !== secId);
-        const client = window.MeryStore.getClient();
-        if (client) {
-          await client.from('menu_categories').delete().eq('slug', secId);
-        }
-        await persistAndBroadcast(`Categoría "${sec.title}" eliminada`);
+        openConfirmModal({
+          title: '¿Eliminar ítem de la carta?',
+          message: `Vas a eliminar "${item.name}" de la categoría "${targetSec.title}". Esta acción impacta al instante en la carta pública.`,
+          confirmLabel: 'Sí, eliminar ítem',
+          onConfirm: () => {
+            targetSec.items = targetSec.items.filter((i) => i.id !== itemId);
+            commitChangesInstant(`"${item.name}" fue eliminado`);
+            const client = window.MeryStore.getClient();
+            if (client) {
+              client.from('menu_items').delete().eq('id', itemId).then(() => {}).catch(() => {});
+            }
+          }
+        });
       });
     });
   }
 
-  // 4. ITEM MODAL (Create / Edit Dish + Photo Upload)
+  // Active Category Header Actions
+  if (btnRenameActiveCat) {
+    btnRenameActiveCat.addEventListener('click', () => {
+      const sec = menuSections.find((s) => s.id === activeCategoryId);
+      if (sec) openCategoryModal(sec);
+    });
+  }
+
+  if (btnDeleteActiveCat) {
+    btnDeleteActiveCat.addEventListener('click', () => {
+      const sec = menuSections.find((s) => s.id === activeCategoryId);
+      if (!sec || menuSections.length <= 1) return;
+
+      openConfirmModal({
+        title: '¿Eliminar categoría completa?',
+        message: `Vas a eliminar la categoría "${sec.title}" junto con sus ${(sec.items || []).length} ítems.`,
+        confirmLabel: 'Sí, eliminar categoría',
+        onConfirm: () => {
+          menuSections = menuSections.filter((s) => s.id !== sec.id);
+          activeCategoryId = menuSections[0]?.id || '';
+          commitChangesInstant(`Categoría "${sec.title}" eliminada`);
+          const client = window.MeryStore.getClient();
+          if (client) {
+            client.from('menu_categories').delete().eq('slug', sec.id).then(() => {}).catch(() => {});
+          }
+        }
+      });
+    });
+  }
+
+  // 5. ITEM MODAL (Create / Edit Dish + Clean Photo Upload)
   function populateCategorySelect(selectedId) {
     if (!itemFormCategory) return;
     itemFormCategory.innerHTML = menuSections
@@ -463,7 +507,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function openItemModal(defaultCatId, item) {
-    const targetCat = defaultCatId || (menuSections[0] && menuSections[0].id) || 'cocktails';
+    const targetCat = defaultCatId || activeCategoryId || menuSections[0]?.id || 'cocktails';
     populateCategorySelect(targetCat);
 
     if (item) {
@@ -479,7 +523,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       itemFormPairing.value = item.pairing || '';
       itemFormTags.value = Array.isArray(item.tags) ? item.tags.join(', ') : '';
     } else {
-      itemModalHeading.textContent = 'Nuevo Plato / Trago / Vino';
+      itemModalHeading.textContent = 'Agregar nuevo ítem';
       itemFormId.value = '';
       itemFormPrice.value = '';
       itemFormName.value = '';
@@ -489,9 +533,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       itemFormShortDesc.value = '';
       itemFormDetailCopy.value = '';
       itemFormPairing.value = '';
-      itemFormTags.value = 'Especialidad de la Casa, Mery La Previa';
+      itemFormTags.value = 'Especialidad de la casa, Mery La Previa';
     }
 
+    if (itemFormFile) itemFormFile.value = '';
     itemModal.hidden = false;
   }
 
@@ -500,48 +545,28 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   document.getElementById('btnNewDish')?.addEventListener('click', () => {
-    const catId = activeCategoryFilter === 'all' ? menuSections[0]?.id : activeCategoryFilter;
-    openItemModal(catId, null);
+    openItemModal(activeCategoryId, null);
   });
   document.getElementById('btnCloseItemModal')?.addEventListener('click', closeItemModal);
   document.getElementById('btnCancelItemModal')?.addEventListener('click', closeItemModal);
-
-  if (itemFormImageUrl) {
-    itemFormImageUrl.addEventListener('input', () => {
-      if (itemFormImageUrl.value.trim()) {
-        itemFormPreview.src = itemFormImageUrl.value.trim();
-      }
-    });
-  }
-
-  document.querySelectorAll('.admin-preset-chip').forEach((chip) => {
-    chip.addEventListener('click', () => {
-      const img = chip.getAttribute('data-img');
-      if (img) {
-        itemFormImageUrl.value = img;
-        itemFormPreview.src = img;
-      }
-    });
-  });
 
   if (itemFormFile) {
     itemFormFile.addEventListener('change', async (e) => {
       const file = e.target.files && e.target.files[0];
       if (!file) return;
-      showToast('Subiendo y optimizando foto...');
       try {
         const uploadedUrl = await window.MeryStore.uploadDishImage(file);
         itemFormImageUrl.value = uploadedUrl;
         itemFormPreview.src = uploadedUrl;
-        showToast('✓ Foto cargada lista para guardar');
-      } catch (err) {
-        showToast('No se pudo cargar la imagen');
+        showToast('Foto lista para guardar');
+      } catch (_) {
+        showToast('No se pudo procesar la imagen');
       }
     });
   }
 
   if (itemForm) {
-    itemForm.addEventListener('submit', async (e) => {
+    itemForm.addEventListener('submit', (e) => {
       e.preventDefault();
       const targetCatId = itemFormCategory.value;
       const existingId = itemFormId.value.trim();
@@ -565,31 +590,59 @@ document.addEventListener('DOMContentLoaded', async () => {
         available: true
       };
 
-      // Remove from old category if moved
-      menuSections.forEach((sec) => {
-        if (existingId) {
-          sec.items = (sec.items || []).filter((i) => i.id !== existingId);
-        }
-      });
-
       const targetSec = menuSections.find((s) => s.id === targetCatId);
-      if (targetSec) {
+      if (existingId) {
+        let updatedInPlace = false;
+        menuSections.forEach((sec) => {
+          const idx = (sec.items || []).findIndex((i) => i.id === existingId);
+          if (idx !== -1) {
+            if (sec.id === targetCatId) {
+              itemData.available = sec.items[idx].available !== false;
+              sec.items[idx] = itemData;
+              updatedInPlace = true;
+            } else {
+              sec.items.splice(idx, 1);
+            }
+          }
+        });
+        if (!updatedInPlace && targetSec) {
+          targetSec.items.push(itemData);
+        }
+      } else if (targetSec) {
         targetSec.items.push(itemData);
       }
 
+      activeCategoryId = targetCatId;
       closeItemModal();
-      await persistAndBroadcast(`✓ "${itemData.name}" publicado en tiempo real`);
+      commitChangesInstant(`"${itemData.name}" guardado en la carta`);
+
+      const client = window.MeryStore.getClient();
+      if (client) {
+        client.from('menu_items').upsert({
+          id: itemData.id,
+          category_id: targetCatId,
+          name: itemData.name,
+          badge: itemData.badge,
+          price: itemData.price,
+          short_desc: itemData.desc,
+          detail_copy: itemData.detailCopy,
+          pairing_note: itemData.pairing,
+          tags: itemData.tags,
+          image_url: itemData.image,
+          available: itemData.available
+        }, { onConflict: 'id' }).then(() => {}).catch(() => {});
+      }
     });
   }
 
-  // 5. CATEGORY MODAL (Create / Rename Category)
+  // 6. CATEGORY MODAL (Create / Rename Category)
   function openCategoryModal(sec) {
     if (sec) {
-      catModalHeading.textContent = 'Renombrar Categoría';
+      catModalHeading.textContent = 'Renombrar categoría';
       catFormSlug.value = sec.id;
       catFormTitle.value = sec.title;
     } else {
-      catModalHeading.textContent = 'Nueva Categoría';
+      catModalHeading.textContent = 'Nueva categoría';
       catFormSlug.value = '';
       catFormTitle.value = '';
     }
@@ -605,30 +658,38 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('btnCancelCatModal')?.addEventListener('click', closeCategoryModal);
 
   if (categoryForm) {
-    categoryForm.addEventListener('submit', async (e) => {
+    categoryForm.addEventListener('submit', (e) => {
       e.preventDefault();
       const existingSlug = catFormSlug.value.trim();
       const title = catFormTitle.value.trim();
       if (!title) return;
 
+      let targetSlug = existingSlug;
       if (existingSlug) {
         const sec = menuSections.find((s) => s.id === existingSlug);
         if (sec) sec.title = title;
       } else {
-        const newSlug = slugify(title);
+        targetSlug = slugify(title);
         menuSections.push({
-          id: newSlug,
+          id: targetSlug,
           title,
           sort_order: menuSections.length + 1,
           items: []
         });
-        activeCategoryFilter = newSlug;
+        activeCategoryId = targetSlug;
       }
 
       closeCategoryModal();
-      await persistAndBroadcast(`✓ Categoría "${title}" actualizada en vivo`);
+      commitChangesInstant(`Categoría "${title}" guardada`);
+
+      const client = window.MeryStore.getClient();
+      if (client && targetSlug) {
+        client.from('menu_categories').upsert({
+          slug: targetSlug,
+          title,
+          sort_order: menuSections.length
+        }, { onConflict: 'slug' }).then(() => {}).catch(() => {});
+      }
     });
   }
-
-  await checkActiveSession();
 });

@@ -4,10 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="dark" />
-  <title>MERY LA PREVIA — Panel Autoadministrable</title>
+  <title>Mery La Previa — Panel de Administración</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Forum&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="admin.css" />
 </head>
 <body>
@@ -17,40 +17,38 @@
           (No video playback, never covers the neon sign, no user sign-up)
        ====================================================================== -->
   <section id="adminLoginScreen" class="admin-login-screen" aria-label="Acceso Administrativo Mery La Previa">
-    <!-- Top Final Neon Frame Stage (Never covered by the form) -->
     <div class="admin-neon-stage">
       <img
         src="assets/img/neon-wall-mery.jpg"
-        alt="Cartel Luminoso MERY LA PREVIA"
+        alt="Cartel Luminoso Mery La Previa"
         class="admin-neon-frame-img"
       />
       <div class="admin-neon-vignette" aria-hidden="true"></div>
     </div>
 
-    <!-- Bottom Login Grid Container (Positioned cleanly below the neon sign) -->
     <div class="admin-login-grid-wrap">
       <div class="admin-login-card">
         <div class="admin-diamond-header">
           <span class="diamond-line"></span>
           <span class="diamond-dot"></span>
-          <h1>ACCESO STAFF • LA CARTA</h1>
+          <h1>Acceso al panel de la carta</h1>
           <span class="diamond-dot"></span>
           <span class="diamond-line"></span>
         </div>
 
         <p class="admin-login-subtitle">
-          Ingresá con tu usuario asignado para actualizar precios, platos, fotos y categorías en tiempo real.
+          Ingresá con tu cuenta asignada para actualizar precios, platos, fotos y categorías en tiempo real.
         </p>
 
         <form id="adminLoginForm" class="admin-login-form" autocomplete="on">
           <div class="admin-login-inputs-grid">
             <div class="admin-field">
-              <label for="loginEmail">Email del Staff</label>
+              <label for="loginEmail">Correo electrónico</label>
               <input
                 type="email"
                 id="loginEmail"
                 class="admin-input"
-                placeholder="staff@merylaprevia.com"
+                placeholder="nombre@merylaprevia.com"
                 required
                 autocomplete="username"
               />
@@ -73,92 +71,107 @@
 
           <button type="submit" id="btnLoginSubmit" class="admin-enter-btn">
             <span class="intro-diamond"></span>
-            <span>INGRESAR AL PANEL</span>
+            <span>Ingresar al panel</span>
             <span class="intro-diamond"></span>
           </button>
         </form>
 
         <div class="admin-login-footer">
-          <button type="button" id="btnToggleSupaSetup" class="admin-link-subtle">
-            ⚙ Configurar conexión Supabase
-          </button>
-          <a href="index.html" class="admin-link-subtle">← Volver a la Carta Pública</a>
-        </div>
-
-        <!-- Collapsible Supabase Project Credentials Panel -->
-        <div id="supaSetupDrawer" class="admin-supa-drawer" hidden>
-          <p class="admin-supa-help">
-            Pegá la <strong>Project URL</strong> y <strong>anon public key</strong> de tu proyecto Supabase de Mery La Previa (o dejalas fijas en <code>supabase-config.js</code>).
-          </p>
-          <div class="admin-login-inputs-grid">
-            <input type="url" id="cfgSupaUrl" class="admin-input" placeholder="https://tu-proyecto.supabase.co" />
-            <input type="text" id="cfgSupaKey" class="admin-input" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI..." />
-          </div>
-          <div class="admin-supa-actions">
-            <button type="button" id="btnSaveSupaCfg" class="admin-btn-gold">Guardar Conexión</button>
-            <span id="supaCfgStatus" class="admin-supa-status"></span>
-          </div>
+          <a href="index.html" class="admin-link-subtle">← Volver a la carta pública</a>
         </div>
       </div>
     </div>
   </section>
 
   <!-- ======================================================================
-       2. SELF-MANAGED ADMIN PANEL (Real-Time Menu, Prices, Categories & Photos)
+       2. SELF-MANAGED ADMIN WORKSPACE (Left Sidebar + Ordered Category Panel)
        ====================================================================== -->
-  <main id="adminDashboardScreen" class="admin-dashboard" hidden>
-    <header class="admin-topbar">
-      <div class="admin-topbar-brand">
-        <span class="admin-logo">MERY LA PREVIA</span>
-        <span id="realtimeBadge" class="admin-live-pill">
-          <span class="live-dot"></span>
-          <span id="realtimeStatusText">EN VIVO • TIEMPO REAL</span>
-        </span>
+  <div id="adminDashboardScreen" class="admin-shell" hidden>
+    <!-- Left Sidebar -->
+    <aside id="adminSidebar" class="admin-sidebar" aria-label="Menú lateral de categorías">
+      <div class="admin-sidebar-top">
+        <div class="admin-brand-box">
+          <div class="admin-brand-row">
+            <span class="admin-brand-name">Mery La Previa</span>
+            <span class="admin-live-badge" title="Los cambios impactan al instante en la carta">
+              <span class="live-dot"></span>
+              <span>En vivo</span>
+            </span>
+          </div>
+          <span class="admin-brand-sub">Gestión de carta y precios</span>
+        </div>
+
+        <div class="admin-sidebar-section">
+          <div class="admin-sidebar-label-row">
+            <span class="admin-sidebar-label">Categorías</span>
+          </div>
+          <nav id="adminCategoryPills" class="admin-sidebar-nav" role="tablist" aria-label="Categorías de la carta"></nav>
+
+          <button type="button" id="btnNewCategory" class="admin-sidebar-add-btn">
+            <span>+ Nueva categoría</span>
+          </button>
+        </div>
       </div>
 
-      <div class="admin-topbar-actions">
-        <a href="index.html" target="_blank" rel="noopener" class="admin-btn-outline">
-          Ver Carta en Vivo ↗
+      <div class="admin-sidebar-footer">
+        <a href="index.html" target="_blank" rel="noopener" class="admin-sidebar-link">
+          <span>Ver carta pública</span>
+          <span aria-hidden="true">↗</span>
         </a>
-        <button type="button" id="btnOpenSupaModal" class="admin-btn-outline">
-          Base de Datos
-        </button>
-        <button type="button" id="btnLogout" class="admin-btn-outline admin-btn-danger">
-          Cerrar Sesión
+        <button type="button" id="btnLogout" class="admin-sidebar-logout">
+          <span>Cerrar sesión</span>
         </button>
       </div>
-    </header>
+    </aside>
 
-    <!-- Toolbar: Category Filter + Quick Actions -->
-    <section class="admin-toolbar">
-      <div class="admin-category-bar">
-        <div id="adminCategoryPills" class="admin-pills-wrap" role="tablist"></div>
-        <button type="button" id="btnNewCategory" class="admin-pill-add">
-          + Nueva Categoría
-        </button>
-      </div>
+    <!-- Right Main Workspace -->
+    <main class="admin-main">
+      <header class="admin-main-header">
+        <div class="admin-main-title-wrap">
+          <h2 id="activeCategoryTitle" class="admin-main-title">Cocktails 11:11</h2>
+          <span id="activeCategoryCount" class="admin-main-subtitle">3 ítems en esta categoría</span>
+        </div>
 
-      <div class="admin-primary-actions">
-        <button type="button" id="btnNewDish" class="admin-btn-gold">
-          + Agregar Plato / Trago / Vino
-        </button>
-      </div>
-    </section>
+        <div class="admin-main-actions">
+          <div class="admin-search-wrap">
+            <input
+              type="search"
+              id="adminSearchInput"
+              class="admin-search-input"
+              placeholder="Buscar plato o bebida..."
+              aria-label="Buscar plato o bebida"
+            />
+          </div>
 
-    <!-- Toast Notification Banner for Instant Feedback -->
-    <div id="adminToast" class="admin-toast" role="status" aria-live="polite" hidden></div>
+          <button type="button" id="btnRenameActiveCat" class="admin-btn-outline">
+            Renombrar categoría
+          </button>
+          <button type="button" id="btnDeleteActiveCat" class="admin-btn-outline admin-btn-danger">
+            Eliminar categoría
+          </button>
+          <button type="button" id="btnNewDish" class="admin-btn-gold">
+            + Agregar ítem
+          </button>
+        </div>
+      </header>
 
-    <!-- Menu Sections & Items Grid -->
-    <section id="adminSectionsContainer" class="admin-sections-container"></section>
-  </main>
+      <section id="adminSectionsContainer" class="admin-sections-container"></section>
+    </main>
+  </div>
+
+  <!-- Toast Notification Banner -->
+  <div id="adminToast" class="admin-toast" role="status" aria-live="polite" hidden></div>
 
   <!-- ======================================================================
-       3. MODAL: CREATE / EDIT DISH OR DRINK (With Photo Upload & Rich Copy)
+       3. POPUP MODAL: CREATE / EDIT DISH OR DRINK (Clean Photo Upload, No Presets)
        ====================================================================== -->
   <div id="adminItemModal" class="admin-modal-backdrop" hidden role="dialog" aria-modal="true" aria-labelledby="itemModalHeading">
     <div class="admin-modal-card">
       <div class="admin-modal-header">
-        <h2 id="itemModalHeading">Agregar Ítem a la Carta</h2>
+        <div class="admin-modal-title-group">
+          <span class="diamond-dot"></span>
+          <h2 id="itemModalHeading">Agregar ítem a la carta</h2>
+        </div>
         <button type="button" id="btnCloseItemModal" class="admin-modal-close" aria-label="Cerrar">✕</button>
       </div>
 
@@ -179,94 +192,116 @@
 
         <div class="admin-form-grid-2">
           <div class="admin-field">
-            <label for="itemFormName">Nombre del Plato / Trago / Vino</label>
+            <label for="itemFormName">Nombre del plato, trago o vino</label>
             <input type="text" id="itemFormName" class="admin-input" placeholder="Ej. Ojo de Bife en Bandeja Imperial" required />
           </div>
 
           <div class="admin-field">
-            <label for="itemFormBadge">Insignia Destacada</label>
+            <label for="itemFormBadge">Distinción en la carta</label>
             <select id="itemFormBadge" class="admin-input">
-              <option value="★">★ Recomendado de la Casa</option>
+              <option value="★">★ Recomendado de la casa</option>
               <option value="◇">◇ Especialidad 11:11</option>
             </select>
           </div>
         </div>
 
-        <!-- Photo Upload + Gallery Selector -->
         <div class="admin-field">
-          <label>Foto del Plato / Trago</label>
+          <label>Foto del ítem</label>
           <div class="admin-photo-uploader">
             <img id="itemFormPreview" src="assets/img/ice-cube-previa.jpg" alt="Vista previa" class="admin-photo-preview" />
             <div class="admin-photo-controls">
+              <p class="admin-photo-hint">
+                Seleccioná una imagen desde tu celular o computadora. Se ajusta y optimiza automáticamente para la carta.
+              </p>
               <label for="itemFormFile" class="admin-btn-outline admin-upload-label">
-                📷 Subir Foto desde el Celu o PC
+                Subir o cambiar foto
               </label>
               <input type="file" id="itemFormFile" accept="image/*" hidden />
-              <input type="text" id="itemFormImageUrl" class="admin-input" placeholder="Ruta o URL de foto (ej. assets/img/steak-flash.jpg)" />
-              <div class="admin-preset-photos">
-                <span>Fotos rápidas:</span>
-                <button type="button" class="admin-preset-chip" data-img="assets/img/ice-cube-previa.jpg">Cocktail Hielo</button>
-                <button type="button" class="admin-preset-chip" data-img="assets/img/cocktails-neon.jpg">Barra Neón</button>
-                <button type="button" class="admin-preset-chip" data-img="assets/img/brand-tutto-passa.jpg">Spritz</button>
-                <button type="button" class="admin-preset-chip" data-img="assets/img/steak-flash.jpg">Carnes</button>
-                <button type="button" class="admin-preset-chip" data-img="assets/img/wine-mery.jpg">Blanc de Nuit</button>
-                <button type="button" class="admin-preset-chip" data-img="assets/img/bottle-hero-isolated.jpg">Malbec</button>
-              </div>
+              <input type="hidden" id="itemFormImageUrl" value="assets/img/ice-cube-previa.jpg" />
             </div>
           </div>
         </div>
 
         <div class="admin-field">
-          <label for="itemFormShortDesc">Descripción Corta (Se ve en la lista general de la carta)</label>
+          <label for="itemFormShortDesc">Descripción corta (se muestra en el listado de la carta)</label>
           <textarea id="itemFormShortDesc" class="admin-input admin-textarea" rows="2" placeholder="Ingredientes principales y presentación..." required></textarea>
         </div>
 
         <div class="admin-field">
-          <label for="itemFormDetailCopy">Copy Extendido &amp; Historia (Se abre al hacer clic en el plato)</label>
+          <label for="itemFormDetailCopy">Detalle y copy extendido (se muestra al abrir la ventana del plato)</label>
           <textarea id="itemFormDetailCopy" class="admin-input admin-textarea" rows="3" placeholder="Contá el ritual de servicio, notas de cata, cocción o por qué es especial..."></textarea>
         </div>
 
         <div class="admin-form-grid-2">
           <div class="admin-field">
-            <label for="itemFormPairing">Sugerencia de Maridaje / Momento</label>
-            <input type="text" id="itemFormPairing" class="admin-input" placeholder="Ej. Ideal para compartir entre 2 o 3 personas con un Malbec." />
+            <label for="itemFormPairing">Sugerencia de maridaje o momento</label>
+            <input type="text" id="itemFormPairing" class="admin-input" placeholder="Ej. Ideal para compartir entre 2 o 3 personas." />
           </div>
 
           <div class="admin-field">
             <label for="itemFormTags">Etiquetas (separadas por coma)</label>
-            <input type="text" id="itemFormTags" class="admin-input" placeholder="Para Compartir, Brasas, Autor 11:11" />
+            <input type="text" id="itemFormTags" class="admin-input" placeholder="Para compartir, Brasas, Autor 11:11" />
           </div>
         </div>
 
         <div class="admin-modal-footer">
           <button type="button" id="btnCancelItemModal" class="admin-btn-outline">Cancelar</button>
-          <button type="submit" id="btnSaveItemModal" class="admin-btn-gold">Guardar y Publicar en Vivo</button>
+          <button type="submit" id="btnSaveItemModal" class="admin-btn-gold">Guardar cambios</button>
         </div>
       </form>
     </div>
   </div>
 
   <!-- ======================================================================
-       4. MODAL: CREATE / RENAME CATEGORY
+       4. POPUP MODAL: CREATE / RENAME CATEGORY (Unified Visual Style)
        ====================================================================== -->
   <div id="adminCategoryModal" class="admin-modal-backdrop" hidden role="dialog" aria-modal="true" aria-labelledby="catModalHeading">
     <div class="admin-modal-card admin-modal-sm">
       <div class="admin-modal-header">
-        <h2 id="catModalHeading">Nueva Categoría</h2>
+        <div class="admin-modal-title-group">
+          <span class="diamond-dot"></span>
+          <h2 id="catModalHeading">Nueva categoría</h2>
+        </div>
         <button type="button" id="btnCloseCatModal" class="admin-modal-close" aria-label="Cerrar">✕</button>
       </div>
 
       <form id="adminCategoryForm" class="admin-modal-form">
         <input type="hidden" id="catFormSlug" />
         <div class="admin-field">
-          <label for="catFormTitle">Nombre de la Categoría</label>
-          <input type="text" id="catFormTitle" class="admin-input" placeholder="Ej. Tapeo & Entradas" required />
+          <label for="catFormTitle">Nombre de la categoría</label>
+          <input type="text" id="catFormTitle" class="admin-input" placeholder="Ej. Postres & Café" required />
         </div>
         <div class="admin-modal-footer">
           <button type="button" id="btnCancelCatModal" class="admin-btn-outline">Cancelar</button>
-          <button type="submit" class="admin-btn-gold">Guardar Categoría</button>
+          <button type="submit" class="admin-btn-gold">Guardar categoría</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- ======================================================================
+       5. POPUP MODAL: UNIFIED VISUAL CONFIRMATION (Logout / Delete Dish / Delete Category)
+       ====================================================================== -->
+  <div id="adminConfirmModal" class="admin-modal-backdrop" hidden role="dialog" aria-modal="true" aria-labelledby="confirmModalHeading">
+    <div class="admin-modal-card admin-modal-sm">
+      <div class="admin-modal-header">
+        <div class="admin-modal-title-group">
+          <span class="diamond-dot"></span>
+          <h2 id="confirmModalHeading">Confirmar acción</h2>
+        </div>
+        <button type="button" id="btnCloseConfirmModal" class="admin-modal-close" aria-label="Cerrar">✕</button>
+      </div>
+
+      <div class="admin-confirm-body">
+        <p id="confirmModalMessage" class="admin-confirm-message">
+          ¿Estás seguro de que querés realizar esta acción?
+        </p>
+      </div>
+
+      <div class="admin-modal-footer">
+        <button type="button" id="btnCancelConfirmModal" class="admin-btn-outline">Cancelar</button>
+        <button type="button" id="btnAcceptConfirmModal" class="admin-btn-gold admin-btn-confirm-danger">Confirmar</button>
+      </div>
     </div>
   </div>
 
