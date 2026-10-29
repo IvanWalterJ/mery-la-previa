@@ -533,11 +533,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const successState = document.getElementById('confirmSuccessState');
     const successTextEl = document.getElementById('confirmSuccessText');
 
+    const modalHeader = confirmModal.querySelector('.admin-modal-header');
+
+    if (modalHeader) modalHeader.style.display = 'flex';
     if (promptState) {
       promptState.hidden = false;
       promptState.style.display = 'block';
     }
     if (successState) {
+      successState.classList.remove('is-animating');
       successState.hidden = true;
       successState.style.display = 'none';
     }
@@ -552,6 +556,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     pendingConfirmCallback = typeof onConfirm === 'function' ? async () => {
       if (successText && successState && promptState) {
+        if (modalHeader) modalHeader.style.display = 'none';
         promptState.hidden = true;
         promptState.style.display = 'none';
         if (successTextEl) successTextEl.textContent = successText;
@@ -588,8 +593,19 @@ document.addEventListener('DOMContentLoaded', () => {
   function closeConfirmModal() {
     if (!confirmModal) return;
     clearTimeout(confirmSuccessTimer);
+    const modalHeader = confirmModal.querySelector('.admin-modal-header');
+    if (modalHeader) modalHeader.style.display = 'flex';
     const successState = document.getElementById('confirmSuccessState');
-    if (successState) successState.classList.remove('is-animating');
+    if (successState) {
+      successState.classList.remove('is-animating');
+      successState.hidden = true;
+      successState.style.display = 'none';
+    }
+    const promptState = document.getElementById('confirmPromptState');
+    if (promptState) {
+      promptState.hidden = false;
+      promptState.style.display = 'block';
+    }
     confirmModal.hidden = true;
     pendingConfirmCallback = null;
   }
@@ -599,7 +615,6 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnAcceptConfirmModal) {
     btnAcceptConfirmModal.addEventListener('click', () => {
       const fn = pendingConfirmCallback;
-      closeConfirmModal();
       if (fn) fn();
     });
   }
@@ -1793,7 +1808,6 @@ document.addEventListener('DOMContentLoaded', () => {
             onConfirm: () => {
               if (window.MeryStore && typeof window.MeryStore.approveReservationDeposit === 'function') {
                 window.MeryStore.approveReservationDeposit(targetResId);
-                showToast(`✓ Seña confirmada para ${targetCustomerName} (${targetResId})`);
                 updateReservationsBadge();
                 renderReservationsWorkspace();
               }
@@ -1813,7 +1827,6 @@ document.addEventListener('DOMContentLoaded', () => {
             onConfirm: () => {
               if (window.MeryStore && typeof window.MeryStore.checkInReservation === 'function') {
                 window.MeryStore.checkInReservation(targetResId, nextState);
-                showToast(nextState ? `✓ Ingreso registrado para ${targetCustomerName}` : `Check-in cancelado para ${targetCustomerName}`);
                 updateReservationsBadge();
                 renderReservationsWorkspace();
               }
@@ -1893,7 +1906,6 @@ document.addEventListener('DOMContentLoaded', () => {
         onConfirm: () => {
           if (window.MeryStore && typeof window.MeryStore.approveReservationDeposit === 'function') {
             window.MeryStore.approveReservationDeposit(targetResId);
-            showToast(`✓ Seña confirmada para ${targetCustomerName} (${targetResId})`);
             closeProofModal();
             updateReservationsBadge();
             if (activeTab === 'reservations') renderReservationsWorkspace();
