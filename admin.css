@@ -17,6 +17,14 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 html, body {
@@ -27,6 +35,10 @@ html, body {
   font-size: 15px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+}
+
+body:has(.admin-modal-backdrop:not([hidden])) {
+  overflow: hidden;
 }
 
 [hidden] {
@@ -1271,31 +1283,34 @@ html, body {
 .ig-cropper-card {
   max-width: 660px;
   width: 95vw;
+  padding: 20px 24px;
+  gap: 14px;
 }
 
 .ig-crop-tabs {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  padding: 4px;
+  gap: 10px;
+  padding: 6px;
   background: #111311;
-  border-radius: 10px;
+  border-radius: 12px;
   border: 1px solid var(--q-border);
 }
 
 .ig-crop-tab {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
+  justify-content: flex-start;
+  gap: 12px;
   padding: 10px 14px;
-  border-radius: 8px;
+  border-radius: 9px;
   border: 1px solid transparent;
   background: transparent;
   color: var(--q-cream-muted);
   font-family: var(--font-sans);
-  font-size: 0.84rem;
+  font-size: 0.86rem;
   font-weight: 500;
+  text-align: left;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -1306,21 +1321,23 @@ html, body {
 }
 
 .ig-crop-tab.active {
-  color: var(--q-gold-bright);
+  color: var(--q-cream);
   background: #191c19;
-  border-color: rgba(212, 175, 55, 0.4);
+  border-color: rgba(207, 190, 145, 0.45);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
 .ig-tab-num {
-  width: 18px;
-  height: 18px;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  flex-shrink: 0;
   border-radius: 50%;
-  background: rgba(239, 231, 210, 0.1);
+  background: rgba(239, 231, 210, 0.12);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.7rem;
+  font-size: 0.76rem;
   font-weight: 600;
 }
 
@@ -1329,16 +1346,31 @@ html, body {
   color: #0b0c0b;
 }
 
+.ig-tab-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.ig-tab-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: inherit;
+}
+
 .ig-tab-ratio {
   font-size: 0.72rem;
-  opacity: 0.75;
+  opacity: 0.72;
+  line-height: 1.2;
 }
 
 .ig-crop-workspace {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  margin-top: 14px;
+  gap: 12px;
+  margin-top: 2px;
 }
 
 .ig-crop-viewport-container {
@@ -1346,7 +1378,7 @@ html, body {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 14px 10px;
+  padding: 12px 10px;
   background: #090a09;
   border-radius: 12px;
   border: 1px solid rgba(239, 231, 210, 0.07);
@@ -1369,14 +1401,14 @@ html, body {
 }
 
 .ig-crop-viewport.mode-thumb {
-  width: 345px;
-  height: 258px;
+  width: 300px;
+  height: 224px;
   aspect-ratio: 115 / 86;
 }
 
 .ig-crop-viewport.mode-modal {
-  width: 522px;
-  height: 225px;
+  width: 464px;
+  height: 200px;
   aspect-ratio: 580 / 250;
 }
 
@@ -1464,29 +1496,34 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 14px;
   width: 100%;
   padding: 10px 14px;
   background: #141614;
   border: 1px solid var(--q-border);
   border-radius: 10px;
+  box-sizing: border-box;
 }
 
 .ig-zoom-group {
   display: flex;
   align-items: center;
-  gap: 12px;
-  flex: 1;
+  gap: 10px;
+  flex: 1 1 0%;
+  min-width: 0;
 }
 
 .ig-zoom-label {
   font-size: 0.82rem;
   color: var(--q-cream-muted);
   font-weight: 500;
+  flex-shrink: 0;
 }
 
 .ig-range-slider {
-  flex: 1;
+  flex: 1 1 0%;
+  min-width: 0;
+  width: 100%;
   accent-color: var(--q-gold);
   height: 6px;
   background: #232723;
@@ -1500,14 +1537,16 @@ html, body {
   font-size: 0.82rem;
   color: var(--q-gold);
   min-width: 44px;
+  flex-shrink: 0;
   text-align: right;
   font-weight: 600;
 }
 
 .ig-btn-reset {
+  flex-shrink: 0;
   white-space: nowrap;
   font-size: 0.8rem;
-  padding: 6px 12px;
+  padding: 7px 13px;
 }
 
 .ig-previews-strip {
