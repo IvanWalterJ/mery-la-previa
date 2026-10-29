@@ -201,6 +201,24 @@ body:has(.admin-modal-backdrop:not([hidden])) {
   text-align: center;
 }
 
+.admin-login-notice {
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--q-gold);
+  background: rgba(212, 175, 55, 0.12);
+  color: var(--q-gold);
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.4;
+  animation: fadeInNotice 0.25s ease;
+}
+
+@keyframes fadeInNotice {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .admin-enter-btn {
   appearance: none;
   width: 100%;
@@ -445,6 +463,98 @@ body:has(.admin-modal-backdrop:not([hidden])) {
 .admin-cat-pill.active .admin-cat-pill-count {
   background: var(--q-gold);
   color: #0a0b0a;
+}
+
+/* Horizontal Category Selector Bar in Carta Workspace */
+.admin-cat-pills-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding: 2px 0 16px;
+  border-bottom: 1px solid var(--q-border-subtle);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.admin-cat-pills-bar::-webkit-scrollbar {
+  height: 4px;
+}
+.admin-cat-pills-bar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+}
+.admin-cat-pills-bar::-webkit-scrollbar-thumb {
+  background: var(--q-border-strong);
+  border-radius: 4px;
+}
+
+.admin-cat-pills-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+}
+
+.admin-cat-pills-row .admin-cat-pill {
+  width: auto;
+  white-space: nowrap;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--q-border-subtle);
+  padding: 8px 14px;
+  border-radius: 99px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.admin-cat-pills-row .admin-cat-pill:hover {
+  background: rgba(239, 231, 210, 0.08);
+  border-color: rgba(207, 190, 145, 0.3);
+  color: var(--q-cream);
+}
+
+.admin-cat-pills-row .admin-cat-pill.active {
+  background: rgba(207, 190, 145, 0.15);
+  border-color: var(--q-gold);
+  color: var(--q-cream);
+  font-weight: 600;
+}
+
+.admin-cat-pills-row .admin-cat-pill.active .admin-cat-pill-count {
+  background: var(--q-gold);
+  color: #0a0b0a;
+}
+
+.admin-cat-pills-bar .admin-cat-pill-add {
+  width: auto;
+  white-space: nowrap;
+  flex-shrink: 0;
+  padding: 8px 14px;
+  border-radius: 99px;
+  border: 1px dashed var(--q-border-strong);
+  background: transparent;
+  color: var(--q-gold);
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.admin-cat-pills-bar .admin-cat-pill-add:hover {
+  background: rgba(207, 190, 145, 0.1);
+  border-color: var(--q-gold);
 }
 
 .admin-sidebar-add-btn {
@@ -2377,6 +2487,59 @@ body:has(.admin-modal-backdrop:not([hidden])) {
   padding: 14px;
   font-size: 0.95rem;
   font-weight: 600;
+}
+
+/* Confirmed Success Check-in Button State */
+.admin-btn-success {
+  background: #2ecc71 !important;
+  color: #0d0f0d !important;
+  border-color: #2ecc71 !important;
+  font-weight: 600 !important;
+  box-shadow: 0 4px 16px rgba(46, 204, 113, 0.4) !important;
+  cursor: default;
+}
+
+.admin-btn-success:hover {
+  background: #27ae60 !important;
+  color: #0d0f0d !important;
+  border-color: #27ae60 !important;
+}
+
+/* Dedicated VIP pass check-in popup styling when camera is stopped */
+.admin-qr-viewport.camera-stopped {
+  background: #0d0f0d;
+}
+
+.admin-qr-viewport.camera-stopped .admin-qr-camera-stage {
+  display: none !important;
+}
+
+.admin-qr-viewport.camera-stopped .admin-qr-bottom-drawer,
+.admin-qr-viewport:has(.admin-qr-camera-stage[hidden]) .admin-qr-bottom-drawer {
+  flex: 1;
+  max-height: none;
+  background: #0d0f0d;
+  border-top: none;
+  justify-content: center;
+  align-items: center;
+  padding: 24px 20px calc(24px + env(safe-area-inset-bottom, 0px));
+}
+
+.admin-qr-viewport.camera-stopped .admin-scan-result-card,
+.admin-qr-viewport:has(.admin-qr-camera-stage[hidden]) .admin-scan-result-card {
+  width: 100%;
+  max-width: 440px;
+  background: #141714;
+  border: 1.5px solid var(--q-gold);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.9), 0 0 30px rgba(212, 175, 55, 0.15);
+}
+
+.admin-qr-viewport.camera-stopped .admin-qr-input-row,
+.admin-qr-viewport:has(.admin-qr-camera-stage[hidden]) .admin-qr-input-row {
+  width: 100%;
+  max-width: 440px;
 }
 
 /* WhatsApp & Deposit Settings View */

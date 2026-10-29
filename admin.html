@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="admin.css?v=15" />
+  <link rel="stylesheet" href="admin.css?v=17" />
 </head>
 <body>
 
@@ -39,6 +39,10 @@
         <p class="admin-login-subtitle">
           Ingresá con tu cuenta asignada para actualizar precios, platos, fotos y categorías en tiempo real.
         </p>
+
+        <div id="adminLoginNotice" class="admin-login-notice" hidden>
+          🔒 Iniciá sesión como administrador para validar el Pase VIP
+        </div>
 
         <form id="adminLoginForm" class="admin-login-form" autocomplete="on">
           <div class="admin-login-inputs-grid">
@@ -114,7 +118,7 @@
     <div id="adminSidebarBackdrop" class="admin-sidebar-backdrop" hidden></div>
 
     <!-- Left Sidebar -->
-    <aside id="adminSidebar" class="admin-sidebar" aria-label="Menú lateral de categorías">
+    <aside id="adminSidebar" class="admin-sidebar" aria-label="Menú lateral de administración">
       <div class="admin-sidebar-top">
         <div class="admin-brand-box">
           <div class="admin-brand-row">
@@ -124,40 +128,25 @@
               <span>En vivo</span>
             </span>
           </div>
-          <span class="admin-brand-sub">Gestión de carta y precios</span>
+          <span class="admin-brand-sub">Gestión de carta y reservas</span>
         </div>
 
         <div class="admin-sidebar-section">
           <div class="admin-sidebar-label-row">
-            <span class="admin-sidebar-label">Categorías</span>
+            <span class="admin-sidebar-label">Navegación y Multimedia</span>
           </div>
-          <nav id="adminCategoryPills" class="admin-sidebar-nav" role="tablist" aria-label="Categorías de la carta"></nav>
-
-          <button type="button" id="btnNewCategory" class="admin-sidebar-add-btn">
-            <span>+ Nueva categoría</span>
-          </button>
-        </div>
-
-        <div class="admin-sidebar-section">
-          <div class="admin-sidebar-label-row">
-            <span class="admin-sidebar-label">Operaciones y reservas</span>
-          </div>
-          <nav class="admin-sidebar-nav" aria-label="Operaciones de reservas y WhatsApp">
+          <nav class="admin-sidebar-nav" aria-label="Navegación principal">
             <button type="button" id="btnNavReservations" class="admin-cat-pill">
               <span>Reservas y Check-in QR</span>
               <span id="adminReservationsBadge" class="admin-cat-pill-count">0</span>
             </button>
+            <button type="button" id="btnNavMenu" class="admin-cat-pill">
+              <span>Carta y Categorías</span>
+              <span id="adminMenuTotalBadge" class="admin-cat-pill-count">0</span>
+            </button>
             <button type="button" id="btnNavWhatsapp" class="admin-cat-pill">
               <span>WhatsApp y Señas</span>
             </button>
-          </nav>
-        </div>
-
-        <div class="admin-sidebar-section">
-          <div class="admin-sidebar-label-row">
-            <span class="admin-sidebar-label">Multimedia</span>
-          </div>
-          <nav class="admin-sidebar-nav" aria-label="Multimedia y videos">
             <button type="button" id="btnNavVideos" class="admin-cat-pill">
               <span>Videos de secciones</span>
             </button>
@@ -678,10 +667,10 @@
 
           <div class="admin-scan-actions">
             <button type="button" id="btnConfirmQrCheckIn" class="admin-btn-gold admin-btn-checkin-large">
-              Confirmar ingreso (Asistió)
+              Confirmar ingreso
             </button>
             <button type="button" id="btnScanAnotherQr" class="admin-btn-outline" style="width: 100%; margin-top: 8px;">
-              📷 Escanear otro código
+              📷 Escanear otro pase
             </button>
           </div>
         </div>
@@ -855,7 +844,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/js/qrcode.min.js"></script>
   <script src="assets/js/jsqr.min.js"></script>
-  <script src="supabase-config.js?v=16"></script>
-  <script src="admin.js?v=16"></script>
+  <script src="supabase-config.js?v=17"></script>
+  <script src="admin.js?v=17"></script>
 </body>
 </html>

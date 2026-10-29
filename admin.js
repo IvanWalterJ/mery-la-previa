@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const loginForm = document.getElementById('adminLoginForm');
   const loginEmail = document.getElementById('loginEmail');
   const loginPassword = document.getElementById('loginPassword');
+  const loginNoticeEl = document.getElementById('adminLoginNotice');
   const loginErrorMsg = document.getElementById('loginErrorMsg');
   const btnLogout = document.getElementById('btnLogout');
 
@@ -33,10 +34,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnRenameActiveCat = document.getElementById('btnRenameActiveCat');
   const btnDeleteActiveCat = document.getElementById('btnDeleteActiveCat');
   const btnNewDish = document.getElementById('btnNewDish');
-  const btnNavVideos = document.getElementById('btnNavVideos');
   const btnNavReservations = document.getElementById('btnNavReservations');
   const adminReservationsBadge = document.getElementById('adminReservationsBadge');
+  const btnNavMenu = document.getElementById('btnNavMenu');
+  const adminMenuTotalBadge = document.getElementById('adminMenuTotalBadge');
   const btnNavWhatsapp = document.getElementById('btnNavWhatsapp');
+  const btnNavVideos = document.getElementById('btnNavVideos');
   const adminSearchInput = document.getElementById('adminSearchInput');
   const sectionsContainer = document.getElementById('adminSectionsContainer');
   const toastEl = document.getElementById('adminToast');
@@ -180,10 +183,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let menuSections = window.MeryStore.getLocalSections();
   let activeCategoryId = menuSections[0]?.id || 'cocktails';
-  let activeTab = 'category'; // 'category' | 'videos' | 'reservations' | 'whatsapp'
+  let activeTab = 'reservations'; // 'reservations' | 'category' | 'videos' | 'whatsapp'
   let searchQuery = '';
   let toastTimer = null;
   let pendingConfirmCallback = null;
+  const urlCheckinParam = new URLSearchParams(window.location.search).get('checkin');
 
   // Global operational & reservation state declarations (avoids TDZ on early render)
   let activeResFilter = 'Todas';
@@ -237,17 +241,19 @@ document.addEventListener('DOMContentLoaded', () => {
     let targetTab = null;
     let targetCategory = null;
 
-    // 1. Read URL hash first
+    // 1. Read URL hash first (default tab is reservations when no hash or #reservas)
     const hash = window.location.hash || '';
-    if (hash === '#reservas' || hash === '#reservaciones' || hash === '#reserva') {
+    if (!hash || hash === '#reservas' || hash === '#reservaciones' || hash === '#reserva') {
       targetTab = 'reservations';
     } else if (hash === '#whatsapp') {
       targetTab = 'whatsapp';
     } else if (hash === '#videos') {
       targetTab = 'videos';
-    } else if (hash.startsWith('#cat-')) {
+    } else if (hash.startsWith('#cat-') || hash === '#menu' || hash === '#carta') {
       targetTab = 'category';
-      targetCategory = decodeURIComponent(hash.slice(5).trim());
+      if (hash.startsWith('#cat-')) {
+        targetCategory = decodeURIComponent(hash.slice(5).trim());
+      }
     }
 
     // 2. Fallback to localStorage if no matching hash in URL
@@ -264,7 +270,7 @@ document.addEventListener('DOMContentLoaded', () => {
       } catch (_) {}
     }
 
-    if (!targetTab) targetTab = 'category';
+    if (!targetTab) targetTab = 'reservations';
     activeTab = targetTab;
 
     if (targetCategory && menuSections.some((s) => s.id === targetCategory)) {
@@ -829,6 +835,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       sessionStorage.setItem(SESSION_AUTH_KEY, 'true');
       enterDashboard();
+      checkAndHandlePendingCheckin();
     });
   }
 
@@ -871,53 +878,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // 4. LEFT SIDEBAR & FOCUSED SINGLE-CATEGORY WORKSPACE
-  function renderAdminSidebar() {
-    if (!categoryPillsEl) return;
-
-    categoryPillsEl.innerHTML = menuSections.map((sec) => {
-      const count = (sec.items || []).length;
-      const isActive = activeTab === 'category' && sec.id === activeCategoryId;
-      return `
-        <button
-          type="button"
-          class="admin-cat-pill ${isActive ? 'active' : ''}"
-          data-cat="${escapeHtml(sec.id)}"
-          role="tab"
-          aria-selected="${isActive}"
-        >
-          <span>${escapeHtml(sec.title)}</span>
-          <span class="admin-cat-pill-count">${count}</span>
-        </button>
-      `;
-    }).join('');
-
-    btnNavVideos?.classList.toggle('active', activeTab === 'videos');
-    btnNavReservations?.classList.toggle('active', activeTab === 'reservations');
-    btnNavWhatsapp?.classList.toggle('active', activeTab === 'whatsapp');
-
-    categoryPillsEl.querySelectorAll('.admin-cat-pill').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        stopWaPolling();
-        activeTab = 'category';
-        activeCategoryId = btn.getAttribute('data-cat') || menuSections[0]?.id;
-        renderAdminSidebar();
-        renderActiveCategoryWorkspace();
-        persistActiveTabState();
-        closeAdminMobileMenu();
-      });
-    });
+  // 4. LEFT SIDEBAR & COMPACT NAVIGATION
+  function updateMenuTotalBadge() {
+    if (!adminMenuTotalBadge) return;
+    const total = menuSections.reduce((acc, s) => acc + (s.items || []).length, 0);
+    adminMenuTotalBadge.textContent = String(total);
+    adminMenuTotalBadge.title = `${total} ítems en la carta`;
   }
 
-  if (btnNavVideos) {
-    btnNavVideos.addEventListener('click', () => {
-      stopWaPolling();
-      activeTab = 'videos';
-      renderAdminSidebar();
-      renderVideosWorkspace();
-      persistActiveTabState();
-      closeAdminMobileMenu();
-    });
+  function renderAdminSidebar() {
+    btnNavReservations?.classList.toggle('active', activeTab === 'reservations');
+    btnNavMenu?.classList.toggle('active', activeTab === 'category');
+    btnNavWhatsapp?.classList.toggle('active', activeTab === 'whatsapp');
+    btnNavVideos?.classList.toggle('active', activeTab === 'videos');
+    updateMenuTotalBadge();
   }
 
   if (btnNavReservations) {
@@ -926,6 +900,17 @@ document.addEventListener('DOMContentLoaded', () => {
       activeTab = 'reservations';
       renderAdminSidebar();
       renderReservationsWorkspace();
+      persistActiveTabState();
+      closeAdminMobileMenu();
+    });
+  }
+
+  if (btnNavMenu) {
+    btnNavMenu.addEventListener('click', () => {
+      stopWaPolling();
+      activeTab = 'category';
+      renderAdminSidebar();
+      renderActiveCategoryWorkspace();
       persistActiveTabState();
       closeAdminMobileMenu();
     });
@@ -942,6 +927,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  if (btnNavVideos) {
+    btnNavVideos.addEventListener('click', () => {
+      stopWaPolling();
+      activeTab = 'videos';
+      renderAdminSidebar();
+      renderVideosWorkspace();
+      persistActiveTabState();
+      closeAdminMobileMenu();
+    });
+  }
+
   if (adminSearchInput) {
     adminSearchInput.addEventListener('input', () => {
       searchQuery = adminSearchInput.value.trim().toLowerCase();
@@ -953,19 +949,64 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!sectionsContainer) return;
     activeTab = 'category';
     persistActiveTabState();
-    btnNavVideos?.classList.remove('active');
-    btnNavReservations?.classList.remove('active');
-    btnNavWhatsapp?.classList.remove('active');
+    renderAdminSidebar();
+
     if (btnRenameActiveCat) btnRenameActiveCat.hidden = false;
     if (btnNewDish) btnNewDish.hidden = false;
     if (adminSearchInput?.parentElement) adminSearchInput.parentElement.hidden = false;
 
     const sec = menuSections.find((s) => s.id === activeCategoryId) || menuSections[0];
 
+    const categoryPillsBarHtml = `
+      <div class="admin-cat-pills-bar">
+        <div class="admin-cat-pills-row" role="tablist" aria-label="Categorías de la carta">
+          ${menuSections.map((s) => {
+            const count = (s.items || []).length;
+            const isActive = sec && s.id === sec.id;
+            return `
+              <button
+                type="button"
+                class="admin-cat-pill ${isActive ? 'active' : ''}"
+                data-cat="${escapeHtml(s.id)}"
+                role="tab"
+                aria-selected="${isActive}"
+              >
+                <span>${escapeHtml(s.title)}</span>
+                <span class="admin-cat-pill-count">${count}</span>
+              </button>
+            `;
+          }).join('')}
+        </div>
+        <button type="button" id="btnNewCategory" class="admin-cat-pill-add">
+          <span>+ Nueva categoría</span>
+        </button>
+      </div>
+    `;
+
+    function attachCategoryBarListeners() {
+      sectionsContainer.querySelectorAll('.admin-cat-pills-row [data-cat]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          activeCategoryId = btn.getAttribute('data-cat') || menuSections[0]?.id;
+          renderActiveCategoryWorkspace();
+        });
+      });
+      sectionsContainer.querySelector('#btnNewCategory')?.addEventListener('click', () => {
+        closeAdminMobileMenu();
+        openCategoryModal(null);
+      });
+    }
+
     if (!sec) {
       if (activeCategoryTitle) activeCategoryTitle.textContent = 'Sin categorías';
-      if (activeCategoryCount) activeCategoryCount.textContent = 'Creá una categoría desde el panel izquierdo';
-      sectionsContainer.innerHTML = '';
+      if (activeCategoryCount) activeCategoryCount.textContent = 'Creá una categoría para comenzar';
+      if (btnDeleteActiveCat) btnDeleteActiveCat.hidden = true;
+      sectionsContainer.innerHTML = `
+        ${categoryPillsBarHtml}
+        <div class="admin-empty-state">
+          <p>No hay categorías creadas aún.</p>
+        </div>
+      `;
+      attachCategoryBarListeners();
       return;
     }
 
@@ -988,16 +1029,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (filteredItems.length === 0) {
       sectionsContainer.innerHTML = `
+        ${categoryPillsBarHtml}
         <div class="admin-empty-state">
           <p>${searchQuery ? 'No se encontraron ítems con esa búsqueda.' : 'Todavía no hay ítems en esta categoría.'}</p>
           <button type="button" class="admin-btn-gold" id="btnEmptyAddDish">+ Agregar primer ítem</button>
         </div>
       `;
+      attachCategoryBarListeners();
       document.getElementById('btnEmptyAddDish')?.addEventListener('click', () => openItemModal(sec.id, null));
       return;
     }
 
     sectionsContainer.innerHTML = `
+      ${categoryPillsBarHtml}
       <div class="admin-items-grid">
         ${filteredItems.map((item) => `
           <article class="admin-item-card ${item.available === false ? 'unavailable' : ''}" data-item-id="${escapeHtml(item.id)}">
@@ -1084,6 +1128,7 @@ document.addEventListener('DOMContentLoaded', () => {
         `).join('')}
       </div>
     `;
+    attachCategoryBarListeners();
 
     // Instant Quick Price Save (also supports Enter key inside the price input)
     sectionsContainer.querySelectorAll('.admin-quick-price-input').forEach((input) => {
@@ -2141,14 +2186,26 @@ document.addEventListener('DOMContentLoaded', () => {
     initScanAudio();
 
     if (qrScanResultBox) qrScanResultBox.hidden = true;
-    if (qrCameraStatus) qrCameraStatus.textContent = 'Apuntá al código QR del cliente';
+    if (btnConfirmQrCheckIn) {
+      btnConfirmQrCheckIn.classList.remove('admin-btn-success');
+      btnConfirmQrCheckIn.textContent = 'Confirmar ingreso';
+      btnConfirmQrCheckIn.disabled = false;
+    }
     if (qrScannerCodeInput) {
       qrScannerCodeInput.value = prefillCode || '';
     }
 
+    const viewport = document.querySelector('.admin-qr-viewport');
+
     if (prefillCode) {
+      stopQrCamera();
+      if (qrCameraContainer) qrCameraContainer.hidden = true;
+      if (viewport) viewport.classList.add('camera-stopped');
       executeQrSearch(prefillCode);
     } else {
+      if (qrCameraContainer) qrCameraContainer.hidden = false;
+      if (viewport) viewport.classList.remove('camera-stopped');
+      if (qrCameraStatus) qrCameraStatus.textContent = 'Apuntá al código QR del cliente';
       startQrCamera();
       if (qrScannerCodeInput) qrScannerCodeInput.focus();
     }
@@ -2159,6 +2216,10 @@ document.addEventListener('DOMContentLoaded', () => {
     adminQrScannerModal.hidden = true;
     document.body.classList.remove('modal-open');
     stopQrCamera();
+    if (qrCameraContainer) qrCameraContainer.hidden = false;
+    const viewport = document.querySelector('.admin-qr-viewport');
+    if (viewport) viewport.classList.remove('camera-stopped');
+    if (qrScanResultBox) qrScanResultBox.hidden = true;
     activeScannedRes = null;
   }
 
@@ -2216,11 +2277,19 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       stopQrCamera();
       isScanningActive = true;
-      if (qrCameraStatus) qrCameraStatus.textContent = 'Buscando código QR...';
+      if (qrCameraContainer) qrCameraContainer.hidden = false;
+      const viewport = document.querySelector('.admin-qr-viewport');
+      if (viewport) viewport.classList.remove('camera-stopped');
+
+      if (qrCameraStatus) {
+        qrCameraStatus.textContent = currentFacingMode === 'environment'
+          ? 'Iniciando cámara trasera...'
+          : 'Iniciando cámara frontal...';
+      }
 
       qrCameraStream = await navigator.mediaDevices.getUserMedia({
         video: {
-          facingMode: currentFacingMode,
+          facingMode: { ideal: currentFacingMode },
           width: { ideal: 1280 },
           height: { ideal: 720 }
         }
@@ -2329,6 +2398,9 @@ document.addEventListener('DOMContentLoaded', () => {
     playScanBeep();
     triggerScanHaptic();
     stopQrCamera();
+    if (qrCameraContainer) qrCameraContainer.hidden = true;
+    const viewport = document.querySelector('.admin-qr-viewport');
+    if (viewport) viewport.classList.add('camera-stopped');
     if (qrScannerCodeInput) qrScannerCodeInput.value = detectedCode;
     executeQrSearch(detectedCode);
   }
@@ -2392,8 +2464,17 @@ document.addEventListener('DOMContentLoaded', () => {
       if (qrScanResultBox) qrScanResultBox.hidden = true;
       if (qrScannerCodeInput) qrScannerCodeInput.value = '';
       activeScannedRes = null;
+      if (btnConfirmQrCheckIn) {
+        btnConfirmQrCheckIn.classList.remove('admin-btn-success');
+        btnConfirmQrCheckIn.textContent = 'Confirmar ingreso';
+        btnConfirmQrCheckIn.disabled = false;
+      }
+      if (qrCameraContainer) qrCameraContainer.hidden = false;
+      const viewport = document.querySelector('.admin-qr-viewport');
+      if (viewport) viewport.classList.remove('camera-stopped');
       if (qrCameraStatus) qrCameraStatus.textContent = 'Apuntá al código QR del cliente';
       startQrCamera();
+      if (qrScannerCodeInput) qrScannerCodeInput.focus();
     });
   }
 
@@ -2409,6 +2490,12 @@ document.addEventListener('DOMContentLoaded', () => {
     term = decodeURIComponent(term).trim();
     const termLower = term.toLowerCase();
     const termDigits = term.replace(/\D/g, '');
+
+    // Stop camera and hide stage immediately on search
+    stopQrCamera();
+    if (qrCameraContainer) qrCameraContainer.hidden = true;
+    const viewport = document.querySelector('.admin-qr-viewport');
+    if (viewport) viewport.classList.add('camera-stopped');
 
     let list = window.MeryStore ? window.MeryStore.getReservations() : [];
     let found = list.find((r) =>
@@ -2476,10 +2563,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (qrResultGuests) qrResultGuests.textContent = `${found.guests} personas`;
     if (qrResultDateTime) qrResultDateTime.textContent = `${found.res_day} • ${found.res_time}`;
     if (qrResultAttendance) {
-      qrResultAttendance.textContent = found.attended
-        ? `✓ Asistió ${found.checked_in_at ? new Date(found.checked_in_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) + ' hs' : ''}`
-        : 'Pendiente de ingreso';
-      qrResultAttendance.style.color = found.attended ? '#2ecc71' : 'var(--q-cream-muted)';
+      if (found.attended) {
+        const timeStr = found.checked_in_at
+          ? new Date(found.checked_in_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) + ' hs'
+          : '';
+        qrResultAttendance.textContent = timeStr ? `✓ Asistió ${timeStr}` : '✓ Asistió';
+        qrResultAttendance.style.color = '#2ecc71';
+      } else {
+        qrResultAttendance.textContent = 'Pendiente de ingreso';
+        qrResultAttendance.style.color = 'var(--q-cream-muted)';
+      }
     }
 
     if (qrResultBirthdayNotice) {
@@ -2492,9 +2585,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (btnConfirmQrCheckIn) {
-      btnConfirmQrCheckIn.textContent = found.attended
-        ? '✓ Ya ingresó — Revalidar ingreso'
-        : 'Confirmar ingreso (Asistió)';
+      if (found.attended) {
+        const timeStr = found.checked_in_at
+          ? new Date(found.checked_in_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
+          : '';
+        btnConfirmQrCheckIn.classList.add('admin-btn-success');
+        btnConfirmQrCheckIn.textContent = timeStr ? `✓ ¡Ingreso registrado! (${timeStr} hs)` : '✓ ¡Ingreso registrado!';
+      } else {
+        btnConfirmQrCheckIn.classList.remove('admin-btn-success');
+        btnConfirmQrCheckIn.textContent = 'Confirmar ingreso';
+      }
+      btnConfirmQrCheckIn.disabled = false;
     }
   }
 
@@ -2511,28 +2612,56 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (btnConfirmQrCheckIn) {
-    btnConfirmQrCheckIn.addEventListener('click', () => {
+    btnConfirmQrCheckIn.addEventListener('click', async () => {
       if (!activeScannedRes) return;
       const targetResId = activeScannedRes.id;
       const targetCustomerName = activeScannedRes.customer_name;
-      const guestsCount = activeScannedRes.guests;
 
-      openConfirmModal({
-        title: '¿Confirmar ingreso?',
-        message: `¿Confirmar ingreso en puerta de ${targetCustomerName} (${guestsCount} personas)?`,
-        confirmLabel: 'Sí, confirmar ingreso',
-        successText: '¡Ingreso confirmado con éxito!',
-        onConfirm: async () => {
-          if (window.MeryStore && typeof window.MeryStore.checkInReservation === 'function') {
-            const updated = await window.MeryStore.checkInReservation(targetResId, true);
-            activeScannedRes = updated || activeScannedRes;
-            showToast(`✓ Ingreso confirmado para ${targetCustomerName} (${targetResId})`);
-            closeQrScannerModal();
-            updateReservationsBadge();
-            if (activeTab === 'reservations') renderReservationsWorkspace();
-          }
+      try {
+        btnConfirmQrCheckIn.disabled = true;
+        let updated = null;
+        if (window.MeryStore && typeof window.MeryStore.checkInReservation === 'function') {
+          updated = await window.MeryStore.checkInReservation(targetResId, true);
         }
-      });
+
+        if (updated) {
+          activeScannedRes = updated;
+        } else {
+          activeScannedRes.attended = true;
+          activeScannedRes.checked_in_at = new Date().toISOString();
+        }
+
+        const now = new Date(activeScannedRes.checked_in_at || Date.now());
+        const timeStr = now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+
+        // Update button style to success green with checkmark
+        btnConfirmQrCheckIn.classList.add('admin-btn-success');
+        btnConfirmQrCheckIn.textContent = `✓ ¡Ingreso registrado! (${timeStr} hs)`;
+        btnConfirmQrCheckIn.disabled = false;
+
+        // Update attendance text on card: "✓ Asistió ${timeStr} hs"
+        if (qrResultAttendance) {
+          qrResultAttendance.textContent = `✓ Asistió ${timeStr} hs`;
+          qrResultAttendance.style.color = '#2ecc71';
+        }
+
+        // Play audio beep + haptic vibration
+        playScanBeep();
+        triggerScanHaptic();
+
+        // Show toast
+        showToast(`✓ Ingreso registrado para ${targetCustomerName} (${targetResId})`);
+
+        // Update reservations badge and list in background
+        updateReservationsBadge();
+        if (activeTab === 'reservations') {
+          renderReservationsWorkspace();
+        }
+      } catch (err) {
+        console.error('Error al registrar ingreso:', err);
+        btnConfirmQrCheckIn.disabled = false;
+        showToast('Error al registrar ingreso: ' + (err.message || err));
+      }
     });
   }
 
@@ -2891,12 +3020,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Initial badge update
   updateReservationsBadge();
-
-  // --- Door Check-in URL parameter (?checkin=MLP-XXXX) ---
-  const urlCheckinParam = new URLSearchParams(window.location.search).get('checkin');
-  if (urlCheckinParam) {
-    openQrScannerModal(urlCheckinParam.trim());
-  }
+  updateMenuTotalBadge();
 
   // ===========================================================================
   // 8. AVAILABILITY & MAX CAPACITY MODAL
@@ -3207,14 +3331,45 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Pending check-in helper
+  function checkAndHandlePendingCheckin() {
+    const pendingCode = sessionStorage.getItem('mery_pending_checkin') || urlCheckinParam;
+    if (pendingCode) {
+      sessionStorage.removeItem('mery_pending_checkin');
+      openQrScannerModal(pendingCode.trim());
+    }
+  }
+
   // --- Initial Auth Check & Dashboard Entry (Executed at end after all handlers are bound) ---
-  if (sessionStorage.getItem(SESSION_AUTH_KEY) === 'true') {
+  const isUserAuthenticated = (sessionStorage.getItem(SESSION_AUTH_KEY) === 'true');
+
+  if (isUserAuthenticated) {
     enterDashboard();
+    checkAndHandlePendingCheckin();
   } else {
+    // Door Check-in Auth Enforcement: If not authenticated, store pending code and show clear notice
+    if (urlCheckinParam) {
+      sessionStorage.setItem('mery_pending_checkin', urlCheckinParam.trim());
+      if (loginNoticeEl) {
+        loginNoticeEl.textContent = '🔒 Iniciá sesión como administrador para validar el Pase VIP';
+        loginNoticeEl.hidden = false;
+      }
+    } else {
+      const savedPending = sessionStorage.getItem('mery_pending_checkin');
+      if (savedPending && loginNoticeEl) {
+        loginNoticeEl.textContent = '🔒 Iniciá sesión como administrador para validar el Pase VIP';
+        loginNoticeEl.hidden = false;
+      }
+    }
+
     const client = window.MeryStore ? window.MeryStore.getClient() : null;
     if (client) {
       client.auth.getSession().then(({ data }) => {
-        if (data && data.session) enterDashboard();
+        if (data && data.session) {
+          sessionStorage.setItem(SESSION_AUTH_KEY, 'true');
+          enterDashboard();
+          checkAndHandlePendingCheckin();
+        }
       }).catch(() => {});
     }
   }
