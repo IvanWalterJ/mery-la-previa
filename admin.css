@@ -2366,3 +2366,213 @@ body:has(.admin-modal-backdrop:not([hidden])) {
   padding: 10px;
 }
 
+/* ==========================================================================
+   Live Capacity Bar & Availability Settings Styles
+   ========================================================================== */
+.admin-capacity-bar-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--q-surface);
+  border: 1px solid var(--q-border);
+  border-radius: 12px;
+  padding: 12px 18px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.admin-capacity-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--q-cream);
+  letter-spacing: 0.02em;
+}
+
+.admin-capacity-chips {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.admin-capacity-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+}
+
+.admin-capacity-chip.is-sold-out {
+  border-color: rgba(248, 113, 113, 0.3);
+  background: rgba(248, 113, 113, 0.06);
+}
+
+.admin-capacity-chip-name {
+  color: var(--q-cream-muted);
+  font-weight: 500;
+}
+
+.admin-capacity-chip-badge {
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 1px 6px;
+  font-size: 0.74rem;
+}
+
+.chip-open {
+  background: rgba(74, 222, 128, 0.12);
+  color: #4ade80;
+}
+
+.chip-sold-out {
+  background: rgba(248, 113, 113, 0.15);
+  color: #f87171;
+}
+
+.admin-capacity-edit-btn {
+  background: none;
+  border: 1px solid var(--q-border);
+  color: var(--q-gold);
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.admin-capacity-edit-btn:hover {
+  background: rgba(212, 175, 55, 0.1);
+  border-color: var(--q-gold);
+}
+
+/* Availability Modal Items */
+.admin-avail-day-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--q-border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+
+.admin-avail-day-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-avail-day-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--q-cream);
+}
+
+.admin-avail-day-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-avail-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: var(--q-cream-muted);
+}
+
+.admin-avail-input {
+  width: 75px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: #111;
+  border: 1px solid var(--q-border);
+  color: #fff;
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.admin-avail-toggle-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--q-border);
+  color: var(--q-cream-muted);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.admin-avail-toggle-btn.is-active-open {
+  background: rgba(74, 222, 128, 0.12);
+  border-color: rgba(74, 222, 128, 0.35);
+  color: #4ade80;
+}
+
+.admin-avail-toggle-btn.is-active-closed {
+  background: rgba(248, 113, 113, 0.12);
+  border-color: rgba(248, 113, 113, 0.35);
+  color: #f87171;
+}
+
+.admin-avail-progress-track {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.admin-avail-progress-fill {
+  height: 100%;
+  background: #4ade80;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.admin-avail-progress-fill.is-high {
+  background: #facc15;
+}
+
+.admin-avail-progress-fill.is-full {
+  background: #f87171;
+}
+
+/* Form Grid Helpers */
+.admin-form-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.admin-form-row-3 {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr 1.3fr;
+  gap: 12px;
+}
+
+@media (max-width: 680px) {
+  .admin-form-row-2,
+  .admin-form-row-3 {
+    grid-template-columns: 1fr;
+  }
+}
+

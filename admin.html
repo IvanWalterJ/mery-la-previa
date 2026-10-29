@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="admin.css?v=13" />
+  <link rel="stylesheet" href="admin.css?v=14" />
 </head>
 <body>
 
@@ -642,8 +642,171 @@
     </div>
   </div>
 
+  <!-- ======================================================================
+       POPUP MODAL: DISPONIBILIDAD Y CUPOS MÁXIMOS POR DÍA
+       ====================================================================== -->
+  <div id="adminAvailabilityModal" class="admin-modal-backdrop" hidden role="dialog" aria-modal="true" aria-labelledby="availModalHeading">
+    <div class="admin-modal-card admin-modal-md">
+      <div class="admin-modal-header">
+        <div class="admin-modal-title-group">
+          <span class="diamond-dot"></span>
+          <h2 id="availModalHeading">Disponibilidad y Cupos Máximos</h2>
+        </div>
+        <button type="button" id="btnCloseAvailModal" class="admin-modal-close" aria-label="Cerrar">✕</button>
+      </div>
+
+      <div class="admin-modal-body" style="padding: 20px;">
+        <p style="color: var(--q-cream-muted); font-size: 0.86rem; margin-bottom: 18px; line-height: 1.5;">
+          Configurá la capacidad máxima de personas por noche. Cuando una fecha alcance el cupo o sea pausada, el formulario público bloqueará automáticamente nuevas reservas para ese día.
+        </p>
+
+        <div id="adminAvailDaysList" class="admin-avail-days-list">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+
+      <div class="admin-modal-footer">
+        <button type="button" id="btnCancelAvailModal" class="admin-btn-outline">Cancelar</button>
+        <button type="button" id="btnSaveAvailModal" class="admin-btn-gold">Guardar cupos</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================================
+       POPUP MODAL: NUEVA RESERVA MANUAL (DESDE WHATSAPP O EN PUERTA)
+       ====================================================================== -->
+  <div id="adminNewResModal" class="admin-modal-backdrop" hidden role="dialog" aria-modal="true" aria-labelledby="newResModalHeading">
+    <div class="admin-modal-card admin-modal-md">
+      <div class="admin-modal-header">
+        <div class="admin-modal-title-group">
+          <span class="diamond-dot"></span>
+          <h2 id="newResModalHeading">Nueva reserva manual</h2>
+        </div>
+        <button type="button" id="btnCloseNewResModal" class="admin-modal-close" aria-label="Cerrar">✕</button>
+      </div>
+
+      <!-- Form View -->
+      <form id="adminNewResForm" class="admin-modal-body" style="padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+        <div class="admin-form-row-2">
+          <div class="admin-form-group">
+            <label class="admin-form-label" for="manualResName">Nombre y Apellido del Titular *</label>
+            <input type="text" id="manualResName" class="admin-input" placeholder="Ej. Camila Navarro" required />
+          </div>
+          <div class="admin-form-group">
+            <label class="admin-form-label" for="manualResPhone">WhatsApp / Teléfono *</label>
+            <input type="tel" id="manualResPhone" class="admin-input" placeholder="Ej. 11 5555-5555" required />
+          </div>
+        </div>
+
+        <div class="admin-form-row-2">
+          <div class="admin-form-group">
+            <label class="admin-form-label" for="manualResEmail">Email (opcional)</label>
+            <input type="email" id="manualResEmail" class="admin-input" placeholder="cliente@ejemplo.com" />
+          </div>
+          <div class="admin-form-group">
+            <label class="admin-form-label" for="manualResType">Sector / Motivo *</label>
+            <select id="manualResType" class="admin-input" required>
+              <option value="Mesa Cena + Previa" selected>Mesa Cena + Quedarse a la Previa</option>
+              <option value="Cumpleaños VIP">Festejo de Cumpleaños (con beneficios)</option>
+              <option value="Living VIP Cabina 13/11">Living VIP / Evento 13/11</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Conditional Birthday Fields in Admin Form -->
+        <div id="manualResBirthdayRow" class="admin-form-row-2" hidden style="display: none;">
+          <div class="admin-form-group">
+            <label class="admin-form-label" for="manualResDni">DNI del cumpleañero/a</label>
+            <input type="text" id="manualResDni" class="admin-input" placeholder="Ej. 42.123.456" />
+          </div>
+          <div class="admin-form-group">
+            <label class="admin-form-label" for="manualResBirthDate">Fecha de cumpleaños</label>
+            <input type="date" id="manualResBirthDate" class="admin-input" />
+          </div>
+        </div>
+
+        <div class="admin-form-row-3">
+          <div class="admin-form-group">
+            <label class="admin-form-label" for="manualResGuests">Personas *</label>
+            <input type="number" id="manualResGuests" class="admin-input" min="1" max="100" value="4" required />
+          </div>
+          <div class="admin-form-group">
+            <label class="admin-form-label" for="manualResDay">Día *</label>
+            <select id="manualResDay" class="admin-input" required>
+              <option value="Viernes 13/11" selected>Viernes 13/11</option>
+              <option value="Sábado">Sábado</option>
+              <option value="Domingo">Domingo</option>
+              <option value="Miércoles / Jueves">Miércoles / Jueves</option>
+            </select>
+          </div>
+          <div class="admin-form-group">
+            <label class="admin-form-label" for="manualResTime">Horario *</label>
+            <select id="manualResTime" class="admin-input" required>
+              <option value="20:30 hs (Cena)" selected>20:30 hs (Cena)</option>
+              <option value="22:00 hs (Cena Tardía)">22:00 hs (Cena Tardía)</option>
+              <option value="23:30 hs (Previa &amp; Club)">23:30 hs (Previa &amp; Club)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="admin-form-row-2">
+          <div class="admin-form-group">
+            <label class="admin-form-label" for="manualResDeposit">Estado de la Seña *</label>
+            <select id="manualResDeposit" class="admin-input" required>
+              <option value="confirmada" selected>✓ Con seña pagada (Lugar asegurado)</option>
+              <option value="pendiente">⏳ Con seña pendiente de comprobante</option>
+              <option value="sin_sena">○ Sin seña (Sujeta a disponibilidad)</option>
+            </select>
+          </div>
+          <div class="admin-form-group">
+            <label class="admin-form-label" for="manualResNotes">Notas internas / Observaciones</label>
+            <input type="text" id="manualResNotes" class="admin-input" placeholder="Ej. Reservó por WhatsApp con Juan" />
+          </div>
+        </div>
+
+        <div class="admin-modal-footer" style="padding: 16px 0 0; margin-top: 6px;">
+          <button type="button" id="btnCancelNewResModal" class="admin-btn-outline">Cancelar</button>
+          <button type="submit" id="btnSaveNewResModal" class="admin-btn-gold">Guardar y generar Pase VIP</button>
+        </div>
+      </form>
+
+      <!-- Created Success View with Pass Share Links -->
+      <div id="adminNewResSuccessView" class="admin-modal-body" hidden style="display:none; padding: 24px; text-align: center;">
+        <div class="admin-check-anim-circle is-animating" style="margin: 0 auto 16px; opacity: 1; transform: scale(1);">
+          <svg class="admin-check-svg" viewBox="0 0 52 52">
+            <circle class="admin-check-circle" cx="26" cy="26" r="23" fill="none" style="stroke-dashoffset: 0;"/>
+            <path class="admin-check-path" fill="none" d="M14 27l8 8 16-16" style="stroke-dashoffset: 0;"/>
+          </svg>
+        </div>
+        <h3 id="manualSuccessCode" style="font-size: 1.5rem; font-weight: 700; color: var(--q-gold); margin: 0 0 6px;">MLP-0000</h3>
+        <p id="manualSuccessSummary" style="color: var(--q-cream-muted); font-size: 0.92rem; margin: 0 0 20px;">
+          Reserva guardada y lugar registrado en el sistema.
+        </p>
+
+        <div style="display: flex; flex-direction: column; gap: 10px; max-width: 360px; margin: 0 auto;">
+          <a id="btnShareManualWhatsapp" href="#" target="_blank" rel="noopener" class="admin-btn-gold" style="display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none;">
+            <span>💬</span>
+            <span>Enviar Pase VIP por WhatsApp al cliente</span>
+          </a>
+          <button type="button" id="btnCopyManualPassLink" class="admin-btn-outline" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <span>🔗</span>
+            <span id="btnCopyManualPassText">Copiar link del Pase digital</span>
+          </button>
+          <a id="btnOpenManualPassDirect" href="#" target="_blank" rel="noopener" class="admin-btn-outline" style="display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none;">
+            <span>↗</span>
+            <span>Abrir Pase de Acceso en nueva pestaña</span>
+          </a>
+        </div>
+
+        <div class="admin-modal-footer" style="padding: 20px 0 0; margin-top: 16px;">
+          <button type="button" id="btnFinishNewResModal" class="admin-btn-gold" style="width: 100%;">Listo, volver al listado</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js?v=13"></script>
-  <script src="admin.js?v=13"></script>
+  <script src="supabase-config.js?v=14"></script>
+  <script src="admin.js?v=14"></script>
 </body>
 </html>

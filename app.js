@@ -689,6 +689,111 @@ document.addEventListener('DOMContentLoaded', () => {
     updateBirthdayFieldsVisibility();
   }
 
+  // Availability & Capacity management on public form
+  const resDaySelect = document.getElementById('resDay');
+  const resGuestsInput = document.getElementById('resGuests');
+  const resDayAvailNotice = document.getElementById('resDayAvailNotice');
+
+  function updatePublicDayAvailability() {
+    if (!window.MeryStore || typeof window.MeryStore.getDayAvailability !== 'function') return;
+
+    const dayWrap = document.querySelector('[data-select-id="resDay"]');
+    if (!dayWrap) return;
+
+    const options = dayWrap.querySelectorAll('.q-select-option');
+    const nativeSelect = dayWrap.querySelector('select#resDay');
+    const triggerVal = dayWrap.querySelector('.q-select-value');
+
+    let currentDay = nativeSelect?.value || 'Viernes 13/11';
+    let currentDayAvail = window.MeryStore.getDayAvailability(currentDay);
+
+    options.forEach((opt) => {
+      const val = opt.getAttribute('data-value');
+      const avail = window.MeryStore.getDayAvailability(val);
+      const spanLabel = opt.querySelector('span:first-child');
+      let pill = opt.querySelector('.q-option-avail-pill');
+
+      if (!pill) {
+        pill = document.createElement('span');
+        pill.className = 'q-option-avail-pill';
+        opt.insertBefore(pill, opt.querySelector('.q-option-diamond'));
+      }
+
+      if (avail.isSoldOut) {
+        opt.classList.add('is-sold-out');
+        pill.textContent = 'Agotado';
+        if (spanLabel) spanLabel.textContent = val;
+      } else {
+        opt.classList.remove('is-sold-out');
+        pill.textContent = `${avail.remaining} disp.`;
+        if (spanLabel) spanLabel.textContent = val;
+      }
+
+      // Update native option
+      if (nativeSelect) {
+        const nativeOpt = nativeSelect.querySelector(`option[value="${val}"]`);
+        if (nativeOpt) {
+          nativeOpt.disabled = avail.isSoldOut;
+          nativeOpt.textContent = avail.isSoldOut ? `${val} (Agotado)` : `${val} (${avail.remaining} disp.)`;
+        }
+      }
+    });
+
+    // If current selected day is sold out, pick the first available day
+    if (currentDayAvail.isSoldOut) {
+      const firstAvailOpt = Array.from(options).find((o) => !o.classList.contains('is-sold-out'));
+      if (firstAvailOpt) {
+        const nextVal = firstAvailOpt.getAttribute('data-value');
+        options.forEach((o) => o.classList.toggle('selected', o === firstAvailOpt));
+        if (triggerVal) triggerVal.textContent = nextVal;
+        if (nativeSelect) nativeSelect.value = nextVal;
+        currentDay = nextVal;
+        currentDayAvail = window.MeryStore.getDayAvailability(currentDay);
+      }
+    }
+
+    // Check guests vs remaining
+    const guests = parseInt(resGuestsInput?.value, 10) || 0;
+    if (resDayAvailNotice) {
+      if (currentDayAvail.isSoldOut) {
+        resDayAvailNotice.hidden = false;
+        resDayAvailNotice.className = 'q-res-avail-notice is-warning';
+        resDayAvailNotice.innerHTML = `⚠️ El día <strong>${currentDay}</strong> se encuentra agotado. Seleccioná otra fecha disponible.`;
+      } else if (guests > 0 && currentDayAvail.max > 0 && guests > currentDayAvail.remaining) {
+        resDayAvailNotice.hidden = false;
+        resDayAvailNotice.className = 'q-res-avail-notice is-warning';
+        resDayAvailNotice.innerHTML = `⚠️ Capacidad limitada para <strong>${currentDay}</strong>: solo quedan <strong>${currentDayAvail.remaining}</strong> lugares disponibles (ingresaste ${guests}).`;
+      } else if (currentDayAvail.remaining <= 15 && currentDayAvail.remaining > 0) {
+        resDayAvailNotice.hidden = false;
+        resDayAvailNotice.className = 'q-res-avail-notice';
+        resDayAvailNotice.innerHTML = `🔥 ¡Últimos <strong>${currentDayAvail.remaining}</strong> lugares disponibles para <strong>${currentDay}</strong>!`;
+      } else {
+        resDayAvailNotice.hidden = true;
+        resDayAvailNotice.innerHTML = '';
+      }
+    }
+  }
+
+  if (resDaySelect) {
+    resDaySelect.addEventListener('change', updatePublicDayAvailability);
+    document.querySelectorAll('[data-select-id="resDay"] .q-select-option').forEach((opt) => {
+      opt.addEventListener('click', () => {
+        setTimeout(updatePublicDayAvailability, 50);
+      });
+    });
+  }
+  if (resGuestsInput) {
+    resGuestsInput.addEventListener('input', updatePublicDayAvailability);
+  }
+
+  updatePublicDayAvailability();
+
+  if (window.MeryStore && typeof window.MeryStore.subscribeToReservationChanges === 'function') {
+    window.MeryStore.subscribeToReservationChanges(() => {
+      updatePublicDayAvailability();
+    });
+  }
+
   // Deposit Mode selector cards
   if (resDepositModeWrap) {
     const cards = resDepositModeWrap.querySelectorAll('.q-deposit-card');
@@ -1127,6 +1232,18 @@ document.addEventListener('DOMContentLoaded', () => {
       if (isBirthday && (!dni || !birthDate)) {
         alert('Para reservas de Cumpleaños VIP, ingresá el DNI y la Fecha de Cumpleaños.');
         return;
+      }
+
+      if (window.MeryStore && typeof window.MeryStore.getDayAvailability === 'function') {
+        const avail = window.MeryStore.getDayAvailability(day);
+        if (avail.isSoldOut) {
+          alert(`Lo sentimos, el día "${day}" se encuentra agotado o cerrado para nuevas reservas. Por favor elegí otra fecha.`);
+          return;
+        }
+        if (avail.max > 0 && avail.remaining < (Number(guests) || 2)) {
+          alert(`Capacidad insuficiente para "${day}". Solo quedan ${avail.remaining} lugares disponibles y solicitaste ${guests}.`);
+          return;
+        }
       }
 
       pendingReservationData = {

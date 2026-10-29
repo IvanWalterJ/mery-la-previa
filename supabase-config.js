@@ -26,7 +26,14 @@ const DEFAULT_RESERVATION_SETTINGS = {
   evolutionServerUrl: 'https://mery-la-previa-evolution-api.rsssbm.easypanel.host',
   evolutionApiKey: '429683C4C977415CAAFCCE10F7D57E11',
   evolutionInstanceName: 'mery-la-previa',
-  whatsappConnected: false
+  whatsappConnected: false,
+  maxCapacityPerDay: {
+    'Viernes 13/11': 60,
+    'Sábado': 80,
+    'Domingo': 50,
+    'Miércoles / Jueves': 40
+  },
+  closedDays: []
 };
 
 const DEFAULT_RESERVATIONS = [
@@ -1145,6 +1152,11 @@ const DEFAULT_MENU_SECTIONS = [
         return {
           ...DEFAULT_RESERVATION_SETTINGS,
           ...parsed,
+          maxCapacityPerDay: {
+            ...DEFAULT_RESERVATION_SETTINGS.maxCapacityPerDay,
+            ...(parsed.maxCapacityPerDay || {})
+          },
+          closedDays: Array.isArray(parsed.closedDays) ? parsed.closedDays : [],
           evolutionServerUrl: parsed.evolutionServerUrl || DEFAULT_RESERVATION_SETTINGS.evolutionServerUrl,
           evolutionApiKey: parsed.evolutionApiKey || DEFAULT_RESERVATION_SETTINGS.evolutionApiKey,
           evolutionInstanceName: parsed.evolutionInstanceName || DEFAULT_RESERVATION_SETTINGS.evolutionInstanceName
@@ -1197,6 +1209,64 @@ const DEFAULT_MENU_SECTIONS = [
     }
   }
 
+  const DEFAULT_AVAILABLE_DAYS = ['Viernes 13/11', 'Sábado', 'Domingo', 'Miércoles / Jueves'];
+
+  function getDayAvailability(dayName) {
+    const settings = getReservationSettings();
+    const maxCapacity = (settings.maxCapacityPerDay && settings.maxCapacityPerDay[dayName] !== undefined)
+      ? Number(settings.maxCapacityPerDay[dayName])
+      : (DEFAULT_RESERVATION_SETTINGS.maxCapacityPerDay[dayName] !== undefined ? DEFAULT_RESERVATION_SETTINGS.maxCapacityPerDay[dayName] : 60);
+    const isClosed = Array.isArray(settings.closedDays) && settings.closedDays.includes(dayName);
+
+    const allRes = getReservations();
+    const dayRes = allRes.filter((r) => r.res_day === dayName);
+    const bookedGuests = dayRes.reduce((acc, r) => acc + (Number(r.guests) || 0), 0);
+    const remaining = Math.max(0, maxCapacity - bookedGuests);
+    const isSoldOut = isClosed || (maxCapacity > 0 && remaining <= 0);
+    const percent = maxCapacity > 0 ? Math.min(100, Math.round((bookedGuests / maxCapacity) * 100)) : 0;
+
+    return {
+      day: dayName,
+      max: maxCapacity,
+      booked: bookedGuests,
+      remaining: remaining,
+      totalReservas: dayRes.length,
+      isClosed: isClosed,
+      isSoldOut: isSoldOut,
+      percent: percent
+    };
+  }
+
+  function getAllDaysAvailability() {
+    const settings = getReservationSettings();
+    const daySet = new Set([
+      ...DEFAULT_AVAILABLE_DAYS,
+      ...Object.keys(settings.maxCapacityPerDay || {})
+    ]);
+    return Array.from(daySet).map((day) => getDayAvailability(day));
+  }
+
+  function updateDayCapacity(dayName, newMax) {
+    const settings = getReservationSettings();
+    const current = { ...(settings.maxCapacityPerDay || DEFAULT_RESERVATION_SETTINGS.maxCapacityPerDay) };
+    current[dayName] = Math.max(0, parseInt(newMax, 10) || 0);
+    return saveReservationSettings({ maxCapacityPerDay: current });
+  }
+
+  function toggleDayClosed(dayName, forceState = null) {
+    const settings = getReservationSettings();
+    const list = new Set(settings.closedDays || []);
+    if (forceState === true) {
+      list.add(dayName);
+    } else if (forceState === false) {
+      list.delete(dayName);
+    } else {
+      if (list.has(dayName)) list.delete(dayName);
+      else list.add(dayName);
+    }
+    return saveReservationSettings({ closedDays: Array.from(list) });
+  }
+
   function generateReservationId() {
     const existing = getReservations();
     for (let i = 0; i < 50; i++) {
@@ -1207,6 +1277,25 @@ const DEFAULT_MENU_SECTIONS = [
   }
 
   function createReservation(payload) {
+    const dayName = payload.res_day || 'Viernes 13/11';
+    const requestedGuests = Number(payload.guests) || 2;
+    const isFromAdmin = Boolean(payload.fromAdmin);
+
+    // Si la reserva viene desde el formulario público, validar disponibilidad
+    if (!isFromAdmin) {
+      const avail = getDayAvailability(dayName);
+      if (avail.isClosed) {
+        throw new Error(`Las reservas para el día ${dayName} se encuentran momentáneamente cerradas.`);
+      }
+      if (avail.max > 0 && avail.remaining < requestedGuests) {
+        throw new Error(
+          avail.remaining > 0
+            ? `Disponibilidad insuficiente para ${dayName}. Solo quedan ${avail.remaining} lugares disponibles.`
+            : `El día ${dayName} se encuentra completo / agotado.`
+        );
+      }
+    }
+
     const list = getReservations();
     const id = payload.id || generateReservationId();
     const now = new Date().toISOString();
@@ -1537,7 +1626,12 @@ const DEFAULT_MENU_SECTIONS = [
     saveSiteVideos,
     subscribeToVideoChanges,
     deleteBlobFromIDB,
-    // Reservations & Evolution API
+    // Reservations, Availability & Evolution API
+    DEFAULT_AVAILABLE_DAYS,
+    getDayAvailability,
+    getAllDaysAvailability,
+    updateDayCapacity,
+    toggleDayClosed,
     getReservations,
     saveReservations,
     createReservation,

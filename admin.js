@@ -1559,6 +1559,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (adminSearchInput?.parentElement) adminSearchInput.parentElement.hidden = true;
 
     const allReservations = window.MeryStore ? window.MeryStore.getReservations() : [];
+    const daysAvailability = window.MeryStore && typeof window.MeryStore.getAllDaysAvailability === 'function'
+      ? window.MeryStore.getAllDaysAvailability()
+      : [];
 
     // KPI Counters
     const totalReservas = allReservations.length;
@@ -1614,6 +1617,28 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       </div>
 
+      <!-- Capacity & Availability Overview Strip -->
+      <div class="admin-capacity-bar-strip">
+        <div class="admin-capacity-title">
+          <span class="diamond-dot"></span>
+          <span>Disponibilidad por Noche</span>
+        </div>
+        <div class="admin-capacity-chips">
+          ${daysAvailability.map((d) => `
+            <div class="admin-capacity-chip ${d.isSoldOut ? 'is-sold-out' : ''}" title="${d.isClosed ? 'Pausado manualmente' : `${d.booked} personas reservadas de ${d.max} (${d.remaining} lugares libres)`}">
+              <span class="admin-capacity-chip-name">${escapeHtml(d.day)}</span>
+              <span class="admin-capacity-chip-badge ${d.isSoldOut ? 'chip-sold-out' : 'chip-open'}">
+                ${d.isClosed ? 'Pausado' : d.isSoldOut ? 'Agotado' : `${d.booked}/${d.max} (${d.remaining} libres)`}
+              </span>
+            </div>
+          `).join('')}
+        </div>
+        <button type="button" id="btnQuickEditCapacity" class="admin-capacity-edit-btn">
+          <span>⚙</span>
+          <span>Ajustar cupos</span>
+        </button>
+      </div>
+
       <!-- Top Action Bar -->
       <div class="admin-res-action-bar">
         <div class="admin-filter-pills" role="tablist" aria-label="Filtros de reservas">
@@ -1628,18 +1653,26 @@ document.addEventListener('DOMContentLoaded', () => {
           `).join('')}
         </div>
 
-        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
           <input
             type="search"
             id="resWorkspaceSearch"
             class="admin-input"
-            style="width:240px; padding:8px 12px; font-size:0.84rem;"
-            placeholder="Buscar por nombre, MLP-XXXX, DNI..."
+            style="width:200px; padding:8px 12px; font-size:0.84rem;"
+            placeholder="Buscar reserva..."
             value="${escapeHtml(resSearchQuery)}"
           />
+          <button type="button" id="btnOpenManualRes" class="admin-btn-gold">
+            <span>+</span>
+            <span>Nueva reserva manual</span>
+          </button>
+          <button type="button" id="btnOpenAvailability" class="admin-btn-outline">
+            <span>⚙</span>
+            <span>Cupos</span>
+          </button>
           <button type="button" id="btnOpenQrScanner" class="admin-btn-gold admin-btn-scanner">
             <span>📷</span>
-            <span>Escanear / Validar QR en puerta</span>
+            <span>Escanear QR</span>
           </button>
         </div>
       </div>
@@ -1784,6 +1817,29 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnOpenQr) {
       btnOpenQr.addEventListener('click', () => {
         openQrScannerModal();
+      });
+    }
+
+    // Open Manual Reservation modal
+    const btnOpenManual = sectionsContainer.querySelector('#btnOpenManualRes');
+    if (btnOpenManual) {
+      btnOpenManual.addEventListener('click', () => {
+        openNewResModal();
+      });
+    }
+
+    // Open Availability & Capacity modal
+    const btnOpenAvail = sectionsContainer.querySelector('#btnOpenAvailability');
+    if (btnOpenAvail) {
+      btnOpenAvail.addEventListener('click', () => {
+        openAvailabilityModal();
+      });
+    }
+
+    const btnQuickAvail = sectionsContainer.querySelector('#btnQuickEditCapacity');
+    if (btnQuickAvail) {
+      btnQuickAvail.addEventListener('click', () => {
+        openAvailabilityModal();
       });
     }
 
@@ -2478,5 +2534,315 @@ document.addEventListener('DOMContentLoaded', () => {
   const urlCheckinParam = new URLSearchParams(window.location.search).get('checkin');
   if (urlCheckinParam) {
     openQrScannerModal(urlCheckinParam.trim());
+  }
+
+  // ===========================================================================
+  // 8. AVAILABILITY & MAX CAPACITY MODAL
+  // ===========================================================================
+  const adminAvailabilityModal = document.getElementById('adminAvailabilityModal');
+  const btnCloseAvailModal = document.getElementById('btnCloseAvailModal');
+  const btnCancelAvailModal = document.getElementById('btnCancelAvailModal');
+  const btnSaveAvailModal = document.getElementById('btnSaveAvailModal');
+  const adminAvailDaysList = document.getElementById('adminAvailDaysList');
+
+  function openAvailabilityModal() {
+    if (!adminAvailabilityModal || !window.MeryStore) return;
+    const days = window.MeryStore.getAllDaysAvailability();
+
+    if (adminAvailDaysList) {
+      adminAvailDaysList.innerHTML = days.map((d) => {
+        const isHigh = d.percent >= 80 && d.percent < 100;
+        const isFull = d.percent >= 100;
+        return `
+          <div class="admin-avail-day-row" data-day-name="${escapeHtml(d.day)}">
+            <div class="admin-avail-day-header">
+              <div>
+                <span class="admin-avail-day-title">${escapeHtml(d.day)}</span>
+                <span style="font-size: 0.8rem; color: var(--q-cream-muted); margin-left: 8px;">
+                  ${d.booked} pers. reservadas (${d.remaining} lugares libres)
+                </span>
+              </div>
+              <div class="admin-avail-day-controls">
+                <div class="admin-avail-input-wrap">
+                  <span>Cupo máx:</span>
+                  <input
+                    type="number"
+                    class="admin-avail-input"
+                    data-day-capacity="${escapeHtml(d.day)}"
+                    min="0"
+                    max="500"
+                    value="${d.max}"
+                  />
+                  <span>pers.</span>
+                </div>
+                <button
+                  type="button"
+                  class="admin-avail-toggle-btn ${d.isClosed ? 'is-active-closed' : 'is-active-open'}"
+                  data-toggle-day="${escapeHtml(d.day)}"
+                  data-closed="${d.isClosed ? 'true' : 'false'}"
+                >
+                  ${d.isClosed ? '✕ Pausado' : '● Abierto'}
+                </button>
+              </div>
+            </div>
+            <div class="admin-avail-progress-track">
+              <div
+                class="admin-avail-progress-fill ${isFull ? 'is-full' : isHigh ? 'is-high' : ''}"
+                style="width: ${d.percent}%;"
+              ></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Toggle button event listeners
+      adminAvailDaysList.querySelectorAll('[data-toggle-day]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const isClosed = (btn.getAttribute('data-closed') === 'true');
+          const nextClosed = !isClosed;
+          btn.setAttribute('data-closed', String(nextClosed));
+          btn.className = `admin-avail-toggle-btn ${nextClosed ? 'is-active-closed' : 'is-active-open'}`;
+          btn.textContent = nextClosed ? '✕ Pausado' : '● Abierto';
+        });
+      });
+    }
+
+    adminAvailabilityModal.hidden = false;
+  }
+
+  function closeAvailabilityModal() {
+    if (!adminAvailabilityModal) return;
+    adminAvailabilityModal.hidden = true;
+  }
+
+  if (btnCloseAvailModal) btnCloseAvailModal.addEventListener('click', closeAvailabilityModal);
+  if (btnCancelAvailModal) btnCancelAvailModal.addEventListener('click', closeAvailabilityModal);
+  if (adminAvailabilityModal) {
+    adminAvailabilityModal.addEventListener('click', (e) => {
+      if (e.target === adminAvailabilityModal) closeAvailabilityModal();
+    });
+  }
+
+  if (btnSaveAvailModal) {
+    btnSaveAvailModal.addEventListener('click', () => {
+      if (!window.MeryStore) return;
+      const settings = window.MeryStore.getReservationSettings();
+      const newMaxMap = { ...(settings.maxCapacityPerDay || {}) };
+      const closedDays = [];
+
+      adminAvailDaysList?.querySelectorAll('.admin-avail-day-row').forEach((row) => {
+        const day = row.getAttribute('data-day-name');
+        const input = row.querySelector('[data-day-capacity]');
+        const toggle = row.querySelector('[data-toggle-day]');
+
+        if (day && input) {
+          newMaxMap[day] = Math.max(0, parseInt(input.value, 10) || 0);
+        }
+        if (day && toggle && toggle.getAttribute('data-closed') === 'true') {
+          closedDays.push(day);
+        }
+      });
+
+      window.MeryStore.saveReservationSettings({
+        maxCapacityPerDay: newMaxMap,
+        closedDays
+      });
+
+      closeAvailabilityModal();
+      showToast('✓ Cupos y disponibilidad actualizados');
+      if (activeTab === 'reservations') renderReservationsWorkspace();
+    });
+  }
+
+  // ===========================================================================
+  // 9. MANUAL RESERVATION MODAL (WhatsApp booking / door booking)
+  // ===========================================================================
+  const adminNewResModal = document.getElementById('adminNewResModal');
+  const btnCloseNewResModal = document.getElementById('btnCloseNewResModal');
+  const btnCancelNewResModal = document.getElementById('btnCancelNewResModal');
+  const adminNewResForm = document.getElementById('adminNewResForm');
+  const manualResType = document.getElementById('manualResType');
+  const manualResBirthdayRow = document.getElementById('manualResBirthdayRow');
+  const manualResDni = document.getElementById('manualResDni');
+  const manualResBirthDate = document.getElementById('manualResBirthDate');
+  const adminNewResSuccessView = document.getElementById('adminNewResSuccessView');
+  const manualSuccessCode = document.getElementById('manualSuccessCode');
+  const manualSuccessSummary = document.getElementById('manualSuccessSummary');
+  const btnShareManualWhatsapp = document.getElementById('btnShareManualWhatsapp');
+  const btnCopyManualPassLink = document.getElementById('btnCopyManualPassLink');
+  const btnCopyManualPassText = document.getElementById('btnCopyManualPassText');
+  const btnOpenManualPassDirect = document.getElementById('btnOpenManualPassDirect');
+  const btnFinishNewResModal = document.getElementById('btnFinishNewResModal');
+  let activeManualCreatedRes = null;
+
+  function updateManualBirthdayRow() {
+    if (!manualResBirthdayRow) return;
+    const isBirthday = (manualResType?.value === 'Cumpleaños VIP');
+    manualResBirthdayRow.hidden = !isBirthday;
+    manualResBirthdayRow.style.display = isBirthday ? 'grid' : 'none';
+    if (manualResDni) manualResDni.required = isBirthday;
+    if (manualResBirthDate) manualResBirthDate.required = isBirthday;
+  }
+
+  if (manualResType) {
+    manualResType.addEventListener('change', updateManualBirthdayRow);
+  }
+
+  function openNewResModal() {
+    if (!adminNewResModal) return;
+    activeManualCreatedRes = null;
+
+    if (adminNewResForm) {
+      adminNewResForm.reset();
+      adminNewResForm.hidden = false;
+      adminNewResForm.style.display = 'flex';
+      updateManualBirthdayRow();
+    }
+    if (adminNewResSuccessView) {
+      adminNewResSuccessView.hidden = true;
+      adminNewResSuccessView.style.display = 'none';
+    }
+
+    // Populate manualResDay with remaining spots label
+    const daySelect = document.getElementById('manualResDay');
+    if (daySelect && window.MeryStore && typeof window.MeryStore.getAllDaysAvailability === 'function') {
+      const days = window.MeryStore.getAllDaysAvailability();
+      daySelect.innerHTML = days.map((d) => `
+        <option value="${escapeHtml(d.day)}">
+          ${escapeHtml(d.day)} (${d.isClosed ? 'Pausado' : d.isSoldOut ? 'Agotado' : `${d.remaining} lugares libres`})
+        </option>
+      `).join('');
+    }
+
+    adminNewResModal.hidden = false;
+  }
+
+  function closeNewResModal() {
+    if (!adminNewResModal) return;
+    adminNewResModal.hidden = true;
+    activeManualCreatedRes = null;
+  }
+
+  if (btnCloseNewResModal) btnCloseNewResModal.addEventListener('click', closeNewResModal);
+  if (btnCancelNewResModal) btnCancelNewResModal.addEventListener('click', closeNewResModal);
+  if (btnFinishNewResModal) btnFinishNewResModal.addEventListener('click', closeNewResModal);
+  if (adminNewResModal) {
+    adminNewResModal.addEventListener('click', (e) => {
+      if (e.target === adminNewResModal) closeNewResModal();
+    });
+  }
+
+  if (adminNewResForm) {
+    adminNewResForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById('manualResName')?.value.trim() || '';
+      const phone = document.getElementById('manualResPhone')?.value.trim() || '';
+      const email = document.getElementById('manualResEmail')?.value.trim() || '';
+      const type = document.getElementById('manualResType')?.value || 'Mesa Cena + Previa';
+      const guests = parseInt(document.getElementById('manualResGuests')?.value, 10) || 2;
+      const day = document.getElementById('manualResDay')?.value || 'Viernes 13/11';
+      const time = document.getElementById('manualResTime')?.value || '20:30 hs (Cena)';
+      const depositChoice = document.getElementById('manualResDeposit')?.value || 'confirmada';
+      const notes = document.getElementById('manualResNotes')?.value.trim() || '';
+
+      const isBirthday = (type === 'Cumpleaños VIP');
+      const dni = isBirthday ? (document.getElementById('manualResDni')?.value.trim() || '') : '';
+      const birthDate = isBirthday ? (document.getElementById('manualResBirthDate')?.value.trim() || '') : '';
+
+      if (!name || !phone) {
+        showToast('Completá nombre y teléfono del titular');
+        return;
+      }
+
+      const depositMode = depositChoice === 'sin_sena' ? 'sin_sena' : 'con_sena';
+      const depositStatus = depositChoice === 'confirmada' ? 'confirmada' : (depositChoice === 'pendiente' ? 'pendiente' : 'sin_sena');
+
+      try {
+        let created = null;
+        if (window.MeryStore && typeof window.MeryStore.createReservation === 'function') {
+          created = window.MeryStore.createReservation({
+            customer_name: name,
+            customer_phone: phone,
+            customer_email: email,
+            res_type: type,
+            is_birthday: isBirthday,
+            birthday_dni: dni,
+            birthday_date: birthDate,
+            guests: guests,
+            res_day: day,
+            res_time: time,
+            deposit_mode: depositMode,
+            deposit_status: depositStatus,
+            notes: notes ? `${notes} (Cargada manualmente desde admin)` : 'Cargada manualmente desde admin',
+            fromAdmin: true
+          });
+        }
+
+        if (created) {
+          activeManualCreatedRes = created;
+
+          // Switch to Success View
+          if (adminNewResForm) {
+            adminNewResForm.hidden = true;
+            adminNewResForm.style.display = 'none';
+          }
+          if (adminNewResSuccessView) {
+            adminNewResSuccessView.hidden = false;
+            adminNewResSuccessView.style.display = 'block';
+          }
+
+          if (manualSuccessCode) manualSuccessCode.textContent = created.id;
+          if (manualSuccessSummary) {
+            manualSuccessSummary.textContent = `${created.customer_name} • ${created.res_day} ${created.res_time} (${created.guests} personas) • ${depositStatus === 'confirmada' ? 'Seña confirmada ✓' : 'Seña pendiente'}`;
+          }
+
+          // Origin URL
+          const origin = window.location.origin || 'http://localhost:3000';
+          const passUrl = `${origin}/pase.html?id=${encodeURIComponent(created.id)}`;
+
+          if (btnOpenManualPassDirect) {
+            btnOpenManualPassDirect.href = passUrl;
+          }
+
+          if (btnShareManualWhatsapp) {
+            const cleanPhone = created.customer_phone.replace(/\D/g, '');
+            const intlPhone = cleanPhone.startsWith('54') ? cleanPhone : (cleanPhone.length >= 10 ? `549${cleanPhone}` : cleanPhone);
+            const msg = `¡Hola ${created.customer_name}! 🥂\n` +
+              `Ya registramos tu reserva en *Mery La Previa* (${created.id}):\n` +
+              `• *Día y Hora:* ${created.res_day} a las ${created.res_time}\n` +
+              `• *Sector:* ${created.res_type} (${created.guests} personas)\n` +
+              `• *Estado:* ${created.deposit_status === 'confirmada' ? 'Lugar asegurado • Seña confirmada ✓' : 'Reserva registrada'}\n\n` +
+              `Acá tenés tu Pase VIP digital para ingresar en puerta:\n${passUrl}\n\n` +
+              `¡Te esperamos en la previa! 🎶`;
+
+            btnShareManualWhatsapp.href = `https://wa.me/${intlPhone ? intlPhone : ''}?text=${encodeURIComponent(msg)}`;
+          }
+
+          updateReservationsBadge();
+          if (activeTab === 'reservations') renderReservationsWorkspace();
+        }
+      } catch (err) {
+        alert('Error al crear reserva: ' + (err.message || err));
+      }
+    });
+  }
+
+  if (btnCopyManualPassLink) {
+    btnCopyManualPassLink.addEventListener('click', async () => {
+      if (!activeManualCreatedRes) return;
+      const origin = window.location.origin || 'http://localhost:3000';
+      const passUrl = `${origin}/pase.html?id=${encodeURIComponent(activeManualCreatedRes.id)}`;
+
+      try {
+        await navigator.clipboard.writeText(passUrl);
+        if (btnCopyManualPassText) btnCopyManualPassText.textContent = '¡Enlace copiado al portapapeles!';
+        setTimeout(() => {
+          if (btnCopyManualPassText) btnCopyManualPassText.textContent = 'Copiar link del Pase digital';
+        }, 2000);
+      } catch (_) {
+        prompt('Copiá el enlace del Pase VIP:', passUrl);
+      }
+    });
   }
 });
