@@ -516,18 +516,76 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 2600);
   }
 
-  // 1. UNIFIED VISUAL CONFIRMATION POPUP (Custom modal for logout & delete)
-  function openConfirmModal({ title, message, confirmLabel = 'Confirmar', onConfirm }) {
+  // 1. UNIFIED VISUAL CONFIRMATION POPUP (Custom modal with animated green check on success)
+  let confirmSuccessTimer = null;
+
+  function openConfirmModal({
+    title,
+    message,
+    confirmLabel = 'Confirmar',
+    successText = '',
+    onConfirm
+  }) {
     if (!confirmModal) return;
+    clearTimeout(confirmSuccessTimer);
+
+    const promptState = document.getElementById('confirmPromptState');
+    const successState = document.getElementById('confirmSuccessState');
+    const successTextEl = document.getElementById('confirmSuccessText');
+
+    if (promptState) {
+      promptState.hidden = false;
+      promptState.style.display = 'block';
+    }
+    if (successState) {
+      successState.hidden = true;
+      successState.style.display = 'none';
+    }
+
     if (confirmModalHeading) confirmModalHeading.textContent = title || 'Confirmar acción';
     if (confirmModalMessage) confirmModalMessage.textContent = message || '¿Querés continuar?';
-    if (btnAcceptConfirmModal) btnAcceptConfirmModal.textContent = confirmLabel;
-    pendingConfirmCallback = typeof onConfirm === 'function' ? onConfirm : null;
+    if (btnAcceptConfirmModal) {
+      btnAcceptConfirmModal.textContent = confirmLabel;
+      const isApproval = confirmLabel.toLowerCase().includes('seña') || confirmLabel.toLowerCase().includes('ingreso');
+      btnAcceptConfirmModal.className = isApproval ? 'admin-btn-gold' : 'admin-btn-gold admin-btn-confirm-danger';
+    }
+
+    pendingConfirmCallback = typeof onConfirm === 'function' ? async () => {
+      if (successText && successState && promptState) {
+        promptState.hidden = true;
+        promptState.style.display = 'none';
+        if (successTextEl) successTextEl.textContent = successText;
+        successState.hidden = false;
+        successState.style.display = 'flex';
+
+        // Replay SVG stroke animation
+        const svg = successState.querySelector('.admin-check-svg');
+        if (svg) {
+          const clone = svg.cloneNode(true);
+          svg.replaceWith(clone);
+        }
+
+        try {
+          await onConfirm();
+        } catch (_) {}
+
+        confirmSuccessTimer = setTimeout(() => {
+          closeConfirmModal();
+        }, 1000);
+      } else {
+        closeConfirmModal();
+        try {
+          await onConfirm();
+        } catch (_) {}
+      }
+    } : null;
+
     confirmModal.hidden = false;
   }
 
   function closeConfirmModal() {
     if (!confirmModal) return;
+    clearTimeout(confirmSuccessTimer);
     confirmModal.hidden = true;
     pendingConfirmCallback = null;
   }
@@ -1721,14 +1779,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (action === 'view-proof') {
           openProofModal(target);
         } else if (action === 'approve-deposit') {
+          const targetResId = target.id;
+          const targetCustomerName = target.customer_name;
           openConfirmModal({
             title: '¿Confirmar seña?',
-            message: `¿Confirmar la seña para ${target.customer_name} (${target.id})? Esto marcará la reserva como "Lugar asegurado • Seña confirmada".`,
+            message: `¿Confirmar la seña para ${targetCustomerName} (${targetResId})? Esto marcará la reserva como "Lugar asegurado • Seña confirmada".`,
             confirmLabel: 'Sí, confirmar seña',
+            successText: '¡Seña confirmada con éxito!',
             onConfirm: () => {
               if (window.MeryStore && typeof window.MeryStore.approveReservationDeposit === 'function') {
-                window.MeryStore.approveReservationDeposit(resId);
-                showToast(`✓ Seña confirmada para ${target.customer_name} (${target.id})`);
+                window.MeryStore.approveReservationDeposit(targetResId);
+                showToast(`✓ Seña confirmada para ${targetCustomerName} (${targetResId})`);
                 updateReservationsBadge();
                 renderReservationsWorkspace();
               }
@@ -1736,16 +1797,19 @@ document.addEventListener('DOMContentLoaded', () => {
           });
         } else if (action === 'toggle-checkin') {
           const nextState = !target.attended;
+          const targetResId = target.id;
+          const targetCustomerName = target.customer_name;
           openConfirmModal({
             title: nextState ? '¿Confirmar ingreso?' : '¿Cancelar check-in?',
             message: nextState
-              ? `¿Confirmar el ingreso en puerta de ${target.customer_name} (${target.guests} personas)?`
-              : `¿Cancelar el check-in de ${target.customer_name}?`,
+              ? `¿Confirmar el ingreso en puerta de ${targetCustomerName} (${target.guests} personas)?`
+              : `¿Cancelar el check-in de ${targetCustomerName}?`,
             confirmLabel: nextState ? 'Sí, registrar ingreso' : 'Sí, cancelar check-in',
+            successText: nextState ? '¡Ingreso registrado con éxito!' : 'Check-in cancelado',
             onConfirm: () => {
               if (window.MeryStore && typeof window.MeryStore.checkInReservation === 'function') {
-                window.MeryStore.checkInReservation(resId, nextState);
-                showToast(nextState ? `✓ Ingreso registrado para ${target.customer_name}` : `Check-in cancelado para ${target.customer_name}`);
+                window.MeryStore.checkInReservation(targetResId, nextState);
+                showToast(nextState ? `✓ Ingreso registrado para ${targetCustomerName}` : `Check-in cancelado para ${targetCustomerName}`);
                 updateReservationsBadge();
                 renderReservationsWorkspace();
               }
@@ -1814,14 +1878,18 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnApproveProofModal) {
     btnApproveProofModal.addEventListener('click', () => {
       if (!activeProofRes) return;
+      const targetResId = activeProofRes.id;
+      const targetCustomerName = activeProofRes.customer_name;
+
       openConfirmModal({
         title: '¿Confirmar seña?',
-        message: `¿Aprobar el comprobante de transferencia y asegurar la mesa para ${activeProofRes.customer_name} (${activeProofRes.id})?`,
+        message: `¿Aprobar el comprobante de transferencia y asegurar la mesa para ${targetCustomerName} (${targetResId})?`,
         confirmLabel: 'Sí, confirmar seña',
+        successText: '¡Seña confirmada con éxito!',
         onConfirm: () => {
           if (window.MeryStore && typeof window.MeryStore.approveReservationDeposit === 'function') {
-            window.MeryStore.approveReservationDeposit(activeProofRes.id);
-            showToast(`✓ Seña confirmada para ${activeProofRes.customer_name} (${activeProofRes.id})`);
+            window.MeryStore.approveReservationDeposit(targetResId);
+            showToast(`✓ Seña confirmada para ${targetCustomerName} (${targetResId})`);
             closeProofModal();
             updateReservationsBadge();
             if (activeTab === 'reservations') renderReservationsWorkspace();
@@ -1939,14 +2007,26 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnConfirmQrCheckIn) {
     btnConfirmQrCheckIn.addEventListener('click', () => {
       if (!activeScannedRes) return;
-      if (window.MeryStore && typeof window.MeryStore.checkInReservation === 'function') {
-        const updated = window.MeryStore.checkInReservation(activeScannedRes.id, true);
-        activeScannedRes = updated;
-        showToast(`✓ Ingreso confirmado para ${updated.customer_name} (${updated.id})`);
-        closeQrScannerModal();
-        updateReservationsBadge();
-        if (activeTab === 'reservations') renderReservationsWorkspace();
-      }
+      const targetResId = activeScannedRes.id;
+      const targetCustomerName = activeScannedRes.customer_name;
+      const guestsCount = activeScannedRes.guests;
+
+      openConfirmModal({
+        title: '¿Confirmar ingreso?',
+        message: `¿Confirmar ingreso en puerta de ${targetCustomerName} (${guestsCount} personas)?`,
+        confirmLabel: 'Sí, confirmar ingreso',
+        successText: '¡Ingreso confirmado con éxito!',
+        onConfirm: () => {
+          if (window.MeryStore && typeof window.MeryStore.checkInReservation === 'function') {
+            const updated = window.MeryStore.checkInReservation(targetResId, true);
+            activeScannedRes = updated;
+            showToast(`✓ Ingreso confirmado para ${targetCustomerName} (${targetResId})`);
+            closeQrScannerModal();
+            updateReservationsBadge();
+            if (activeTab === 'reservations') renderReservationsWorkspace();
+          }
+        }
+      });
     });
   }
 

@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="admin.css?v=10" />
+  <link rel="stylesheet" href="admin.css?v=11" />
 </head>
 <body>
 
@@ -370,15 +370,28 @@
         <button type="button" id="btnCloseConfirmModal" class="admin-modal-close" aria-label="Cerrar">✕</button>
       </div>
 
-      <div class="admin-confirm-body">
-        <p id="confirmModalMessage" class="admin-confirm-message">
-          ¿Estás seguro de que querés realizar esta acción?
-        </p>
+      <div id="confirmPromptState">
+        <div class="admin-confirm-body">
+          <p id="confirmModalMessage" class="admin-confirm-message">
+            ¿Estás seguro de que querés realizar esta acción?
+          </p>
+        </div>
+
+        <div class="admin-modal-footer">
+          <button type="button" id="btnCancelConfirmModal" class="admin-btn-outline">Cancelar</button>
+          <button type="button" id="btnAcceptConfirmModal" class="admin-btn-gold admin-btn-confirm-danger">Confirmar</button>
+        </div>
       </div>
 
-      <div class="admin-modal-footer">
-        <button type="button" id="btnCancelConfirmModal" class="admin-btn-outline">Cancelar</button>
-        <button type="button" id="btnAcceptConfirmModal" class="admin-btn-gold admin-btn-confirm-danger">Confirmar</button>
+      <!-- Animated Green Success Check State -->
+      <div id="confirmSuccessState" class="admin-confirm-success-state" hidden style="display:none;">
+        <div class="admin-check-anim-circle">
+          <svg class="admin-check-svg" viewBox="0 0 52 52">
+            <circle class="admin-check-circle" cx="26" cy="26" r="23" fill="none"/>
+            <path class="admin-check-path" fill="none" d="M14 27l8 8 16-16"/>
+          </svg>
+        </div>
+        <span id="confirmSuccessText" class="admin-confirm-success-text">¡Acción confirmada con éxito!</span>
       </div>
     </div>
   </div>
@@ -630,7 +643,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js?v=10"></script>
-  <script src="admin.js?v=10"></script>
+  <script src="supabase-config.js?v=11"></script>
+  <script src="admin.js?v=11"></script>
 </body>
 </html>
