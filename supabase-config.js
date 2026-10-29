@@ -5,8 +5,8 @@
  * 1. Ejecutá el archivo `supabase/schema.sql` en el SQL Editor de tu proyecto Supabase.
  * 2. Pegá tu SUPABASE_URL y SUPABASE_ANON_KEY abajo (o configuralos desde /admin.html -> Conexión Supabase).
  */
-const DEFAULT_SUPABASE_URL = '';
-const DEFAULT_SUPABASE_ANON_KEY = '';
+const DEFAULT_SUPABASE_URL = 'https://auuwueojsqpyukfzmgcj.supabase.co';
+const DEFAULT_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF1dXd1ZW9qc3FweXVrZnptZ2NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMyMjg3NDcsImV4cCI6MjEwODgwNDc0N30.xKBbM5wjhJ3sdHGDH3Q_2O4Rr2xm-vDrCT5Ssmoq0wo';
 
 const STORAGE_KEY_MENU = 'mery_menu_sections_v2';
 const STORAGE_KEY_SUPA_CFG = 'mery_supabase_config_v1';
