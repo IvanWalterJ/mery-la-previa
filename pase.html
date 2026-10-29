@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Forum&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="pase.css?v=9" />
+  <link rel="stylesheet" href="pase.css?v=10" />
 </head>
 <body class="pass-body">
 
@@ -81,7 +81,7 @@
             <span class="vip-grid-label">Fecha y Horario</span>
             <strong id="passDateTime" class="vip-grid-val">-</strong>
           </div>
-          <div id="passBirthdayRow" class="vip-grid-cell vip-grid-cell-full vip-birthday-cell" hidden>
+          <div id="passBirthdayRow" class="vip-grid-cell vip-grid-cell-full vip-birthday-cell" hidden style="display: none;">
             <span class="vip-grid-label">🎂 Cumpleaños VIP</span>
             <span class="vip-grid-val">
               DNI: <strong id="passDni">-</strong> • Fecha: <strong id="passBirthDate">-</strong>
@@ -157,12 +157,22 @@
 
             <!-- STRICTLY HIDDEN when !res.proof_url -->
             <div id="passProofPreviewWrap" class="pass-proof-preview-wrap" hidden style="display: none;">
-              <img id="passProofPreviewImg" src="" alt="Comprobante de seña" class="pass-proof-img" />
+              <div class="pass-proof-media-wrap" title="Clic para ver en tamaño completo">
+                <img id="passProofPreviewImg" src="" alt="Comprobante de seña" class="pass-proof-img" />
+              </div>
               <div class="pass-proof-meta">
                 <span id="passProofStatusMsg" class="pass-proof-status-msg">
                   ✓ Comprobante recibido — Ya notificamos al equipo
                 </span>
                 <span class="pass-proof-time-note">Revisión en el panel de recepción en curso</span>
+                <div class="pass-proof-btns-row">
+                  <button type="button" id="btnViewFullProof" class="vip-btn-link-action">
+                    Ver comprobante en grande
+                  </button>
+                  <button type="button" id="btnChangeProof" class="vip-btn-link-action">
+                    Cambiar foto
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -205,8 +215,21 @@
   <!-- Notification Toast -->
   <div id="passToast" class="pass-toast" hidden></div>
 
+  <!-- Lightbox Modal for Full Size Proof View -->
+  <div id="passProofLightboxModal" class="vip-proof-lightbox" hidden style="display: none;" role="dialog" aria-modal="true" aria-label="Comprobante en tamaño completo">
+    <div class="vip-proof-lightbox-card">
+      <div class="vip-proof-lightbox-header">
+        <span>Comprobante de seña subido</span>
+        <button type="button" id="btnCloseProofLightbox" class="vip-proof-lightbox-close" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="vip-proof-lightbox-body">
+        <img id="passProofLightboxImg" src="" alt="Comprobante de pago" />
+      </div>
+    </div>
+  </div>
+
   <!-- Scripts -->
-  <script src="supabase-config.js?v=9"></script>
-  <script src="pase.js?v=9"></script>
+  <script src="supabase-config.js?v=10"></script>
+  <script src="pase.js?v=10"></script>
 </body>
 </html>

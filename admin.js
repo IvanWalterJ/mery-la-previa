@@ -1655,7 +1655,7 @@ document.addEventListener('DOMContentLoaded', () => {
               ` : ''}
 
               <div class="admin-res-actions">
-                ${r.proof_url ? `
+                ${(r.proof_url || r.deposit_status === 'comprobante_subido') ? `
                   <button type="button" class="admin-btn-gold admin-btn-action-sm" data-res-action="view-proof" data-id="${escapeHtml(r.id)}">
                     Ver comprobante subido
                   </button>
@@ -1721,20 +1721,36 @@ document.addEventListener('DOMContentLoaded', () => {
         if (action === 'view-proof') {
           openProofModal(target);
         } else if (action === 'approve-deposit') {
-          if (window.MeryStore && typeof window.MeryStore.approveReservationDeposit === 'function') {
-            window.MeryStore.approveReservationDeposit(resId);
-            showToast(`Seña confirmada para ${target.customer_name} (${target.id})`);
-            updateReservationsBadge();
-            renderReservationsWorkspace();
-          }
+          openConfirmModal({
+            title: '¿Confirmar seña?',
+            message: `¿Confirmar la seña para ${target.customer_name} (${target.id})? Esto marcará la reserva como "Lugar asegurado • Seña confirmada".`,
+            confirmLabel: 'Sí, confirmar seña',
+            onConfirm: () => {
+              if (window.MeryStore && typeof window.MeryStore.approveReservationDeposit === 'function') {
+                window.MeryStore.approveReservationDeposit(resId);
+                showToast(`✓ Seña confirmada para ${target.customer_name} (${target.id})`);
+                updateReservationsBadge();
+                renderReservationsWorkspace();
+              }
+            }
+          });
         } else if (action === 'toggle-checkin') {
-          if (window.MeryStore && typeof window.MeryStore.checkInReservation === 'function') {
-            const nextState = !target.attended;
-            window.MeryStore.checkInReservation(resId, nextState);
-            showToast(nextState ? `✓ Ingreso registrado para ${target.customer_name}` : `Check-in cancelado para ${target.customer_name}`);
-            updateReservationsBadge();
-            renderReservationsWorkspace();
-          }
+          const nextState = !target.attended;
+          openConfirmModal({
+            title: nextState ? '¿Confirmar ingreso?' : '¿Cancelar check-in?',
+            message: nextState
+              ? `¿Confirmar el ingreso en puerta de ${target.customer_name} (${target.guests} personas)?`
+              : `¿Cancelar el check-in de ${target.customer_name}?`,
+            confirmLabel: nextState ? 'Sí, registrar ingreso' : 'Sí, cancelar check-in',
+            onConfirm: () => {
+              if (window.MeryStore && typeof window.MeryStore.checkInReservation === 'function') {
+                window.MeryStore.checkInReservation(resId, nextState);
+                showToast(nextState ? `✓ Ingreso registrado para ${target.customer_name}` : `Check-in cancelado para ${target.customer_name}`);
+                updateReservationsBadge();
+                renderReservationsWorkspace();
+              }
+            }
+          });
         } else if (action === 'view-pass') {
           window.open(`pase.html?id=${encodeURIComponent(target.id)}`, '_blank', 'noopener');
         } else if (action === 'delete-res') {
@@ -1798,13 +1814,20 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnApproveProofModal) {
     btnApproveProofModal.addEventListener('click', () => {
       if (!activeProofRes) return;
-      if (window.MeryStore && typeof window.MeryStore.approveReservationDeposit === 'function') {
-        window.MeryStore.approveReservationDeposit(activeProofRes.id);
-        showToast(`Seña confirmada para ${activeProofRes.customer_name} (${activeProofRes.id})`);
-        closeProofModal();
-        updateReservationsBadge();
-        if (activeTab === 'reservations') renderReservationsWorkspace();
-      }
+      openConfirmModal({
+        title: '¿Confirmar seña?',
+        message: `¿Aprobar el comprobante de transferencia y asegurar la mesa para ${activeProofRes.customer_name} (${activeProofRes.id})?`,
+        confirmLabel: 'Sí, confirmar seña',
+        onConfirm: () => {
+          if (window.MeryStore && typeof window.MeryStore.approveReservationDeposit === 'function') {
+            window.MeryStore.approveReservationDeposit(activeProofRes.id);
+            showToast(`✓ Seña confirmada para ${activeProofRes.customer_name} (${activeProofRes.id})`);
+            closeProofModal();
+            updateReservationsBadge();
+            if (activeTab === 'reservations') renderReservationsWorkspace();
+          }
+        }
+      });
     });
   }
 

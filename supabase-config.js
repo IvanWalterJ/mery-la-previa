@@ -1267,7 +1267,7 @@ const DEFAULT_MENU_SECTIONS = [
       webpUrl = file;
     } else if (file) {
       const uploadRes = await uploadDishImage(file);
-      webpUrl = uploadRes && uploadRes.url ? uploadRes.url : '';
+      webpUrl = typeof uploadRes === 'string' ? uploadRes : (uploadRes?.url || '');
     }
 
     const now = new Date().toISOString();

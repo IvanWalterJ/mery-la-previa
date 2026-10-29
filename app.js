@@ -667,8 +667,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!resBirthdayFields) return;
     const isBirthday = (resTypeSelect?.value === 'Cumpleaños VIP');
     resBirthdayFields.hidden = !isBirthday;
-    if (resDniInput) resDniInput.required = isBirthday;
-    if (resBirthDateInput) resBirthDateInput.required = isBirthday;
+    resBirthdayFields.style.display = isBirthday ? 'grid' : 'none';
+    if (resDniInput) {
+      resDniInput.required = isBirthday;
+      if (!isBirthday) resDniInput.value = '';
+    }
+    if (resBirthDateInput) {
+      resBirthDateInput.required = isBirthday;
+      if (!isBirthday) resBirthDateInput.value = '';
+    }
   }
 
   if (resTypeSelect) {
@@ -1107,10 +1114,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const day = document.getElementById('resDay')?.value || 'Viernes 13/11';
       const time = document.getElementById('resTime')?.value || '20:30 hs (Cena)';
       const depositMode = document.getElementById('resDepositMode')?.value || 'con_sena';
-      const dni = document.getElementById('resDni')?.value.trim() || '';
-      const birthDate = document.getElementById('resBirthDate')?.value.trim() || '';
 
       const isBirthday = (motivo === 'Cumpleaños VIP');
+      const dni = isBirthday ? (document.getElementById('resDni')?.value.trim() || '') : '';
+      const birthDate = isBirthday ? (document.getElementById('resBirthDate')?.value.trim() || '') : '';
 
       if (!name || !phone || !email) {
         alert('Por favor, completá los campos obligatorios (Nombre, Celular y Correo).');
@@ -1158,10 +1165,12 @@ document.addEventListener('DOMContentLoaded', () => {
       if (confirmResBirthdayRow) {
         if (isBirthday) {
           confirmResBirthdayRow.hidden = false;
+          confirmResBirthdayRow.style.display = 'flex';
           if (confirmResDni) confirmResDni.textContent = dni || '-';
           if (confirmResBirthDate) confirmResBirthDate.textContent = birthDate || '-';
         } else {
           confirmResBirthdayRow.hidden = true;
+          confirmResBirthdayRow.style.display = 'none';
         }
       }
 

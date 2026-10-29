@@ -72,14 +72,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (passGuests) passGuests.textContent = `${res.guests || 2} ${res.guests === 1 ? 'persona' : 'personas'}`;
     if (passDateTime) passDateTime.textContent = `${res.res_day} • ${res.res_time}`;
 
-    // Birthday Info
+    // Birthday Info: ONLY display if is_birthday AND res_type === 'Cumpleaños VIP' AND has data
     if (passBirthdayRow) {
-      if (res.is_birthday && (res.birthday_dni || res.birthday_date)) {
-        passBirthdayRow.hidden = false;
+      const showBday = Boolean(res.is_birthday && res.res_type === 'Cumpleaños VIP' && (res.birthday_dni || res.birthday_date));
+      passBirthdayRow.hidden = !showBday;
+      passBirthdayRow.style.display = showBday ? 'block' : 'none';
+      if (showBday) {
         if (passDni) passDni.textContent = res.birthday_dni || '-';
         if (passBirthDate) passBirthDate.textContent = res.birthday_date || '-';
-      } else {
-        passBirthdayRow.hidden = true;
       }
     }
 
@@ -120,12 +120,13 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    // FIX EMPTY PROOF BUG: strictly hidden when !res.proof_url
+    // FIX EMPTY PROOF BUG & Button state: strictly hidden when !res.proof_url
     if (passProofPreviewWrap && passProofPreviewImg) {
       if (res.proof_url) {
         passProofPreviewWrap.hidden = false;
         passProofPreviewWrap.style.display = 'flex';
         passProofPreviewImg.src = res.proof_url;
+        if (btnUploadProof) btnUploadProof.style.display = 'none';
         if (passProofStatusMsg) {
           passProofStatusMsg.textContent = (res.deposit_status === 'confirmada')
             ? '✓ Seña confirmada por el equipo de Mery'
@@ -135,6 +136,10 @@ document.addEventListener('DOMContentLoaded', () => {
         passProofPreviewWrap.hidden = true;
         passProofPreviewWrap.style.display = 'none';
         passProofPreviewImg.src = '';
+        if (btnUploadProof) {
+          btnUploadProof.style.display = 'block';
+          btnUploadProof.textContent = 'Adjuntar comprobante de pago';
+        }
       }
     }
 
@@ -203,17 +208,46 @@ document.addEventListener('DOMContentLoaded', () => {
           const updated = await window.MeryStore.uploadDepositProof(activeReservation.id, file);
           activeReservation = updated;
           renderReservationData(updated);
-          showToast('✓ Comprobante enviado con éxito');
+          showToast('✓ Comprobante subido con éxito');
         }
       } catch (err) {
-        alert('Error al subir el comprobante: ' + (err.message || err));
+        showToast('Error al subir el comprobante: ' + (err.message || err));
       } finally {
         btnUploadProof.disabled = false;
-        btnUploadProof.textContent = originalText;
         passProofFileInput.value = '';
       }
     });
   }
+
+  // Lightbox Modal for Full Size Proof View
+  const passProofLightboxModal = document.getElementById('passProofLightboxModal');
+  const passProofLightboxImg = document.getElementById('passProofLightboxImg');
+  const btnCloseProofLightbox = document.getElementById('btnCloseProofLightbox');
+  const btnViewFullProof = document.getElementById('btnViewFullProof');
+  const btnChangeProof = document.getElementById('btnChangeProof');
+
+  function openProofLightbox() {
+    if (!passProofLightboxModal || !activeReservation || !activeReservation.proof_url) return;
+    if (passProofLightboxImg) passProofLightboxImg.src = activeReservation.proof_url;
+    passProofLightboxModal.hidden = false;
+    passProofLightboxModal.style.display = 'flex';
+  }
+
+  function closeProofLightbox() {
+    if (!passProofLightboxModal) return;
+    passProofLightboxModal.hidden = true;
+    passProofLightboxModal.style.display = 'none';
+  }
+
+  if (btnCloseProofLightbox) btnCloseProofLightbox.addEventListener('click', closeProofLightbox);
+  if (passProofLightboxModal) {
+    passProofLightboxModal.addEventListener('click', (e) => {
+      if (e.target === passProofLightboxModal) closeProofLightbox();
+    });
+  }
+  if (btnViewFullProof) btnViewFullProof.addEventListener('click', openProofLightbox);
+  if (passProofPreviewImg) passProofPreviewImg.addEventListener('click', openProofLightbox);
+  if (btnChangeProof) btnChangeProof.addEventListener('click', () => passProofFileInput?.click());
 
   // Share on WhatsApp
   if (btnSharePassWhatsapp) {

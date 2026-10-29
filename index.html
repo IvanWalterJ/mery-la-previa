@@ -5,11 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="dark" />
   <title>MERY LA PREVIA — Wine Bar &amp; Nightclub</title>
+  <script>
+    (function() {
+      try {
+        var params = new URLSearchParams(window.location.search);
+        var id = params.get('reserva') || params.get('id');
+        if (id) {
+          window.location.replace('pase.html?id=' + encodeURIComponent(id.trim()));
+        }
+      } catch (_) {}
+    })();
+  </script>
   <!-- Exact Qitchen Framer Fonts: Forum (Display Serif) + Plus Jakarta Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Forum&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=9" />
+  <link rel="stylesheet" href="styles.css?v=10" />
 </head>
 <body>
 
@@ -287,7 +298,7 @@
             <!-- Custom Branded Select: Motivo de Reserva -->
             <div class="q-custom-select" data-select-id="resType">
               <button type="button" class="q-select-trigger" aria-haspopup="listbox" aria-expanded="false">
-                <span class="q-select-value">Motivo: Festejo de Cumpleaños (con beneficios)</span>
+                <span class="q-select-value">Motivo: Mesa Cena + Quedarse a la Previa</span>
                 <span class="q-select-arrow" aria-hidden="true">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="6 9 12 15 18 9"></polyline>
@@ -295,12 +306,12 @@
                 </span>
               </button>
               <ul class="q-select-menu" role="listbox">
-                <li class="q-select-option selected" data-value="Cumpleaños VIP" role="option" aria-selected="true">
-                  <span>Festejo de Cumpleaños (con beneficios)</span>
+                <li class="q-select-option selected" data-value="Mesa Cena + Previa" role="option" aria-selected="true">
+                  <span>Mesa Cena + Quedarse a la Previa</span>
                   <span class="q-option-diamond">◇</span>
                 </li>
-                <li class="q-select-option" data-value="Mesa Cena + Previa" role="option" aria-selected="false">
-                  <span>Mesa Cena + Quedarse a la Previa</span>
+                <li class="q-select-option" data-value="Cumpleaños VIP" role="option" aria-selected="false">
+                  <span>Festejo de Cumpleaños (con beneficios)</span>
                   <span class="q-option-diamond">◇</span>
                 </li>
                 <li class="q-select-option" data-value="Living VIP Cabina 13/11" role="option" aria-selected="false">
@@ -309,16 +320,16 @@
                 </li>
               </ul>
               <select id="resType" class="q-select-native" tabindex="-1" aria-hidden="true" required>
-                <option value="Cumpleaños VIP" selected>Motivo: Festejo de Cumpleaños (con beneficios)</option>
-                <option value="Mesa Cena + Previa">Motivo: Mesa Cena + Quedarse a la Previa</option>
+                <option value="Mesa Cena + Previa" selected>Motivo: Mesa Cena + Quedarse a la Previa</option>
+                <option value="Cumpleaños VIP">Motivo: Festejo de Cumpleaños (con beneficios)</option>
                 <option value="Living VIP Cabina 13/11">Motivo: Living VIP / Evento 13/11</option>
               </select>
             </div>
 
-            <!-- Conditional Birthday Fields (shown for Cumpleaños VIP) -->
-            <div id="resBirthdayFields" class="q-form-row-2">
-              <input type="text" id="resDni" class="q-input" placeholder="DNI del cumpleañero/a" required />
-              <input type="date" id="resBirthDate" class="q-input" placeholder="Fecha de cumpleaños" required />
+            <!-- Conditional Birthday Fields (shown ONLY for Cumpleaños VIP) -->
+            <div id="resBirthdayFields" class="q-form-row-2" hidden style="display: none;">
+              <input type="text" id="resDni" class="q-input" placeholder="DNI del cumpleañero/a" />
+              <input type="date" id="resBirthDate" class="q-input" placeholder="Fecha de cumpleaños" />
             </div>
 
             <div class="q-form-row-3">
@@ -746,7 +757,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js?v=9"></script>
-  <script src="app.js?v=9"></script>
+  <script src="supabase-config.js?v=10"></script>
+  <script src="app.js?v=10"></script>
 </body>
 </html>
