@@ -1492,6 +1492,25 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
           }).join('')}
         </div>
+
+        <!-- Issued Vouchers Anti-Fraud Table -->
+        <div class="admin-roulette-vouchers-section">
+          <div class="admin-roulette-actions-bar" style="margin-bottom: 10px;">
+            <div>
+              <h3 class="admin-roulette-actions-title">Cupones Emitidos en Vivo (Anti-fraude)</h3>
+              <p style="font-size: 0.8rem; color: var(--q-cream-muted); margin-top: 2px;">
+                Validá y cancelá códigos de cupón al momento del canje en barra o mesa para evitar réplicas.
+              </p>
+            </div>
+            <button type="button" id="btnRefreshVouchers" class="admin-btn-outline" style="font-size: 0.78rem;">
+              🔄 Actualizar Cupones
+            </button>
+          </div>
+
+          <div id="adminVouchersGrid" class="admin-vouchers-grid">
+            <p style="font-size: 0.85rem; color: var(--q-cream-muted);">Cargando cupones emitidos...</p>
+          </div>
+        </div>
       </div>
     `;
 
@@ -1644,6 +1663,67 @@ document.addEventListener('DOMContentLoaded', () => {
         renderRouletteWorkspace();
       });
     });
+
+    // 8. Load & Manage Issued Vouchers
+    async function loadAdminVouchers() {
+      const grid = sectionsContainer.querySelector('#adminVouchersGrid');
+      if (!grid) return;
+      let vouchers = [];
+      if (window.MeryStore && typeof window.MeryStore.fetchRouletteVouchers === 'function') {
+        try {
+          vouchers = await window.MeryStore.fetchRouletteVouchers();
+        } catch (_) {}
+      }
+      if (!Array.isArray(vouchers) || vouchers.length === 0) {
+        grid.innerHTML = `<p style="grid-column: 1 / -1; font-size: 0.85rem; color: var(--q-cream-muted); text-align: center; padding: 20px 0;">No se han emitido cupones hoy todavía.</p>`;
+        return;
+      }
+      grid.innerHTML = vouchers.slice(0, 16).map((v) => {
+        const isRedeemed = (v.status === 'canjeado');
+        const claimedDate = new Date(v.claimedAt || Date.now()).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+        return `
+          <div class="admin-voucher-card ${isRedeemed ? 'is-redeemed' : ''}">
+            <div class="admin-voucher-header">
+              <span class="admin-voucher-code-badge">${escapeHtml(v.code)}</span>
+              <span class="admin-voucher-status-badge ${isRedeemed ? 'is-redeemed' : ''}">
+                ${isRedeemed ? '● Canjeado' : '● Válido'}
+              </span>
+            </div>
+            <div class="admin-voucher-meta">
+              <strong>${escapeHtml(v.prizeName)}</strong><br />
+              Titular: ${escapeHtml(v.clientName)} ${v.clientPhone ? `(${escapeHtml(v.clientPhone)})` : ''}<br />
+              <span style="opacity: 0.7;">Emitido: ${claimedDate} hs</span>
+            </div>
+            ${!isRedeemed ? `
+              <button type="button" class="admin-prize-btn-sm btn-redeem-voucher" data-code="${escapeHtml(v.code)}" style="align-self: flex-start; margin-top: 4px; background: rgba(74, 222, 128, 0.1); border-color: rgba(74, 222, 128, 0.4); color: #4ade80;">
+                ✓ Validar y Marcar Canjeado
+              </button>
+            ` : `
+              <span style="font-size: 0.72rem; color: var(--q-cream-muted);">Canjeado por ${escapeHtml(v.redeemedBy || 'Staff')}</span>
+            `}
+          </div>
+        `;
+      }).join('');
+
+      grid.querySelectorAll('.btn-redeem-voucher').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const code = btn.getAttribute('data-code');
+          if (!code) return;
+          if (window.MeryStore && typeof window.MeryStore.redeemRouletteVoucher === 'function') {
+            await window.MeryStore.redeemRouletteVoucher(code, 'Staff Mery');
+            showToast(`✓ Cupón ${code} validado y marcado como canjeado`);
+            loadAdminVouchers();
+          }
+        });
+      });
+    }
+
+    loadAdminVouchers();
+
+    const btnRefreshVouchers = sectionsContainer.querySelector('#btnRefreshVouchers');
+    if (btnRefreshVouchers) {
+      btnRefreshVouchers.addEventListener('click', loadAdminVouchers);
+    }
   }
 
   // --- Roulette Prize Modal Logic (S3) ---

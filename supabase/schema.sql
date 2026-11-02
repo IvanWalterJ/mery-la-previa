@@ -447,5 +447,46 @@ INSERT INTO public.site_settings (key, value) VALUES
   )
 ON CONFLICT (key) DO NOTHING;
 
+-- =============================================================================
+-- 9. TABLA DE CUPONES EMITIDOS DE RULETA Y ANTI-FRAUDE (roulette_vouchers)
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS public.roulette_vouchers (
+  code TEXT PRIMARY KEY,
+  prize_id TEXT NOT NULL,
+  prize_name TEXT NOT NULL,
+  condition TEXT NOT NULL,
+  customer_name TEXT NOT NULL,
+  customer_phone TEXT,
+  claimed_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  status TEXT NOT NULL DEFAULT 'valido',
+  redeemed_at TIMESTAMPTZ,
+  redeemed_by TEXT
+);
+
+ALTER TABLE public.roulette_vouchers ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Lectura publica de cupones" ON public.roulette_vouchers;
+CREATE POLICY "Lectura publica de cupones"
+  ON public.roulette_vouchers FOR SELECT
+  TO anon, authenticated
+  USING (true);
+
+DROP POLICY IF EXISTS "Insercion y actualizacion de cupones" ON public.roulette_vouchers;
+CREATE POLICY "Insercion y actualizacion de cupones"
+  ON public.roulette_vouchers FOR ALL
+  TO anon, authenticated
+  USING (true)
+  WITH CHECK (true);
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'roulette_vouchers'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.roulette_vouchers;
+  END IF;
+END $$;
+
 
 

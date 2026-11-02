@@ -3223,3 +3223,79 @@ body:has(.admin-modal-backdrop:not([hidden])) {
   background: rgba(239, 68, 68, 0.1);
 }
 
+/* Vouchers Anti-Fraud Table in Admin */
+.admin-roulette-vouchers-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: var(--q-surface);
+  border: 1px solid var(--q-border);
+  border-radius: 14px;
+  padding: 22px 26px;
+  margin-top: 8px;
+}
+
+.admin-vouchers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.admin-voucher-card {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--q-border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.admin-voucher-card.is-redeemed {
+  opacity: 0.65;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.admin-voucher-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.admin-voucher-code-badge {
+  font-family: monospace;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--q-red);
+  letter-spacing: 0.08em;
+}
+
+.admin-voucher-status-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 99px;
+  background: rgba(74, 222, 128, 0.15);
+  color: #4ade80;
+  border: 1px solid rgba(74, 222, 128, 0.35);
+}
+
+.admin-voucher-status-badge.is-redeemed {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--q-cream-muted);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.admin-voucher-meta {
+  font-size: 0.8rem;
+  color: var(--q-cream-muted);
+  line-height: 1.4;
+}
+
+.admin-voucher-meta strong {
+  color: var(--q-cream);
+}
+

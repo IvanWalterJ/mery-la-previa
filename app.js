@@ -1990,6 +1990,17 @@ document.addEventListener('DOMContentLoaded', () => {
     if (clientEl) clientEl.textContent = voucher.clientName;
     if (condEl) condEl.textContent = voucher.condition;
 
+    const waNotice = document.getElementById('voucherWaNotice');
+    if (waNotice) {
+      if (voucher.clientPhone) {
+        waNotice.hidden = false;
+        waNotice.style.display = 'inline-flex';
+      } else {
+        waNotice.hidden = true;
+        waNotice.style.display = 'none';
+      }
+    }
+
     // WhatsApp share with official verification and anti-duplication security
     const shareBtn = document.getElementById('btnShareVoucherWhatsapp');
     if (shareBtn) {

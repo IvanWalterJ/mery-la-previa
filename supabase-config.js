@@ -14,6 +14,7 @@ const STORAGE_KEY_VIDEOS = 'mery_site_videos_v1';
 const STORAGE_KEY_RESERVATIONS = 'mery_reservations_v1';
 const STORAGE_KEY_RES_SETTINGS = 'mery_reservation_settings_v1';
 const STORAGE_KEY_ROULETTE_SETTINGS = 'mery_roulette_settings_v1';
+const STORAGE_KEY_VOUCHERS = 'mery_roulette_vouchers_v1';
 const BROADCAST_CHANNEL_NAME = 'mery_la_previa_realtime_v1';
 const IDB_NAME = 'mery_media_idb_v1';
 const IDB_STORE = 'media';
@@ -1363,14 +1364,195 @@ const DEFAULT_MENU_SECTIONS = [
       condition: prize.condition,
       clientName: clientInfo.name || 'Invitado/a',
       clientPhone: clientInfo.phone || '',
-      claimedAt: new Date().toISOString()
+      claimedAt: new Date().toISOString(),
+      status: 'valido'
     };
+
+    saveVoucherLocal(voucher);
+
+    const client = getClient();
+    if (client) {
+      client.from('roulette_vouchers').insert({
+        code: voucher.code,
+        prize_id: voucher.prizeId,
+        prize_name: voucher.prizeName,
+        condition: voucher.condition,
+        customer_name: voucher.clientName,
+        customer_phone: voucher.clientPhone,
+        claimed_at: voucher.claimedAt,
+        status: 'valido'
+      }).then(() => {}).catch((err) => {
+        console.warn('Supabase roulette_vouchers insert fallback:', err.message || err);
+      });
+    }
+
+    if (voucher.clientPhone) {
+      sendRouletteVoucherNotification(voucher);
+    }
 
     return {
       success: true,
       voucher,
       remainingStock: current.prizes[prizeIndex].stock
     };
+  }
+
+  function getLocalVouchers() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_VOUCHERS);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (_) {}
+    return [];
+  }
+
+  function saveVoucherLocal(voucher) {
+    if (!voucher || !voucher.code) return;
+    const list = getLocalVouchers();
+    const existingIdx = list.findIndex((v) => v.code === voucher.code);
+    if (existingIdx >= 0) {
+      list[existingIdx] = { ...list[existingIdx], ...voucher };
+    } else {
+      list.unshift(voucher);
+    }
+    try {
+      localStorage.setItem(STORAGE_KEY_VOUCHERS, JSON.stringify(list));
+    } catch (_) {}
+  }
+
+  async function sendRouletteVoucherNotification(voucher) {
+    if (!voucher || !voucher.clientPhone) return { sent: false, reason: 'no_phone' };
+
+    const settings = getReservationSettings();
+    const serverUrl = (settings.evolutionServerUrl || '').trim().replace(/\/+$/, '');
+    const apiKey = (settings.evolutionApiKey || '').trim();
+    const instanceName = (settings.evolutionInstanceName || 'mery-la-previa').trim();
+
+    if (!serverUrl || !apiKey) {
+      return { sent: false, reason: 'evolution_not_configured' };
+    }
+
+    try {
+      const cleanPhone = String(voucher.clientPhone).replace(/\D/g, '');
+      if (!cleanPhone) return { sent: false, reason: 'invalid_phone' };
+
+      const formattedPhone = cleanPhone.startsWith('549')
+        ? cleanPhone
+        : (cleanPhone.startsWith('54')
+            ? '549' + cleanPhone.slice(2)
+            : (cleanPhone.startsWith('11') || cleanPhone.startsWith('15') ? '549' + cleanPhone : '549' + cleanPhone));
+
+      const issueDate = new Date(voucher.claimedAt || Date.now()).toLocaleDateString('es-AR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+      const issueTime = new Date(voucher.claimedAt || Date.now()).toLocaleTimeString('es-AR', {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+
+      const messageText =
+        `*MERY JANE · LA PREVIA — CUPÓN DIGITAL EXCLUSIVO*\n\n` +
+        `¡Felicitaciones, ${voucher.clientName}! Tu beneficio ganado en la Ruleta de La Previa ya está emitido y registrado en el sistema con código de seguridad único.\n\n` +
+        `• *CÓDIGO DE VALIDACIÓN:* *${voucher.code}*\n` +
+        `• *BENEFICIO:* *${voucher.prizeName}*\n` +
+        `• *TITULAR:* ${voucher.clientName}\n` +
+        (voucher.clientPhone ? `• *WHATSAPP:* ${voucher.clientPhone}\n` : '') +
+        `• *CONDICIÓN DE USO:* ${voucher.condition}\n` +
+        `• *FECHA DE EMISIÓN:* ${issueDate} a las ${issueTime} hs\n\n` +
+        `*CLÁUSULA DE SEGURIDAD Y CANJE:*\n` +
+        `1. Este cupón digital es personal, intransferible y de un solo uso.\n` +
+        `2. Mostrá este mensaje o tu pantalla al mozo o en la barra al momento de ordenar.\n` +
+        `3. Al canjearse, el código queda registrado como utilizado en el sistema del bar y se invalida automáticamente para evitar réplicas o reusos.\n\n` +
+        `*Ubicación:* Calle 101 Nº 85, Guernica.\n` +
+        `*Tu noche empieza acá.*`;
+
+      fetch(`${serverUrl}/message/sendText/${instanceName}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': apiKey
+        },
+        body: JSON.stringify({
+          number: formattedPhone,
+          text: messageText
+        })
+      }).catch((err) => {
+        console.warn('Evolution API voucher sendText network error:', err.message || err);
+      });
+
+      return { sent: true };
+    } catch (err) {
+      console.warn('Evolution API voucher error:', err.message || err);
+      return { sent: false, error: err.message || err };
+    }
+  }
+
+  async function fetchRouletteVouchers() {
+    const client = getClient();
+    if (!client) return getLocalVouchers();
+    try {
+      const { data, error } = await client
+        .from('roulette_vouchers')
+        .select('*')
+        .order('claimed_at', { ascending: false });
+      if (!error && Array.isArray(data)) {
+        const mapped = data.map((d) => ({
+          code: d.code,
+          prizeId: d.prize_id,
+          prizeName: d.prize_name,
+          condition: d.condition,
+          clientName: d.customer_name,
+          clientPhone: d.customer_phone,
+          claimedAt: d.claimed_at,
+          status: d.status || 'valido',
+          redeemedAt: d.redeemed_at,
+          redeemedBy: d.redeemed_by
+        }));
+        try {
+          localStorage.setItem(STORAGE_KEY_VOUCHERS, JSON.stringify(mapped));
+        } catch (_) {}
+        return mapped;
+      }
+    } catch (_) {}
+    return getLocalVouchers();
+  }
+
+  async function redeemRouletteVoucher(code, redeemedBy = 'Staff Mery') {
+    if (!code) return { success: false, message: 'Código requerido' };
+    const nowIso = new Date().toISOString();
+
+    const list = getLocalVouchers();
+    const idx = list.findIndex((v) => v.code === code);
+    if (idx >= 0) {
+      list[idx].status = 'canjeado';
+      list[idx].redeemedAt = nowIso;
+      list[idx].redeemedBy = redeemedBy;
+      try {
+        localStorage.setItem(STORAGE_KEY_VOUCHERS, JSON.stringify(list));
+      } catch (_) {}
+    }
+
+    const client = getClient();
+    if (client) {
+      try {
+        await client
+          .from('roulette_vouchers')
+          .update({
+            status: 'canjeado',
+            redeemed_at: nowIso,
+            redeemed_by: redeemedBy
+          })
+          .eq('code', code);
+      } catch (err) {
+        console.warn('Supabase voucher redeem update error:', err);
+      }
+    }
+
+    return { success: true, redeemedAt: nowIso };
   }
 
   function getReservations() {
@@ -1922,6 +2104,9 @@ const DEFAULT_MENU_SECTIONS = [
     getRouletteSettings,
     saveRouletteSettings,
     resetRouletteDailyStock,
-    claimRoulettePrize
+    claimRoulettePrize,
+    sendRouletteVoucherNotification,
+    fetchRouletteVouchers,
+    redeemRouletteVoucher
   };
 })(window);
