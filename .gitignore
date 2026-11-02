@@ -6,6 +6,11 @@ desktop.ini
 # WhatsApp voice notes
 WhatsApp Ptt*.ogg
 
+# Raw user upload source images
+/877218469*.jpg
+/Logo neón*.png
+/Ruleta de lujo*.png
+
 # Logs & temp
 *.log
 scratch/

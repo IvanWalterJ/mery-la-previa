@@ -18,7 +18,7 @@ const VIEW_CONFIG = {
     unmute: false
   },
   about: {
-    title: 'TENEMOS<br />PREVIA 13/11',
+    title: 'LA PREVIA<br />DE MERY',
     video: 'assets/video/ice-cube-1311.mp4',
     poster: 'assets/img/ice-cube-previa.jpg',
     unmute: true
@@ -178,7 +178,11 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.addEventListener('click', () => {
       const target = btn.getAttribute('data-overlay-goto');
       toggleOverlay(false);
-      if (target) navigateView(target);
+      if (target === 'roulette') {
+        openRouletteModal();
+      } else if (target) {
+        navigateView(target);
+      }
     });
   });
 
@@ -585,7 +589,11 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('[data-goto]').forEach((el) => {
     el.addEventListener('click', () => {
       const target = el.getAttribute('data-goto');
-      if (target) navigateView(target);
+      if (target === 'roulette') {
+        openRouletteModal();
+      } else if (target) {
+        navigateView(target);
+      }
     });
   });
 
@@ -1314,4 +1322,801 @@ document.addEventListener('DOMContentLoaded', () => {
   if (reservaParam) {
     window.location.replace(`pase.html?id=${encodeURIComponent(reservaParam.trim())}`);
   }
+
+  // ==========================================================================
+  // S4: INTERACTIVE PROMOTIONS & ROULETTE ENGINE (MERY LA PREVIA)
+  // ==========================================================================
+  const STORAGE_KEY_ROULETTE_DEVICE = 'mery_roulette_device_v1';
+
+  let rouletteAudioCtx = null;
+  let currentWheelAngle = 0;
+  let isRouletteSpinning = false;
+  let currentPrizeWon = null;
+  let lastSliceClickIndex = -1;
+
+  function getTodayString() {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  function getRouletteDeviceState() {
+    const today = getTodayString();
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_ROULETTE_DEVICE);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') {
+          if (parsed.date !== today) {
+            // New day: reset spins, preserve previous vouchers history
+            const resetState = {
+              date: today,
+              spinsUsed: 0,
+              claimedVouchers: Array.isArray(parsed.claimedVouchers) ? parsed.claimedVouchers : []
+            };
+            saveRouletteDeviceState(resetState);
+            return resetState;
+          }
+          return {
+            date: today,
+            spinsUsed: Number(parsed.spinsUsed) || 0,
+            claimedVouchers: Array.isArray(parsed.claimedVouchers) ? parsed.claimedVouchers : []
+          };
+        }
+      }
+    } catch (_) {}
+    const newState = { date: today, spinsUsed: 0, claimedVouchers: [] };
+    saveRouletteDeviceState(newState);
+    return newState;
+  }
+
+  function saveRouletteDeviceState(state) {
+    try {
+      localStorage.setItem(STORAGE_KEY_ROULETTE_DEVICE, JSON.stringify(state));
+    } catch (_) {}
+  }
+
+  // --- Web Audio API Mechanical Sound Synthesizer ---
+  function getRouletteAudioContext() {
+    if (!rouletteAudioCtx) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) {
+        rouletteAudioCtx = new AudioCtx();
+      }
+    }
+    if (rouletteAudioCtx && rouletteAudioCtx.state === 'suspended') {
+      rouletteAudioCtx.resume().catch(() => {});
+    }
+    return rouletteAudioCtx;
+  }
+
+  function playRouletteClick() {
+    try {
+      const ctx = getRouletteAudioContext();
+      if (!ctx) return;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(680, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(160, ctx.currentTime + 0.032);
+
+      gain.gain.setValueAtTime(0.22, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.032);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start();
+      osc.stop(ctx.currentTime + 0.033);
+    } catch (_) {}
+  }
+
+  function playRouletteWin() {
+    try {
+      const ctx = getRouletteAudioContext();
+      if (!ctx) return;
+      // Celebratory chord with arpeggiated sparkle
+      const freqs = [523.25, 659.25, 783.99, 1046.50];
+      freqs.forEach((f, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const st = ctx.currentTime + idx * 0.07;
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(f, st);
+
+        gain.gain.setValueAtTime(0.001, st);
+        gain.gain.linearRampToValueAtTime(0.18, st + 0.03);
+        gain.gain.exponentialRampToValueAtTime(0.0001, st + 0.95);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(st);
+        osc.stop(st + 0.96);
+      });
+    } catch (_) {}
+  }
+
+  function splitPrizeName(name) {
+    if (!name) return [''];
+    name = String(name).trim();
+    if (name.length <= 13) return [name];
+
+    const words = name.split(/\s+/);
+    if (words.length <= 1) return [name];
+    if (words.length === 2) return [words[0], words[1]];
+
+    let bestLine1 = words[0];
+    let bestLine2 = words.slice(1).join(' ');
+    let minDiff = 999;
+    for (let i = 1; i < words.length; i++) {
+      const l1 = words.slice(0, i).join(' ');
+      const l2 = words.slice(i).join(' ');
+      const diff = Math.abs(l1.length - l2.length);
+      if (diff < minDiff) {
+        minDiff = diff;
+        bestLine1 = l1;
+        bestLine2 = l2;
+      }
+    }
+    return [bestLine1, bestLine2];
+  }
+
+  // --- Canvas Roulette Wheel Drawer ---
+  function drawRouletteWheel(angle) {
+    const canvas = document.getElementById('rouletteCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const width = canvas.width;
+    const height = canvas.height;
+    const cx = width / 2;
+    const cy = height / 2;
+    const radius = cx - 14;
+
+    ctx.clearRect(0, 0, width, height);
+
+    const settings = window.MeryStore ? window.MeryStore.getRouletteSettings() : null;
+    const prizes = (settings && Array.isArray(settings.prizes) && settings.prizes.length > 0)
+      ? settings.prizes
+      : [];
+    const numSlices = prizes.length || 6;
+    const arc = (2 * Math.PI) / numSlices;
+
+    // Outer glowing rim
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius + 6, 0, 2 * Math.PI);
+    ctx.fillStyle = '#0a0709';
+    ctx.fill();
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = '#e02434';
+    ctx.shadowColor = 'rgba(224, 36, 52, 0.65)';
+    ctx.shadowBlur = 18;
+    ctx.stroke();
+    ctx.restore();
+
+    // Draw slices
+    prizes.forEach((prize, i) => {
+      const sliceStart = angle + i * arc;
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, radius, sliceStart, sliceStart + arc);
+      ctx.closePath();
+
+      // Fill slice color
+      ctx.fillStyle = prize.color || (i % 2 === 0 ? '#e02434' : '#140c10');
+      ctx.fill();
+
+      // Inner radial shade for 3D depth
+      const grad = ctx.createRadialGradient(cx, cy, 25, cx, cy, radius);
+      grad.addColorStop(0, 'rgba(0, 0, 0, 0.45)');
+      grad.addColorStop(0.65, 'transparent');
+      grad.addColorStop(1, 'rgba(0, 0, 0, 0.6)');
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // Stroke boundary
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = 'rgba(251, 247, 238, 0.28)';
+      ctx.stroke();
+
+      // Clean, sharp text label (no heavy cartoonish strokes)
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(sliceStart + arc / 2);
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      ctx.font = '700 11.5px "Satoshi", "Plus Jakarta Sans", sans-serif';
+      ctx.fillStyle = '#ffffff';
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+      ctx.shadowBlur = 2;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 1;
+
+      const lines = splitPrizeName(prize.name || '');
+      const textX = radius - 18;
+
+      if (lines.length === 1) {
+        ctx.fillText(lines[0], textX, 0);
+      } else {
+        const lineSpacing = 13;
+        const startY = -(lines.length - 1) * (lineSpacing / 2);
+        lines.forEach((line, lineIdx) => {
+          const y = startY + lineIdx * lineSpacing;
+          ctx.fillText(line, textX, y);
+        });
+      }
+
+      if (prize.stock === 0) {
+        ctx.font = '700 8.5px "Satoshi", sans-serif';
+        ctx.fillStyle = '#ff4b4b';
+        ctx.shadowBlur = 0;
+        const agotadoY = lines.length > 1 ? 16 : 12;
+        ctx.fillText('(AGOTADO)', textX, agotadoY);
+      }
+
+      ctx.restore();
+      ctx.restore();
+    });
+
+    // Perimeter golden/ruby studs
+    for (let i = 0; i < numSlices; i++) {
+      const pinAngle = angle + i * arc;
+      const px = cx + (radius + 1) * Math.cos(pinAngle);
+      const py = cy + (radius + 1) * Math.sin(pinAngle);
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(px, py, 3.5, 0, 2 * Math.PI);
+      ctx.fillStyle = '#fbf7ee';
+      ctx.shadowColor = '#ffffff';
+      ctx.shadowBlur = 6;
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Center star emblem
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, 32, 0, 2 * Math.PI);
+    ctx.fillStyle = '#080708';
+    ctx.shadowColor = 'rgba(224, 36, 52, 0.8)';
+    ctx.shadowBlur = 18;
+    ctx.fill();
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = '#e02434';
+    ctx.stroke();
+
+    drawCenterStar(ctx, cx, cy, 5, 14, 7, '#e02434');
+    ctx.restore();
+  }
+
+  function drawCenterStar(ctx, cx, cy, spikes, outerRadius, innerRadius, color) {
+    let rot = (Math.PI / 2) * 3;
+    let x = cx;
+    let y = cy;
+    const step = Math.PI / spikes;
+
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - outerRadius);
+    for (let i = 0; i < spikes; i++) {
+      x = cx + Math.cos(rot) * outerRadius;
+      y = cy + Math.sin(rot) * outerRadius;
+      ctx.lineTo(x, y);
+      rot += step;
+
+      x = cx + Math.cos(rot) * innerRadius;
+      y = cy + Math.sin(rot) * innerRadius;
+      ctx.lineTo(x, y);
+      rot += step;
+    }
+    ctx.lineTo(cx, cy - outerRadius);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.shadowColor = 'rgba(224, 36, 52, 0.6)';
+    ctx.shadowBlur = 8;
+    ctx.fill();
+  }
+
+  // --- Real-time Stock, Badges and Visibility Sync ---
+  function updateRouletteBadges() {
+    const settings = window.MeryStore ? window.MeryStore.getRouletteSettings() : null;
+    const triggerBtn = document.getElementById('btnOpenRoulette');
+    const overlayBtn = document.getElementById('btnOverlayRoulette');
+    const bentoCard = document.querySelector('.q-bento-roulette-card');
+
+    if (!settings || !settings.enabled) {
+      if (triggerBtn) triggerBtn.style.display = 'none';
+      if (overlayBtn) overlayBtn.style.display = 'none';
+      if (bentoCard) bentoCard.style.display = 'none';
+      return;
+    } else {
+      if (triggerBtn) triggerBtn.style.display = '';
+      if (overlayBtn) overlayBtn.style.display = '';
+      if (bentoCard) bentoCard.style.display = '';
+    }
+
+    const titleEl = document.getElementById('rouletteModalTitle');
+    const subtitleEl = document.getElementById('rouletteModalSubtitle');
+    if (titleEl && settings.title) titleEl.textContent = settings.title;
+    if (subtitleEl && settings.subtitle) subtitleEl.textContent = settings.subtitle;
+
+    // Live stock count (excluding dummy 999)
+    const prizes = Array.isArray(settings.prizes) ? settings.prizes : [];
+    const realPrizes = prizes.filter((p) => p.stock !== 999);
+    const totalStock = realPrizes.reduce((sum, p) => sum + (Number(p.stock) || 0), 0);
+
+    const stockCountEl = document.getElementById('rouletteStockCount');
+    if (stockCountEl) {
+      stockCountEl.textContent = `${totalStock} disponibles`;
+    }
+
+    const triggerPill = document.getElementById('rouletteTriggerStockPill');
+    if (triggerPill) {
+      triggerPill.textContent = totalStock > 0 ? `● ${totalStock} EN VIVO` : '● HOY';
+    }
+
+    // Device spins left
+    const device = getRouletteDeviceState();
+    const maxSpins = settings.maxSpinsPerDevice || 3;
+    const spinsLeft = Math.max(0, maxSpins - (device.spinsUsed || 0));
+
+    const spinsTextEl = document.getElementById('rouletteSpinsLeftText');
+    if (spinsTextEl) {
+      spinsTextEl.textContent = `Tiros: ${spinsLeft} de ${maxSpins}`;
+    }
+
+    // Link for claimed vouchers
+    const vouchersWrap = document.getElementById('rouletteMyVouchersLinkWrap');
+    const vouchersCount = document.getElementById('myVouchersCount');
+    if (vouchersWrap && vouchersCount) {
+      if (device.claimedVouchers && device.claimedVouchers.length > 0) {
+        vouchersWrap.hidden = false;
+        vouchersCount.textContent = String(device.claimedVouchers.length);
+      } else {
+        vouchersWrap.hidden = true;
+      }
+    }
+  }
+
+  // --- Modal Open & Close ---
+  function openRouletteModal() {
+    const modal = document.getElementById('qitchenRouletteModal');
+    if (!modal) return;
+
+    updateRouletteBadges();
+
+    const settings = window.MeryStore ? window.MeryStore.getRouletteSettings() : null;
+    const device = getRouletteDeviceState();
+    const maxSpins = settings ? (settings.maxSpinsPerDevice || 3) : 3;
+
+    const wheelStage = document.getElementById('rouletteWheelStage');
+    const resultCard = document.getElementById('rouletteResultCard');
+    const voucherCard = document.getElementById('rouletteVoucherCard');
+    const cooldownCard = document.getElementById('rouletteCooldownCard');
+
+    if (device.spinsUsed >= maxSpins) {
+      showCooldownView();
+    } else {
+      if (wheelStage) wheelStage.hidden = false;
+      if (resultCard) resultCard.hidden = true;
+      if (voucherCard) voucherCard.hidden = true;
+      if (cooldownCard) cooldownCard.hidden = true;
+      drawRouletteWheel(currentWheelAngle);
+    }
+
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeRouletteModal() {
+    const modal = document.getElementById('qitchenRouletteModal');
+    if (!modal) return;
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+
+  // --- Friendly Cooldown View ---
+  function showCooldownView() {
+    const wheelStage = document.getElementById('rouletteWheelStage');
+    const resultCard = document.getElementById('rouletteResultCard');
+    const voucherCard = document.getElementById('rouletteVoucherCard');
+    const cooldownCard = document.getElementById('rouletteCooldownCard');
+
+    if (wheelStage) wheelStage.hidden = true;
+    if (resultCard) resultCard.hidden = true;
+    if (voucherCard) voucherCard.hidden = true;
+    if (cooldownCard) cooldownCard.hidden = false;
+
+    const device = getRouletteDeviceState();
+    const vouchersWrap = document.getElementById('cooldownVouchersList');
+    const container = document.getElementById('cooldownVouchersContainer');
+
+    if (vouchersWrap && container) {
+      if (device.claimedVouchers && device.claimedVouchers.length > 0) {
+        vouchersWrap.hidden = false;
+        container.innerHTML = device.claimedVouchers.map((v) => `
+          <div class="cooldown-voucher-item">
+            <span class="cooldown-voucher-code">${escapeHtml(v.code || 'PREVIA-****')}</span>
+            <span class="cooldown-voucher-prize">${escapeHtml(v.prizeName || 'Premio')}</span>
+          </div>
+        `).join('');
+      } else {
+        vouchersWrap.hidden = true;
+        container.innerHTML = '';
+      }
+    }
+  }
+
+  // --- Spin Physics with Easing & Wheel Deceleration ---
+  function spinRoulette() {
+    if (isRouletteSpinning) return;
+    const settings = window.MeryStore ? window.MeryStore.getRouletteSettings() : null;
+    if (!settings || !settings.enabled) return;
+
+    const device = getRouletteDeviceState();
+    const maxSpins = settings.maxSpinsPerDevice || 3;
+    if (device.spinsUsed >= maxSpins) {
+      showCooldownView();
+      return;
+    }
+
+    const prizes = Array.isArray(settings.prizes) ? settings.prizes : [];
+    if (prizes.length === 0) return;
+
+    // Filter prizes with available stock
+    const eligible = prizes.filter((p) => p.stock > 0 || p.stock === 999);
+    const pool = eligible.length > 0 ? eligible : prizes;
+
+    // Weighted random selection based on probability
+    const totalWeight = pool.reduce((sum, p) => sum + (Number(p.probability) || 10), 0);
+    let r = Math.random() * totalWeight;
+    let winningPrize = pool[0];
+    for (const p of pool) {
+      const weight = Number(p.probability) || 10;
+      if (r < weight) {
+        winningPrize = p;
+        break;
+      }
+      r -= weight;
+    }
+
+    // Find index in prizes array
+    const prizeIndex = prizes.findIndex((p) => p.id === winningPrize.id);
+    const targetIdx = prizeIndex >= 0 ? prizeIndex : 0;
+    const numSlices = prizes.length;
+    const arc = (2 * Math.PI) / numSlices;
+
+    // Target angle: aligns targetIdx with pointer at 12 o'clock (1.5*PI)
+    const jitter = (Math.random() - 0.5) * 0.5 * arc;
+    let targetAngleMod = (1.5 * Math.PI - (targetIdx + 0.5) * arc + jitter) % (2 * Math.PI);
+    if (targetAngleMod < 0) targetAngleMod += 2 * Math.PI;
+
+    const currentMod = (currentWheelAngle % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+    let angleDelta = targetAngleMod - currentMod;
+    if (angleDelta < 0) angleDelta += 2 * Math.PI;
+
+    // Minimum 5 to 7 full spins
+    const fullRotations = (5 + Math.floor(Math.random() * 3)) * 2 * Math.PI;
+    const totalDelta = angleDelta + fullRotations;
+    const startAngle = currentWheelAngle;
+    const duration = 4600; // ms
+
+    isRouletteSpinning = true;
+    const spinBtn = document.getElementById('btnSpinRoulette');
+    if (spinBtn) {
+      spinBtn.disabled = true;
+      const textSpan = spinBtn.querySelector('.spin-btn-text');
+      if (textSpan) textSpan.textContent = '¡GIRANDO...! 🎰';
+    }
+
+    const pointerEl = document.getElementById('roulettePointer');
+    const startTime = performance.now();
+
+    function step(now) {
+      const elapsed = now - startTime;
+      const progress = Math.min(1, elapsed / duration);
+      // Realistic smooth deceleration (ease-out quart)
+      const ease = 1 - Math.pow(1 - progress, 4);
+      currentWheelAngle = startAngle + totalDelta * ease;
+
+      // Mechanical ratchet audio click & pointer flick on slice boundary
+      let norm = (1.5 * Math.PI - currentWheelAngle) % (2 * Math.PI);
+      if (norm < 0) norm += 2 * Math.PI;
+      const sliceIndex = Math.floor(norm / arc) % numSlices;
+      if (sliceIndex !== lastSliceClickIndex) {
+        playRouletteClick();
+        if (pointerEl) {
+          pointerEl.classList.remove('kicking');
+          void pointerEl.offsetWidth;
+          pointerEl.classList.add('kicking');
+        }
+        lastSliceClickIndex = sliceIndex;
+      }
+
+      drawRouletteWheel(currentWheelAngle);
+
+      if (progress < 1) {
+        requestAnimationFrame(step);
+      } else {
+        isRouletteSpinning = false;
+        onSpinCompleted(winningPrize);
+      }
+    }
+
+    requestAnimationFrame(step);
+  }
+
+  // --- Wheel Finished Handler ---
+  function onSpinCompleted(winningPrize) {
+    const settings = window.MeryStore ? window.MeryStore.getRouletteSettings() : null;
+    const device = getRouletteDeviceState();
+    device.spinsUsed = (device.spinsUsed || 0) + 1;
+    saveRouletteDeviceState(device);
+
+    updateRouletteBadges();
+
+    const spinBtn = document.getElementById('btnSpinRoulette');
+    if (spinBtn) {
+      spinBtn.disabled = false;
+      const textSpan = spinBtn.querySelector('.spin-btn-text');
+      if (textSpan) textSpan.textContent = '¡GIRAR RULETA!';
+    }
+
+    const isNoPrize = (winningPrize.id === 'segui-participando');
+    currentPrizeWon = winningPrize;
+
+    const wheelStage = document.getElementById('rouletteWheelStage');
+    const resultCard = document.getElementById('rouletteResultCard');
+    const prizeNameEl = document.getElementById('rouletteResultPrizeName');
+    const prizeCondEl = document.getElementById('rouletteResultCondition');
+    const kickerEl = resultCard ? resultCard.querySelector('.congrats-kicker') : null;
+    const claimForm = document.getElementById('rouletteClaimForm');
+    const noPrizeCard = document.getElementById('rouletteNoPrizeCard');
+
+    if (isNoPrize) {
+      if (kickerEl) kickerEl.textContent = '★ ¡CASI! SEGUÍ PARTICIPANDO ★';
+      if (prizeNameEl) prizeNameEl.textContent = winningPrize.name || 'Seguí Participando';
+      if (prizeCondEl) {
+        const maxSpins = settings ? (settings.maxSpinsPerDevice || 3) : 3;
+        const left = Math.max(0, maxSpins - device.spinsUsed);
+        prizeCondEl.textContent = left > 0
+          ? `Te quedan ${left} tiro${left === 1 ? '' : 's'} hoy. ¡Volvé a girar para llevarte un shot o 2x1!`
+          : 'Usaste tus 3 tiros de hoy. ¡Volvé mañana a partir de las 19:00 hs para seguir jugando!';
+      }
+      if (claimForm) claimForm.hidden = true;
+      if (noPrizeCard) {
+        noPrizeCard.hidden = false;
+        const againBtn = document.getElementById('btnSpinAgain');
+        const maxSpins = settings ? (settings.maxSpinsPerDevice || 3) : 3;
+        if (againBtn) {
+          if (device.spinsUsed < maxSpins) {
+            againBtn.textContent = '¡Girar de nuevo!';
+            againBtn.onclick = () => {
+              if (resultCard) resultCard.hidden = true;
+              if (wheelStage) wheelStage.hidden = false;
+            };
+          } else {
+            againBtn.textContent = 'Ver estado de hoy';
+            againBtn.onclick = () => {
+              showCooldownView();
+            };
+          }
+        }
+      }
+    } else {
+      // Real prize won!
+      playRouletteWin();
+      if (kickerEl) kickerEl.textContent = '★ ¡FELICITACIONES! GANASTE ★';
+      if (prizeNameEl) prizeNameEl.textContent = winningPrize.name;
+      if (prizeCondEl) prizeCondEl.textContent = winningPrize.condition || 'Válido para canjear hoy en barra';
+      if (claimForm) claimForm.hidden = false;
+      if (noPrizeCard) noPrizeCard.hidden = true;
+
+      // Prefill from localStorage if available
+      const nameInput = document.getElementById('rouletteClaimName');
+      const phoneInput = document.getElementById('rouletteClaimPhone');
+      if (nameInput && !nameInput.value) {
+        nameInput.value = localStorage.getItem('mery_user_name') || '';
+      }
+      if (phoneInput && !phoneInput.value) {
+        phoneInput.value = localStorage.getItem('mery_user_phone') || '';
+      }
+    }
+
+    if (wheelStage) wheelStage.hidden = true;
+    if (resultCard) resultCard.hidden = false;
+  }
+
+  // --- Claim Form Submission ---
+  function handleRouletteClaimSubmit(e) {
+    e.preventDefault();
+    if (!currentPrizeWon) return;
+
+    const nameInput = document.getElementById('rouletteClaimName');
+    const phoneInput = document.getElementById('rouletteClaimPhone');
+    const name = nameInput ? nameInput.value.trim() : '';
+    const phone = phoneInput ? phoneInput.value.trim() : '';
+
+    if (!name || !phone) {
+      alert('Por favor ingresá tu nombre y WhatsApp para generar tu cupón digital.');
+      return;
+    }
+
+    try {
+      localStorage.setItem('mery_user_name', name);
+      localStorage.setItem('mery_user_phone', phone);
+    } catch (_) {}
+
+    if (!window.MeryStore || typeof window.MeryStore.claimRoulettePrize !== 'function') {
+      alert('El sistema de canjes no está disponible en este momento.');
+      return;
+    }
+
+    const claimResult = window.MeryStore.claimRoulettePrize(currentPrizeWon.id, { name, phone });
+    if (!claimResult || !claimResult.success) {
+      alert(claimResult ? claimResult.message : 'No se pudo generar el cupón. Intentá nuevamente.');
+      return;
+    }
+
+    const voucher = claimResult.voucher;
+    const device = getRouletteDeviceState();
+    if (!Array.isArray(device.claimedVouchers)) {
+      device.claimedVouchers = [];
+    }
+    device.claimedVouchers.push(voucher);
+    saveRouletteDeviceState(device);
+
+    // Show Voucher Card
+    const resultCard = document.getElementById('rouletteResultCard');
+    const voucherCard = document.getElementById('rouletteVoucherCard');
+    if (resultCard) resultCard.hidden = true;
+    if (voucherCard) voucherCard.hidden = false;
+
+    const codeEl = document.getElementById('voucherCode');
+    const prizeEl = document.getElementById('voucherPrize');
+    const clientEl = document.getElementById('voucherClient');
+    const condEl = document.getElementById('voucherCondition');
+
+    if (codeEl) codeEl.textContent = voucher.code;
+    if (prizeEl) prizeEl.textContent = voucher.prizeName;
+    if (clientEl) clientEl.textContent = voucher.clientName;
+    if (condEl) condEl.textContent = voucher.condition;
+
+    // WhatsApp share with official verification and anti-duplication security
+    const shareBtn = document.getElementById('btnShareVoucherWhatsapp');
+    if (shareBtn) {
+      const issueDate = new Date().toLocaleDateString('es-AR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+      const issueTime = new Date().toLocaleTimeString('es-AR', {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+
+      const waText = 
+        `*MERY JANE · LA PREVIA — CUPÓN DIGITAL EXCLUSIVO*\n\n` +
+        `¡Felicitaciones, ${voucher.clientName}! Tu premio obtenido en la Ruleta de La Previa ya está emitido y registrado en el sistema del bar con código de seguridad único.\n\n` +
+        `• *CÓDIGO DE VALIDACIÓN:* *${voucher.code}*\n` +
+        `• *BENEFICIO:* *${voucher.prizeName}*\n` +
+        `• *TITULAR:* ${voucher.clientName}\n` +
+        (voucher.clientPhone ? `• *WHATSAPP:* ${voucher.clientPhone}\n` : '') +
+        `• *CONDICIÓN DE USO:* ${voucher.condition}\n` +
+        `• *FECHA DE EMISIÓN:* ${issueDate} a las ${issueTime} hs\n\n` +
+        `*CLÁUSULA DE SEGURIDAD Y CANJE:*\n` +
+        `1. Este cupón digital es personal, intransferible y de un solo uso.\n` +
+        `2. Mostrá este mensaje o tu pantalla al mozo o en la barra al momento de ordenar.\n` +
+        `3. Al canjearse, el código queda registrado como utilizado en el sistema del bar y se invalida automáticamente para evitar réplicas o reusos.\n\n` +
+        `*Ubicación:* Calle 101 Nº 85, Guernica.\n` +
+        `*Tu noche empieza acá.*`;
+
+      shareBtn.onclick = () => {
+        const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(waText)}`;
+        window.open(url, '_blank');
+      };
+    }
+
+    updateRouletteBadges();
+  }
+
+  // --- Initial Setup & Listeners for Roulette ---
+  function initRoulette() {
+    const btnOpenRoulette = document.getElementById('btnOpenRoulette');
+    if (btnOpenRoulette) {
+      btnOpenRoulette.addEventListener('click', openRouletteModal);
+    }
+
+    const btnCloseModal = document.getElementById('btnCloseRouletteModal');
+    if (btnCloseModal) {
+      btnCloseModal.addEventListener('click', closeRouletteModal);
+    }
+
+    const rouletteModal = document.getElementById('qitchenRouletteModal');
+    if (rouletteModal) {
+      rouletteModal.addEventListener('click', (e) => {
+        if (e.target === rouletteModal) {
+          closeRouletteModal();
+        }
+      });
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && rouletteModal && rouletteModal.classList.contains('open')) {
+        closeRouletteModal();
+      }
+    });
+
+    const btnSpinRoulette = document.getElementById('btnSpinRoulette');
+    if (btnSpinRoulette) {
+      btnSpinRoulette.addEventListener('click', spinRoulette);
+    }
+
+    const claimForm = document.getElementById('rouletteClaimForm');
+    if (claimForm) {
+      claimForm.addEventListener('submit', handleRouletteClaimSubmit);
+    }
+
+    const btnSaveVoucher = document.getElementById('btnSaveVoucher');
+    if (btnSaveVoucher) {
+      btnSaveVoucher.addEventListener('click', () => {
+        closeRouletteModal();
+        navigateView('menu');
+      });
+    }
+
+    const btnCloseCooldownBtn = document.getElementById('btnCloseCooldownBtn');
+    if (btnCloseCooldownBtn) {
+      btnCloseCooldownBtn.addEventListener('click', () => {
+        closeRouletteModal();
+        navigateView('menu');
+      });
+    }
+
+    const btnViewMyVouchers = document.getElementById('btnViewMyVouchers');
+    if (btnViewMyVouchers) {
+      btnViewMyVouchers.addEventListener('click', () => {
+        showCooldownView();
+      });
+    }
+
+    // Real-time broadcast channel listener
+    if (typeof BroadcastChannel !== 'undefined') {
+      try {
+        const syncBc = new BroadcastChannel('mery_sync_channel');
+        syncBc.onmessage = (event) => {
+          if (event && event.data && event.data.type === 'ROULETTE_SETTINGS_UPDATED') {
+            updateRouletteBadges();
+            drawRouletteWheel(currentWheelAngle);
+          }
+        };
+      } catch (_) {}
+    }
+
+    // Storage event listener
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'mery_roulette_settings_v1') {
+        updateRouletteBadges();
+        drawRouletteWheel(currentWheelAngle);
+      }
+    });
+
+    // Check direct URL hash #roulette or ?ruleta=1
+    if (window.location.hash === '#roulette' || searchParams.get('ruleta') === '1') {
+      setTimeout(openRouletteModal, 350);
+    }
+
+    updateRouletteBadges();
+    drawRouletteWheel(currentWheelAngle);
+  }
+
+  initRoulette();
 });

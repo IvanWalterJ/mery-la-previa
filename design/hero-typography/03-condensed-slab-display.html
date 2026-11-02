@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Mery La Previa — Dirección 03: Heavy Chunky Serif</title>
+  <style>
+    :root {
+      --q-bg: #0a0b0a;
+      --q-surface: #111210;
+      --q-card: rgba(24, 24, 24, 0.65);
+      --q-cream: #efe7d2;
+      --q-cream-muted: rgba(245, 242, 234, 0.7);
+      --q-gold: #cfbe91;
+      --q-border: rgba(239, 231, 210, 0.15);
+      --q-border-strong: rgba(239, 231, 210, 0.28);
+      /* Heavy transitional serif — thick crossbars and sturdy brackets */
+      --font-display: Georgia, "Times New Roman", serif;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      width: 1440px;
+      height: 900px;
+      overflow: hidden;
+      background: var(--q-bg);
+      color: var(--q-cream);
+      font-family: var(--font-sans);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      position: relative;
+    }
+
+    .hero-split {
+      padding: 32px 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border-right: 1px solid var(--q-border);
+      position: relative;
+      background: radial-gradient(circle at 10% 50%, rgba(207, 190, 145, 0.12) 0%, transparent 60%);
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 16px;
+      background: rgba(17, 18, 16, 0.8);
+      border: 1px solid var(--q-border);
+      border-radius: 999px;
+      backdrop-filter: blur(10px);
+    }
+    .brand-logo {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1.35rem;
+      letter-spacing: 0.14em;
+      color: var(--q-cream);
+      text-transform: uppercase;
+    }
+    .nav-tag {
+      font-size: 0.75rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--q-gold);
+      font-weight: 600;
+    }
+
+    .headline-stage {
+      margin-bottom: 24px;
+    }
+    .headline-kicker {
+      font-size: 0.82rem;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: var(--q-gold);
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    .hero-title {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 5.2rem;
+      line-height: 0.94;
+      letter-spacing: -0.02em;
+      text-transform: uppercase;
+      color: var(--q-cream);
+      transform-origin: left bottom;
+      transform: scaleX(0.82);
+      text-shadow: 0 4px 24px rgba(0,0,0,0.8);
+    }
+
+    .hero-tagline {
+      margin-top: 20px;
+      font-size: 0.95rem;
+      color: var(--q-cream-muted);
+      letter-spacing: 0.08em;
+      line-height: 1.5;
+      max-width: 440px;
+    }
+
+    .controls-split {
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      background: var(--q-surface);
+      overflow-y: auto;
+    }
+
+    .card {
+      background: var(--q-card);
+      border: 1px solid var(--q-border);
+      border-radius: 14px;
+      padding: 24px;
+    }
+    .card-title {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      letter-spacing: 0.08em;
+      color: var(--q-gold);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+    .card-desc {
+      font-size: 0.88rem;
+      color: var(--q-cream-muted);
+      line-height: 1.45;
+      margin-bottom: 20px;
+    }
+
+    .control-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .control-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--q-cream);
+      letter-spacing: 0.05em;
+    }
+    .control-val {
+      color: var(--q-gold);
+      font-family: monospace;
+    }
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--q-gold);
+      cursor: pointer;
+    }
+
+    .preset-btn-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .preset-btn {
+      flex: 1;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--q-border);
+      border-radius: 8px;
+      color: var(--q-cream);
+      font-size: 0.82rem;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+    }
+    .preset-btn.active {
+      background: var(--q-gold);
+      color: #000;
+      border-color: var(--q-gold);
+    }
+
+    .preview-box {
+      background: #000;
+      border: 1px solid var(--q-border-strong);
+      border-radius: 12px;
+      padding: 24px;
+      margin-top: 12px;
+      text-align: center;
+    }
+    .preview-text {
+      font-family: var(--font-display);
+      font-size: 2.8rem;
+      line-height: 1;
+      color: var(--q-cream);
+      text-transform: uppercase;
+      transform: scaleX(0.82);
+    }
+  </style>
+</head>
+<body>
+  <div class="hero-split">
+    <div class="topbar">
+      <div class="brand-logo">MERY</div>
+      <div class="nav-tag">VIP NIGHTLIFE · GUERNICA</div>
+    </div>
+
+    <div class="headline-stage">
+      <div class="headline-kicker">La Experiencia Oficial</div>
+      <h1 id="liveHeadline" class="hero-title">
+        MERY<br>LA PREVIA
+      </h1>
+      <p class="hero-tagline">
+        Fuerza y presencia contundente, con trazos rellenos y curvas carnosas inspiradas en clubes de cóctel de Brooklyn y Milán.
+      </p>
+    </div>
+  </div>
+
+  <div class="controls-split">
+    <div class="card">
+      <div class="card-title">Dirección 03: Heavy Chunky Serif</div>
+      <div class="card-desc">
+        Estilo <strong>DM Serif / Playfair Heavy / Ogg Chunky</strong>. Elimina por completo la fragilidad del Didone. Los trazos horizontales, remates y ojos tienen cuerpo rotundo y calidez, pegando con fuerza en la entrada del local.
+      </div>
+
+      <div class="control-row">
+        <div class="control-label">
+          <span>Condensación Horizontal (scaleX)</span>
+          <span id="scaleVal" class="control-val">0.82</span>
+        </div>
+        <input type="range" id="scaleSlider" min="0.70" max="1.0" step="0.01" value="0.82">
+      </div>
+
+      <div class="control-row">
+        <div class="control-label">
+          <span>Espaciado entre letras (letter-spacing)</span>
+          <span id="spacingVal" class="control-val">-0.02em</span>
+        </div>
+        <input type="range" id="spacingSlider" min="-0.05" max="0.08" step="0.01" value="-0.02">
+      </div>
+
+      <div class="control-row">
+        <div class="control-label">Texto del Titular</div>
+        <div class="preset-btn-group">
+          <button type="button" class="preset-btn active" onclick="setText('MERY<br>LA PREVIA')">MERY LA PREVIA</button>
+          <button type="button" class="preset-btn" onclick="setText('HOY ES LA<br>PREVIA')">HOY ES LA PREVIA</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Previsualización de Glifos Críticos</div>
+      <div class="card-desc">Observá la masa y el soporte de cada letra:</div>
+      <div class="preview-box">
+        <div id="sampleGlyphs" class="preview-text">H V A E S R</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const headline = document.getElementById('liveHeadline');
+    const glyphs = document.getElementById('sampleGlyphs');
+    const scaleSlider = document.getElementById('scaleSlider');
+    const spacingSlider = document.getElementById('spacingSlider');
+
+    function update() {
+      const sc = scaleSlider.value;
+      const sp = spacingSlider.value + 'em';
+      document.getElementById('scaleVal').innerText = sc;
+      document.getElementById('spacingVal').innerText = sp;
+
+      headline.style.transform = 'scaleX(' + sc + ')';
+      headline.style.letterSpacing = sp;
+      glyphs.style.transform = 'scaleX(' + sc + ')';
+      glyphs.style.letterSpacing = sp;
+    }
+
+    scaleSlider.addEventListener('input', update);
+    spacingSlider.addEventListener('input', update);
+
+    function setText(txt) {
+      headline.innerHTML = txt;
+      document.querySelectorAll('.preset-btn').forEach(b => b.classList.toggle('active', b.innerText.includes(txt.replace('<br>', ' '))));
+    }
+  </script>
+</body>
+</html>

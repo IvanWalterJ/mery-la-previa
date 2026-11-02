@@ -1,0 +1,27 @@
+{
+  "title": "Hero Entrance Typography Studio",
+  "brief": "Calibración y exploración tipográfica de la entrada de Mery La Previa buscando el peso exacto para los trazos secundarios sin el desvanecimiento de Bodoni extrema.",
+  "artboards": [
+    {
+      "file": "01-editorial-bold-serif.html",
+      "title": "01 Editorial Bold (Trazos Calibrados)",
+      "tradeoff": "Didona clásica pero con fustes y remates secundarios engrosados; presencia editorial nítida sin fragilidad.",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "file": "02-monumental-chiseled.html",
+      "title": "02 Monumental Chiseled Roman",
+      "tradeoff": "Serifas esculpidas uniformes; máxima solidez y legibilidad, menor contraste vertical extremo.",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "file": "03-condensed-slab-display.html",
+      "title": "03 Heavy Chunky Display Serif",
+      "tradeoff": "Trazos gruesos, calidez nocturna y peso contundente en toda la letra; estilo coctelería contemporánea.",
+      "width": 1440,
+      "height": 900
+    }
+  ]
+}

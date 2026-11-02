@@ -38,11 +38,27 @@ document.addEventListener('DOMContentLoaded', () => {
   const adminReservationsBadge = document.getElementById('adminReservationsBadge');
   const btnNavMenu = document.getElementById('btnNavMenu');
   const adminMenuTotalBadge = document.getElementById('adminMenuTotalBadge');
+  const btnNavRoulette = document.getElementById('btnNavRoulette');
+  const adminRouletteBadge = document.getElementById('adminRouletteBadge');
   const btnNavWhatsapp = document.getElementById('btnNavWhatsapp');
   const btnNavVideos = document.getElementById('btnNavVideos');
   const adminSearchInput = document.getElementById('adminSearchInput');
   const sectionsContainer = document.getElementById('adminSectionsContainer');
   const toastEl = document.getElementById('adminToast');
+
+  // Roulette Prize Modal elements (S3)
+  const adminPrizeModal = document.getElementById('adminPrizeModal');
+  const prizeModalHeading = document.getElementById('prizeModalHeading');
+  const adminPrizeForm = document.getElementById('adminPrizeForm');
+  const prizeEditId = document.getElementById('prizeEditId');
+  const prizeNameInput = document.getElementById('prizeNameInput');
+  const prizeStockInput = document.getElementById('prizeStockInput');
+  const prizeTotalStockInput = document.getElementById('prizeTotalStockInput');
+  const prizeProbInput = document.getElementById('prizeProbInput');
+  const prizeColorInput = document.getElementById('prizeColorInput');
+  const prizeConditionInput = document.getElementById('prizeConditionInput');
+  const btnClosePrizeModal = document.getElementById('btnClosePrizeModal');
+  const btnCancelPrizeModal = document.getElementById('btnCancelPrizeModal');
 
   // Proof Modal elements (S9)
   const adminProofModal = document.getElementById('adminProofModal');
@@ -220,6 +236,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let targetHash = '';
     if (activeTab === 'reservations') {
       targetHash = '#reservas';
+    } else if (activeTab === 'roulette') {
+      targetHash = '#ruleta';
     } else if (activeTab === 'whatsapp') {
       targetHash = '#whatsapp';
     } else if (activeTab === 'videos') {
@@ -245,6 +263,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const hash = window.location.hash || '';
     if (!hash || hash === '#reservas' || hash === '#reservaciones' || hash === '#reserva') {
       targetTab = 'reservations';
+    } else if (hash === '#ruleta' || hash === '#promos') {
+      targetTab = 'roulette';
     } else if (hash === '#whatsapp') {
       targetTab = 'whatsapp';
     } else if (hash === '#videos') {
@@ -262,7 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const savedRaw = localStorage.getItem(STORAGE_KEY_ADMIN_TAB);
         if (savedRaw) {
           const saved = JSON.parse(savedRaw);
-          if (saved && ['category', 'reservations', 'whatsapp', 'videos'].includes(saved.tab)) {
+          if (saved && ['category', 'reservations', 'roulette', 'whatsapp', 'videos'].includes(saved.tab)) {
             targetTab = saved.tab;
             if (saved.categoryId) targetCategory = saved.categoryId;
           }
@@ -311,6 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (prevTab !== activeTab || prevCat !== activeCategoryId) {
         renderAdminSidebar();
         if (activeTab === 'reservations') renderReservationsWorkspace();
+        else if (activeTab === 'roulette') renderRouletteWorkspace();
         else if (activeTab === 'whatsapp') renderWhatsappWorkspace();
         else if (activeTab === 'videos') renderVideosWorkspace();
         else renderActiveCategoryWorkspace();
@@ -767,6 +788,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       if (confirmModal && !confirmModal.hidden) closeConfirmModal();
+      else if (adminPrizeModal && !adminPrizeModal.hidden) closePrizeModal();
       else if (itemModal && !itemModal.hidden) closeItemModal();
       else if (categoryModal && !categoryModal.hidden) closeCategoryModal();
     }
@@ -783,6 +805,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (activeTab === 'reservations') {
         renderReservationsWorkspace();
+      } else if (activeTab === 'roulette') {
+        renderRouletteWorkspace();
       } else if (activeTab === 'whatsapp') {
         renderWhatsappWorkspace();
       } else if (activeTab === 'videos') {
@@ -886,12 +910,34 @@ document.addEventListener('DOMContentLoaded', () => {
     adminMenuTotalBadge.title = `${total} ítems en la carta`;
   }
 
+  function updateRouletteBadge() {
+    if (!adminRouletteBadge) return;
+    const settings = window.MeryStore ? window.MeryStore.getRouletteSettings() : null;
+    const isAct = settings ? settings.enabled !== false : true;
+    adminRouletteBadge.textContent = isAct ? 'Activa' : 'Pausada';
+    adminRouletteBadge.style.background = isAct ? 'rgba(224, 36, 52, 0.2)' : 'rgba(255, 255, 255, 0.08)';
+    adminRouletteBadge.style.color = isAct ? 'var(--q-red)' : 'var(--q-cream-muted)';
+  }
+
   function renderAdminSidebar() {
     btnNavReservations?.classList.toggle('active', activeTab === 'reservations');
     btnNavMenu?.classList.toggle('active', activeTab === 'category');
+    btnNavRoulette?.classList.toggle('active', activeTab === 'roulette');
     btnNavWhatsapp?.classList.toggle('active', activeTab === 'whatsapp');
     btnNavVideos?.classList.toggle('active', activeTab === 'videos');
     updateMenuTotalBadge();
+    updateRouletteBadge();
+  }
+
+  if (btnNavRoulette) {
+    btnNavRoulette.addEventListener('click', () => {
+      stopWaPolling();
+      activeTab = 'roulette';
+      renderAdminSidebar();
+      renderRouletteWorkspace();
+      persistActiveTabState();
+      closeAdminMobileMenu();
+    });
   }
 
   if (btnNavReservations) {
@@ -953,6 +999,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (btnRenameActiveCat) btnRenameActiveCat.hidden = false;
     if (btnNewDish) btnNewDish.hidden = false;
+    if (adminSearchInput) adminSearchInput.hidden = false;
     if (adminSearchInput?.parentElement) adminSearchInput.parentElement.hidden = false;
 
     const sec = menuSections.find((s) => s.id === activeCategoryId) || menuSections[0];
@@ -1276,7 +1323,461 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 4b. SECTION VIDEOS MANAGEMENT WORKSPACE (Intro Neon, Bottle 360°, Previa 13/11)
+  // ===========================================================================
+  // 4b. S3: ROULETTE & PROMOS MANAGEMENT WORKSPACE
+  // ===========================================================================
+  function renderRouletteWorkspace() {
+    if (!sectionsContainer) return;
+    activeTab = 'roulette';
+    persistActiveTabState();
+    renderAdminSidebar();
+
+    if (activeCategoryTitle) activeCategoryTitle.textContent = 'Ruleta & Promos de la Previa';
+    if (activeCategoryCount) {
+      activeCategoryCount.textContent = 'Configurá los premios de la noche, el stock y los límites de tiros para tus clientes';
+    }
+    if (btnRenameActiveCat) btnRenameActiveCat.hidden = true;
+    if (btnDeleteActiveCat) btnDeleteActiveCat.hidden = true;
+    if (btnNewDish) btnNewDish.hidden = true;
+    if (adminSearchInput) adminSearchInput.hidden = true;
+    if (adminSearchInput?.parentElement) adminSearchInput.parentElement.hidden = true;
+
+    const settings = window.MeryStore ? window.MeryStore.getRouletteSettings() : {
+      enabled: true,
+      title: 'Mery Invita la Previa',
+      subtitle: 'Girá la ruleta y ganá shots de tequila, 2x1 y beneficios para tu previa',
+      maxSpinsPerDevice: 3,
+      requireContact: true,
+      prizes: []
+    };
+
+    const isEnabled = settings.enabled !== false;
+    const prizes = Array.isArray(settings.prizes) ? settings.prizes : [];
+    updateRouletteBadge();
+
+    sectionsContainer.innerHTML = `
+      <div class="admin-roulette-container">
+        <!-- Master Banner -->
+        <div class="admin-roulette-banner">
+          <div class="admin-roulette-banner-left">
+            <span class="admin-roulette-icon" aria-hidden="true">🎰</span>
+            <div>
+              <div class="admin-roulette-status-title">Ruleta de Premios: ${isEnabled ? 'Activa' : 'Pausada'}</div>
+              <div class="admin-roulette-status-desc">
+                ${isEnabled
+                  ? 'La ruleta está disponible públicamente en la previa para que tus clientes jueguen y ganen.'
+                  : 'La ruleta está pausada. Ningún cliente verá el acceso ni podrá girar por premios.'}
+              </div>
+            </div>
+          </div>
+          <button type="button" id="adminRouletteToggleBtn" class="admin-roulette-toggle-btn ${isEnabled ? 'is-active' : ''}">
+            ${isEnabled ? '● Ruleta Activa (Pausar)' : '○ Ruleta Pausada (Activar)'}
+          </button>
+        </div>
+
+        <!-- General Settings Grid -->
+        <div class="admin-roulette-settings-grid">
+          <div class="admin-form-group">
+            <label for="rouletteTitleInput" style="font-size: 0.8rem; font-weight: 600; color: var(--q-cream); margin-bottom: 6px; display: block;">
+              Título del Banner / Ruleta *
+            </label>
+            <input
+              type="text"
+              id="rouletteTitleInput"
+              class="admin-input"
+              value="${escapeHtml(settings.title || 'Mery Invita la Previa')}"
+              placeholder="ej. Mery Invita la Previa"
+            />
+          </div>
+
+          <div class="admin-form-group">
+            <label for="rouletteSubtitleInput" style="font-size: 0.8rem; font-weight: 600; color: var(--q-cream); margin-bottom: 6px; display: block;">
+              Subtítulo / Instrucción *
+            </label>
+            <input
+              type="text"
+              id="rouletteSubtitleInput"
+              class="admin-input"
+              value="${escapeHtml(settings.subtitle || '')}"
+              placeholder="ej. Girá la ruleta y ganá shots de tequila, 2x1 y beneficios para tu previa"
+            />
+          </div>
+
+          <div class="admin-form-group">
+            <label for="rouletteMaxSpinsSelect" style="font-size: 0.8rem; font-weight: 600; color: var(--q-cream); margin-bottom: 6px; display: block;">
+              Límite de Tiros por Dispositivo
+            </label>
+            <select id="rouletteMaxSpinsSelect" class="admin-input" style="width: 100%; box-sizing: border-box; cursor: pointer;">
+              <option value="1" ${settings.maxSpinsPerDevice === 1 ? 'selected' : ''}>1 tiro por cliente / celular</option>
+              <option value="2" ${settings.maxSpinsPerDevice === 2 ? 'selected' : ''}>2 tiros por cliente / celular</option>
+              <option value="3" ${(!settings.maxSpinsPerDevice || settings.maxSpinsPerDevice === 3) ? 'selected' : ''}>3 tiros por cliente / celular (recomendado)</option>
+              <option value="4" ${settings.maxSpinsPerDevice === 4 ? 'selected' : ''}>4 tiros por cliente / celular</option>
+              <option value="5" ${settings.maxSpinsPerDevice === 5 ? 'selected' : ''}>5 tiros por cliente / celular</option>
+              <option value="10" ${settings.maxSpinsPerDevice === 10 ? 'selected' : ''}>10 tiros por cliente / celular</option>
+              <option value="999" ${settings.maxSpinsPerDevice === 999 ? 'selected' : ''}>Sin límite (tiros ilimitados)</option>
+            </select>
+          </div>
+
+          <div class="admin-form-group" style="display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 8px;">
+            <label style="font-size: 0.8rem; font-weight: 600; color: var(--q-cream); margin-bottom: 6px; display: block;">
+              Datos de Contacto
+            </label>
+            <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 0.84rem; color: var(--q-cream-muted); cursor: pointer; user-select: none;">
+              <input
+                type="checkbox"
+                id="rouletteRequireContactCheck"
+                ${settings.requireContact !== false ? 'checked' : ''}
+                style="accent-color: var(--q-red); width: 16px; height: 16px;"
+              />
+              Pedir Nombre y WhatsApp para adjudicar y canjear cupón
+            </label>
+          </div>
+        </div>
+
+        <!-- Action Bar -->
+        <div class="admin-roulette-actions-bar">
+          <h3 class="admin-roulette-actions-title">Premios de la Ruleta (Slots)</h3>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button type="button" id="btnAddPrize" class="admin-btn-gold">
+              + Agregar Premio
+            </button>
+            <button type="button" id="btnResetRouletteStock" class="admin-btn-outline" title="Restablece el stock de todos los premios a su cupo total por noche">
+              🔄 Restablecer Stock del Día
+            </button>
+            <button type="button" id="btnSaveRouletteSettings" class="admin-btn-gold">
+              💾 Guardar Configuración
+            </button>
+          </div>
+        </div>
+
+        <!-- Prize Cards Grid -->
+        <div class="admin-prizes-list">
+          ${prizes.length === 0 ? `
+            <div style="grid-column: 1 / -1; padding: 40px; text-align: center; background: var(--q-surface); border: 1px dashed var(--q-border); border-radius: 12px; color: var(--q-cream-muted);">
+              <p style="font-size: 1.05rem; margin-bottom: 12px; color: var(--q-cream);">No hay premios configurados en la ruleta aún.</p>
+              <button type="button" id="btnAddPrizeEmpty" class="admin-btn-gold">+ Agregar Primer Premio</button>
+            </div>
+          ` : prizes.map((prize) => {
+            const stockDisplay = prize.stock === 999 ? '∞' : prize.stock;
+            const totalStockDisplay = prize.totalStock === 999 ? '∞' : (prize.totalStock !== undefined ? prize.totalStock : prize.stock);
+            return `
+              <article class="admin-prize-card" data-prize-id="${escapeHtml(prize.id)}">
+                <div class="admin-prize-top">
+                  <div class="admin-prize-title-wrap">
+                    <span class="admin-prize-dot" style="background: ${escapeHtml(prize.color || '#e02434')};"></span>
+                    <h4 class="admin-prize-name">${escapeHtml(prize.name)}</h4>
+                  </div>
+                  <span class="admin-prize-prob-badge">${prize.probability || 0}% prob</span>
+                </div>
+
+                <div class="admin-prize-condition">
+                  ${escapeHtml(prize.condition || 'Válido hoy en barra')}
+                </div>
+
+                <div class="admin-prize-bottom">
+                  <div class="admin-prize-stock-box">
+                    <span class="admin-prize-stock-label">Stock:</span>
+                    <button type="button" class="admin-prize-stock-btn btn-stock-dec" data-prize-id="${escapeHtml(prize.id)}" title="Restar 1" aria-label="Restar 1">-</button>
+                    <span class="admin-prize-stock-num">${stockDisplay}</span>
+                    <button type="button" class="admin-prize-stock-btn btn-stock-inc" data-prize-id="${escapeHtml(prize.id)}" title="Sumar 1" aria-label="Sumar 1">+</button>
+                    <span style="font-size: 0.74rem; color: var(--q-cream-muted);">/ ${totalStockDisplay}</span>
+                  </div>
+
+                  <div class="admin-prize-actions">
+                    <button type="button" class="admin-prize-btn-sm btn-edit-prize" data-prize-id="${escapeHtml(prize.id)}">Editar</button>
+                    <button type="button" class="admin-prize-btn-sm admin-prize-btn-danger btn-delete-prize" data-prize-id="${escapeHtml(prize.id)}">Eliminar</button>
+                  </div>
+                </div>
+              </article>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+
+    // 1. Toggle activation on / off
+    const toggleBtn = sectionsContainer.querySelector('#adminRouletteToggleBtn');
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', () => {
+        const current = window.MeryStore ? window.MeryStore.getRouletteSettings() : null;
+        const isCurrentActive = current ? current.enabled !== false : true;
+        const nextEnabled = !isCurrentActive;
+        if (window.MeryStore && typeof window.MeryStore.saveRouletteSettings === 'function') {
+          window.MeryStore.saveRouletteSettings({ enabled: nextEnabled });
+        }
+        updateRouletteBadge();
+        renderRouletteWorkspace();
+        showToast(nextEnabled ? '✓ Ruleta activada para el público' : '✓ Ruleta pausada');
+      });
+    }
+
+    // 2. Save general settings
+    const btnSaveSettings = sectionsContainer.querySelector('#btnSaveRouletteSettings');
+    if (btnSaveSettings) {
+      btnSaveSettings.addEventListener('click', () => {
+        const titleInput = sectionsContainer.querySelector('#rouletteTitleInput');
+        const subtitleInput = sectionsContainer.querySelector('#rouletteSubtitleInput');
+        const maxSpinsSelect = sectionsContainer.querySelector('#rouletteMaxSpinsSelect');
+        const requireContactCheck = sectionsContainer.querySelector('#rouletteRequireContactCheck');
+
+        const title = (titleInput?.value || '').trim();
+        const subtitle = (subtitleInput?.value || '').trim();
+        const maxSpins = parseInt(maxSpinsSelect?.value, 10) || 3;
+        const requireContact = requireContactCheck ? requireContactCheck.checked : true;
+
+        if (!title) {
+          showToast('El título de la ruleta no puede estar vacío');
+          titleInput?.focus();
+          return;
+        }
+
+        if (window.MeryStore && typeof window.MeryStore.saveRouletteSettings === 'function') {
+          window.MeryStore.saveRouletteSettings({
+            title,
+            subtitle,
+            maxSpinsPerDevice: maxSpins,
+            requireContact
+          });
+          showToast('✓ Configuración de la ruleta guardada');
+          renderRouletteWorkspace();
+        }
+      });
+    }
+
+    // 3. Reset daily stock
+    const btnResetStock = sectionsContainer.querySelector('#btnResetRouletteStock');
+    if (btnResetStock) {
+      btnResetStock.addEventListener('click', () => {
+        openConfirmModal({
+          title: '¿Restablecer stock del día?',
+          message: 'Todos los premios de la ruleta volverán a su cupo total por noche para la previa.',
+          confirmLabel: 'Sí, restablecer stock',
+          successText: 'Stock diario restablecido',
+          onConfirm: () => {
+            if (window.MeryStore && typeof window.MeryStore.resetRouletteDailyStock === 'function') {
+              window.MeryStore.resetRouletteDailyStock();
+              renderRouletteWorkspace();
+              showToast('✓ Stock de la ruleta restablecido para hoy');
+            }
+          }
+        });
+      });
+    }
+
+    // 4. Open prize modal for adding
+    const btnAdd = sectionsContainer.querySelector('#btnAddPrize');
+    if (btnAdd) {
+      btnAdd.addEventListener('click', () => {
+        openPrizeModal();
+      });
+    }
+    const btnAddEmpty = sectionsContainer.querySelector('#btnAddPrizeEmpty');
+    if (btnAddEmpty) {
+      btnAddEmpty.addEventListener('click', () => {
+        openPrizeModal();
+      });
+    }
+
+    // 5. Open prize modal for editing
+    sectionsContainer.querySelectorAll('.btn-edit-prize').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const prizeId = btn.getAttribute('data-prize-id');
+        openPrizeModal(prizeId);
+      });
+    });
+
+    // 6. Delete prize with confirmation
+    sectionsContainer.querySelectorAll('.btn-delete-prize').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const prizeId = btn.getAttribute('data-prize-id');
+        const current = window.MeryStore ? window.MeryStore.getRouletteSettings() : null;
+        if (!current || !Array.isArray(current.prizes)) return;
+        const prize = current.prizes.find((p) => p.id === prizeId);
+        if (!prize) return;
+
+        openConfirmModal({
+          title: '¿Eliminar premio?',
+          message: `¿Estás seguro de que querés eliminar el premio "${prize.name}" de la ruleta?`,
+          confirmLabel: 'Sí, eliminar',
+          successText: 'Premio eliminado',
+          onConfirm: () => {
+            const updatedPrizes = current.prizes.filter((p) => p.id !== prizeId);
+            if (window.MeryStore && typeof window.MeryStore.saveRouletteSettings === 'function') {
+              window.MeryStore.saveRouletteSettings({ prizes: updatedPrizes });
+            }
+            renderRouletteWorkspace();
+            showToast(`✓ Premio "${prize.name}" eliminado de la ruleta`);
+          }
+        });
+      });
+    });
+
+    // 7. Increment & decrement stock in real-time
+    sectionsContainer.querySelectorAll('.btn-stock-dec').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const prizeId = btn.getAttribute('data-prize-id');
+        const current = window.MeryStore ? window.MeryStore.getRouletteSettings() : null;
+        if (!current || !Array.isArray(current.prizes)) return;
+        const prize = current.prizes.find((p) => p.id === prizeId);
+        if (!prize) return;
+        if (prize.stock > 0) {
+          prize.stock -= 1;
+          if (window.MeryStore && typeof window.MeryStore.saveRouletteSettings === 'function') {
+            window.MeryStore.saveRouletteSettings({ prizes: current.prizes });
+          }
+          renderRouletteWorkspace();
+        }
+      });
+    });
+
+    sectionsContainer.querySelectorAll('.btn-stock-inc').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const prizeId = btn.getAttribute('data-prize-id');
+        const current = window.MeryStore ? window.MeryStore.getRouletteSettings() : null;
+        if (!current || !Array.isArray(current.prizes)) return;
+        const prize = current.prizes.find((p) => p.id === prizeId);
+        if (!prize) return;
+        prize.stock += 1;
+        if (window.MeryStore && typeof window.MeryStore.saveRouletteSettings === 'function') {
+          window.MeryStore.saveRouletteSettings({ prizes: current.prizes });
+        }
+        renderRouletteWorkspace();
+      });
+    });
+  }
+
+  // --- Roulette Prize Modal Logic (S3) ---
+  function openPrizeModal(prizeId) {
+    if (!adminPrizeModal) return;
+    const current = window.MeryStore ? window.MeryStore.getRouletteSettings() : null;
+    const prizes = (current && Array.isArray(current.prizes)) ? current.prizes : [];
+    const prize = prizeId ? prizes.find((p) => p.id === prizeId) : null;
+
+    if (prize) {
+      if (prizeModalHeading) prizeModalHeading.textContent = `Editar: ${prize.name}`;
+      if (prizeEditId) prizeEditId.value = prize.id;
+      if (prizeNameInput) prizeNameInput.value = prize.name || '';
+      if (prizeStockInput) prizeStockInput.value = prize.stock !== undefined ? prize.stock : 10;
+      if (prizeTotalStockInput) prizeTotalStockInput.value = prize.totalStock !== undefined ? prize.totalStock : (prize.stock !== undefined ? prize.stock : 10);
+      if (prizeProbInput) prizeProbInput.value = prize.probability !== undefined ? prize.probability : 20;
+      if (prizeColorInput) prizeColorInput.value = prize.color || '#e02434';
+      if (prizeConditionInput) prizeConditionInput.value = prize.condition || '';
+    } else {
+      if (prizeModalHeading) prizeModalHeading.textContent = 'Configurar Premio de la Ruleta';
+      if (prizeEditId) prizeEditId.value = '';
+      if (prizeNameInput) prizeNameInput.value = '';
+      if (prizeStockInput) prizeStockInput.value = '10';
+      if (prizeTotalStockInput) prizeTotalStockInput.value = '10';
+      if (prizeProbInput) prizeProbInput.value = '20';
+      if (prizeColorInput) prizeColorInput.value = '#e02434';
+      if (prizeConditionInput) prizeConditionInput.value = 'Válido hoy a las 11:11 PM en barra';
+    }
+
+    adminPrizeModal.hidden = false;
+    setTimeout(() => {
+      prizeNameInput?.focus();
+    }, 50);
+  }
+
+  function closePrizeModal() {
+    if (!adminPrizeModal) return;
+    adminPrizeModal.hidden = true;
+    if (adminPrizeForm) adminPrizeForm.reset();
+    if (prizeEditId) prizeEditId.value = '';
+  }
+
+  if (btnClosePrizeModal) {
+    btnClosePrizeModal.addEventListener('click', closePrizeModal);
+  }
+  if (btnCancelPrizeModal) {
+    btnCancelPrizeModal.addEventListener('click', closePrizeModal);
+  }
+  if (adminPrizeModal) {
+    adminPrizeModal.addEventListener('click', (e) => {
+      if (e.target === adminPrizeModal) {
+        closePrizeModal();
+      }
+    });
+  }
+
+  if (adminPrizeForm) {
+    adminPrizeForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = (prizeNameInput?.value || '').trim();
+      const stock = parseInt(prizeStockInput?.value, 10);
+      const totalStock = parseInt(prizeTotalStockInput?.value, 10);
+      const prob = parseInt(prizeProbInput?.value, 10);
+      const color = prizeColorInput?.value || '#e02434';
+      const condition = (prizeConditionInput?.value || '').trim();
+
+      if (!name) {
+        showToast('El nombre del premio es obligatorio');
+        prizeNameInput?.focus();
+        return;
+      }
+      if (isNaN(stock) || stock < 0) {
+        showToast('Ingresá un stock válido');
+        prizeStockInput?.focus();
+        return;
+      }
+      if (isNaN(totalStock) || totalStock < 0) {
+        showToast('Ingresá un cupo total válido');
+        prizeTotalStockInput?.focus();
+        return;
+      }
+      if (isNaN(prob) || prob < 1 || prob > 100) {
+        showToast('La probabilidad debe ser entre 1% y 100%');
+        prizeProbInput?.focus();
+        return;
+      }
+      if (!condition) {
+        showToast('Ingresá una condición de canje');
+        prizeConditionInput?.focus();
+        return;
+      }
+
+      const settings = window.MeryStore ? window.MeryStore.getRouletteSettings() : null;
+      if (!settings) return;
+
+      const prizes = Array.isArray(settings.prizes) ? [...settings.prizes] : [];
+      const editId = prizeEditId?.value;
+
+      if (editId) {
+        const idx = prizes.findIndex((p) => p.id === editId);
+        if (idx !== -1) {
+          prizes[idx] = {
+            ...prizes[idx],
+            name,
+            stock,
+            totalStock,
+            probability: prob,
+            color,
+            condition
+          };
+        }
+      } else {
+        const newId = 'prize-' + Date.now().toString(36) + '-' + Math.random().toString(36).substring(2, 6);
+        prizes.push({
+          id: newId,
+          name,
+          stock,
+          totalStock,
+          probability: prob,
+          color,
+          condition
+        });
+      }
+
+      if (window.MeryStore && typeof window.MeryStore.saveRouletteSettings === 'function') {
+        window.MeryStore.saveRouletteSettings({ prizes });
+      }
+      showToast(editId ? '✓ Premio actualizado' : '✓ Premio agregado a la ruleta');
+      closePrizeModal();
+      renderRouletteWorkspace();
+    });
+  }
+
+  // 4c. SECTION VIDEOS MANAGEMENT WORKSPACE (Intro Neon, Bottle 360°, Previa 13/11)
   const SECTION_VIDEO_CONFIGS = [
     {
       key: 'intro',

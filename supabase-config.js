@@ -13,9 +13,28 @@ const STORAGE_KEY_SUPA_CFG = 'mery_supabase_config_v1';
 const STORAGE_KEY_VIDEOS = 'mery_site_videos_v1';
 const STORAGE_KEY_RESERVATIONS = 'mery_reservations_v1';
 const STORAGE_KEY_RES_SETTINGS = 'mery_reservation_settings_v1';
+const STORAGE_KEY_ROULETTE_SETTINGS = 'mery_roulette_settings_v1';
 const BROADCAST_CHANNEL_NAME = 'mery_la_previa_realtime_v1';
 const IDB_NAME = 'mery_media_idb_v1';
 const IDB_STORE = 'media';
+
+const DEFAULT_ROULETTE_SETTINGS = {
+  enabled: true,
+  title: 'Mery Invita la Previa',
+  subtitle: 'Girá la ruleta y ganá shots de tequila, 2x1 y beneficios para tu previa',
+  maxSpinsPerDevice: 3,
+  cooldownHours: 24,
+  requireContact: true,
+  activeDate: new Date().toISOString().slice(0, 10),
+  prizes: [
+    { id: 'shot-tequila', name: 'Shot Tequila 11:11', stock: 10, totalStock: 10, color: '#e02434', probability: 25, condition: 'Válido hoy a las 11:11 PM en barra' },
+    { id: 'gin-2x1', name: '2x1 en Gin Tonic', stock: 10, totalStock: 10, color: '#160e12', probability: 20, condition: 'Válido antes de las 22:00 hs' },
+    { id: 'off-mesa', name: '10% OFF en tu Mesa', stock: 5, totalStock: 5, color: '#880b15', probability: 15, condition: 'Mostralo al pedir la cuenta' },
+    { id: 'tapeo-gratis', name: 'Tapeo de Cortesía', stock: 8, totalStock: 8, color: '#1c1014', probability: 15, condition: 'Con la compra de cualquier botella' },
+    { id: 'trago-autor', name: 'Trago de Autor Regalo', stock: 5, totalStock: 5, color: '#b81424', probability: 10, condition: '1 trago de autor a elección del bartender' },
+    { id: 'segui-participando', name: 'Seguí Participando', stock: 999, totalStock: 999, color: '#261418', probability: 15, condition: '¡Volvé a girar si todavía tenés tiros!' }
+  ]
+};
 
 const DEFAULT_RESERVATION_SETTINGS = {
   depositAlias: 'MERY.LAPREVIA.MP',
@@ -1234,7 +1253,7 @@ const DEFAULT_MENU_SECTIONS = [
 
   async function fetchSiteSettingsFromSupabase() {
     const client = getClient();
-    if (!client) return getReservationSettings();
+    if (!client) return { resSettings: getReservationSettings(), rouletteSettings: getRouletteSettings() };
     try {
       const { data, error } = await client.from('site_settings').select('*');
       if (!error && Array.isArray(data)) {
@@ -1245,11 +1264,113 @@ const DEFAULT_MENU_SECTIONS = [
           try {
             localStorage.setItem(STORAGE_KEY_RES_SETTINGS, JSON.stringify(merged));
           } catch (_) {}
-          return merged;
         }
+        const rouletteRow = data.find((r) => r.key === 'roulette_settings');
+        if (rouletteRow && rouletteRow.value && typeof rouletteRow.value === 'object') {
+          const currentR = getRouletteSettings();
+          const mergedR = { ...currentR, ...rouletteRow.value };
+          try {
+            localStorage.setItem(STORAGE_KEY_ROULETTE_SETTINGS, JSON.stringify(mergedR));
+          } catch (_) {}
+        }
+        return { resSettings: getReservationSettings(), rouletteSettings: getRouletteSettings() };
       }
     } catch (_) {}
-    return getReservationSettings();
+    return { resSettings: getReservationSettings(), rouletteSettings: getRouletteSettings() };
+  }
+
+  // ===========================================================================
+  // S3 / S4: ROULETTE & PROMOTIONS DATA LAYER
+  // ===========================================================================
+  function getRouletteSettings() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_ROULETTE_SETTINGS);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed.title === 'La Previa Paga la Vuelta') {
+          parsed.title = 'Mery Invita la Previa';
+        }
+        return {
+          ...DEFAULT_ROULETTE_SETTINGS,
+          ...parsed,
+          title: parsed.title === 'La Previa Paga la Vuelta' ? 'Mery Invita la Previa' : (parsed.title || DEFAULT_ROULETTE_SETTINGS.title),
+          prizes: Array.isArray(parsed.prizes) ? parsed.prizes : DEFAULT_ROULETTE_SETTINGS.prizes
+        };
+      }
+    } catch (_) {}
+    return { ...DEFAULT_ROULETTE_SETTINGS };
+  }
+
+  function saveRouletteSettings(settings) {
+    const current = getRouletteSettings();
+    const merged = { ...current, ...settings };
+    try {
+      localStorage.setItem(STORAGE_KEY_ROULETTE_SETTINGS, JSON.stringify(merged));
+    } catch (_) {}
+    if (broadcastChannel) {
+      broadcastChannel.postMessage({
+        type: 'ROULETTE_SETTINGS_UPDATED',
+        settings: merged,
+        timestamp: Date.now()
+      });
+    }
+
+    const client = getClient();
+    if (client) {
+      client.from('site_settings').upsert({
+        key: 'roulette_settings',
+        value: merged,
+        updated_at: new Date().toISOString()
+      }).then(() => {}).catch((err) => {
+        console.warn('Supabase roulette_settings upsert fallback:', err.message || err);
+      });
+    }
+    return merged;
+  }
+
+  function resetRouletteDailyStock() {
+    const current = getRouletteSettings();
+    const updatedPrizes = (current.prizes || []).map((p) => ({
+      ...p,
+      stock: p.totalStock !== undefined ? p.totalStock : p.stock
+    }));
+    return saveRouletteSettings({
+      prizes: updatedPrizes,
+      activeDate: new Date().toISOString().slice(0, 10)
+    });
+  }
+
+  function claimRoulettePrize(prizeId, clientInfo = {}) {
+    const current = getRouletteSettings();
+    const prizeIndex = current.prizes.findIndex((p) => p.id === prizeId);
+    if (prizeIndex === -1) return null;
+
+    const prize = current.prizes[prizeIndex];
+    if (prize.stock <= 0 && prize.stock !== 999) {
+      return { success: false, message: 'Stock agotado para este premio' };
+    }
+
+    if (prize.stock !== 999) {
+      current.prizes[prizeIndex].stock = Math.max(0, prize.stock - 1);
+      saveRouletteSettings({ prizes: current.prizes });
+    }
+
+    const code = 'PREVIA-' + Math.random().toString(36).substring(2, 6).toUpperCase();
+    const voucher = {
+      code,
+      prizeId: prize.id,
+      prizeName: prize.name,
+      condition: prize.condition,
+      clientName: clientInfo.name || 'Invitado/a',
+      clientPhone: clientInfo.phone || '',
+      claimedAt: new Date().toISOString()
+    };
+
+    return {
+      success: true,
+      voucher,
+      remainingStock: current.prizes[prizeIndex].stock
+    };
   }
 
   function getReservations() {
@@ -1795,6 +1916,12 @@ const DEFAULT_MENU_SECTIONS = [
     saveReservationSettings,
     fetchSiteSettingsFromSupabase,
     sendReservationNotifications,
-    renderQrCode
+    renderQrCode,
+    // S3/S4: Roulette & Promos
+    DEFAULT_ROULETTE_SETTINGS,
+    getRouletteSettings,
+    saveRouletteSettings,
+    resetRouletteDailyStock,
+    claimRoulettePrize
   };
 })(window);

@@ -423,4 +423,29 @@ ON CONFLICT (key) DO UPDATE
   SET value = EXCLUDED.value,
       updated_at = now();
 
+-- Datos iniciales de configuración de la ruleta de promociones y premios
+INSERT INTO public.site_settings (key, value) VALUES
+  (
+    'roulette_settings',
+    jsonb_build_object(
+      'enabled', true,
+      'title', 'Mery Invita la Previa',
+      'subtitle', 'Girá la ruleta y ganá shots de tequila, 2x1 y beneficios para tu previa',
+      'maxSpinsPerDevice', 3,
+      'cooldownHours', 24,
+      'requireContact', true,
+      'activeDate', to_char(now(), 'YYYY-MM-DD'),
+      'prizes', jsonb_build_array(
+        jsonb_build_object('id', 'shot-tequila', 'name', 'Shot Tequila 11:11', 'stock', 10, 'totalStock', 10, 'color', '#e02434', 'probability', 25, 'condition', 'Válido hoy a las 11:11 PM en barra'),
+        jsonb_build_object('id', 'gin-2x1', 'name', '2x1 en Gin Tonic', 'stock', 10, 'totalStock', 10, 'color', '#160e12', 'probability', 20, 'condition', 'Válido antes de las 22:00 hs'),
+        jsonb_build_object('id', 'off-mesa', 'name', '10% OFF en tu Mesa', 'stock', 5, 'totalStock', 5, 'color', '#880b15', 'probability', 15, 'condition', 'Mostralo al pedir la cuenta'),
+        jsonb_build_object('id', 'tapeo-gratis', 'name', 'Tapeo de Cortesía', 'stock', 8, 'totalStock', 8, 'color', '#1c1014', 'probability', 15, 'condition', 'Con la compra de cualquier botella'),
+        jsonb_build_object('id', 'trago-autor', 'name', 'Trago de Autor Regalo', 'stock', 5, 'totalStock', 5, 'color', '#b81424', 'probability', 10, 'condition', '1 trago de autor a elección del bartender'),
+        jsonb_build_object('id', 'segui-participando', 'name', 'Seguí Participando', 'stock', 999, 'totalStock', 999, 'color', '#261418', 'probability', 15, 'condition', '¡Volvé a girar si todavía tenés tiros!')
+      )
+    )
+  )
+ON CONFLICT (key) DO NOTHING;
+
+
 

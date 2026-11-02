@@ -1,17 +1,28 @@
 :root {
-  /* Official Qitchen Framer Template Color Tokens */
-  --q-bg: #0a0b0a;
-  --q-surface: #111210;
-  --q-card: rgba(24, 24, 24, 0.55);
-  --q-cream: #efe7d2;
-  --q-cream-muted: rgba(245, 242, 234, 0.7);
-  --q-gold: #cfbe91;
-  --q-border: rgba(239, 231, 210, 0.15);
-  --q-border-strong: rgba(239, 231, 210, 0.28);
+  /* Mery Jane Instagram Noir & Ruby Aesthetic Tokens */
+  --q-bg: #080708;
+  --q-surface: #110d0f;
+  --q-card: rgba(18, 12, 14, 0.75);
+  --q-cream: #fbf7ee;
+  --q-cream-muted: rgba(251, 247, 238, 0.72);
 
-  /* Official Qitchen Typography: Forum (Display Serif) + Plus Jakarta Sans */
+  /* Mery Jane Signature Colors: Crimson, Ruby and Neon Glow */
+  --q-red: #e02434;
+  --q-red-hover: #ff2e40;
+  --q-red-dark: #880b15;
+  --q-red-glow: rgba(224, 36, 52, 0.45);
+  --q-red-subtle: rgba(224, 36, 52, 0.12);
+
+  /* Primary Brand Accent (Replaces generic muted gold with Mery Jane Ruby) */
+  --q-gold: #e02434;
+  --q-gold-metallic: #cfbe91;
+  --q-border: rgba(224, 36, 52, 0.22);
+  --q-border-strong: rgba(224, 36, 52, 0.48);
+
+  /* Official Section Headlines Display Serif: Forum (Classical Roman Serif) */
   --font-forum: 'Forum', Georgia, serif;
-  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: 'Forum', Georgia, serif;
+  --font-sans: 'Satoshi', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
 
   --q-radius-outer: 16px;
   --q-radius-inner: 12px;
@@ -40,6 +51,10 @@ html, body {
   width: 100%;
   height: 100%;
   background-color: var(--q-bg);
+  background-image: 
+    radial-gradient(ellipse 65% 45% at 85% 12%, rgba(224, 36, 52, 0.12) 0%, transparent 60%),
+    radial-gradient(circle at 10% 88%, rgba(136, 11, 21, 0.14) 0%, transparent 50%);
+  background-attachment: fixed;
   color: var(--q-cream);
   font-family: var(--font-sans);
   overflow: hidden;
@@ -292,30 +307,29 @@ html, body {
   appearance: none;
   background: none;
   border: none;
-  font-family: var(--font-forum);
-  font-weight: 400;
-  font-size: clamp(2.4rem, 5vw, 4rem);
-  line-height: 1.12;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: clamp(1.35rem, 3vw, 2rem);
+  line-height: 1.35;
+  letter-spacing: 0.03em;
+  text-transform: none;
   color: var(--q-cream);
   cursor: pointer;
-  padding: 2px 20px;
+  padding: 8px 24px;
   transition:
-    color 0.3s ease,
-    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
-    letter-spacing 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    color 0.25s ease,
+    transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+    letter-spacing 0.25s ease;
 }
 
 /* Hover dim siblings & highlight hovered item just like Qitchen Framer */
 .q-overlay-nav:hover .q-overlay-link {
-  color: rgba(239, 231, 210, 0.38);
+  color: rgba(247, 242, 231, 0.35);
 }
 
 .q-overlay-nav .q-overlay-link:hover {
-  color: var(--q-gold);
-  transform: scale(1.05);
-  letter-spacing: 0.14em;
+  color: var(--q-red);
+  transform: scale(1.04);
 }
 
 /* ==========================================================================
@@ -453,15 +467,39 @@ html, body {
 }
 
 .q-brand-logo {
-  font-family: var(--font-forum);
-  font-size: 1.45rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--q-cream);
+  display: inline-flex;
+  align-items: center;
   padding: 0 10px 0 6px;
   cursor: pointer;
   background: none;
   border: none;
+}
+
+.q-nav-brand-img {
+  height: 26px;
+  width: auto;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 0 10px rgba(224, 36, 52, 0.5));
+  transition: transform 0.25s ease;
+}
+
+.q-brand-logo:hover .q-nav-brand-img {
+  transform: scale(1.05);
+}
+
+.q-overlay-brand-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.q-overlay-brand-img {
+  max-width: 190px;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 0 18px rgba(224, 36, 52, 0.6));
 }
 
 .q-nav-link {
@@ -505,6 +543,8 @@ html, body {
   justify-content: space-between;
   align-items: flex-end;
   gap: 20px;
+  width: 100%;
+  margin-top: auto;
 }
 
 .qitchen-giant-title {
@@ -515,6 +555,53 @@ html, body {
   letter-spacing: 0.03em;
   text-transform: uppercase;
   color: var(--q-cream);
+  text-shadow: 0 4px 30px rgba(0, 0, 0, 0.85);
+}
+
+.q-hero-accent {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 700;
+  color: var(--q-red);
+  text-shadow: 0 0 28px var(--q-red-glow);
+}
+
+.q-hero-subtag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(14, 10, 12, 0.82);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--q-border);
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--q-cream-muted);
+  white-space: nowrap;
+}
+
+.q-hero-subtag-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--q-red);
+  box-shadow: 0 0 10px var(--q-red);
+  animation: q-pulse-dot 2s infinite ease-in-out;
+}
+
+.q-hero-subtag-icon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--q-red);
+}
+
+@keyframes q-pulse-dot {
+  0%, 100% { opacity: 0.7; transform: scale(0.95); }
+  50% { opacity: 1; transform: scale(1.3); }
 }
 
 /* ==========================================================================
@@ -528,30 +615,42 @@ html, body {
 }
 
 .q-view {
-  display: none;
+  display: none !important;
   width: 100%;
   height: 100%;
 }
 
 .q-view.active {
-  display: flex;
+  display: flex !important;
 }
 
-/* --- VIEW 0: HOME 3-CARD STACK --- */
+/* --- VIEW 0: HOME CARD STACK (Scrollable Bento Column) --- */
 .q-home-stack {
   flex-direction: column;
   gap: var(--q-gap);
   height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
+  padding-bottom: 28px;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.q-home-stack::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
 }
 
 .q-bento-card {
   position: relative;
-  flex: 1;
+  flex: 0 0 230px;
+  min-height: 210px;
   border-radius: var(--q-radius-outer);
   overflow: hidden;
   border: 1px solid var(--q-border);
   cursor: pointer;
-  background: #121311;
+  background: #100d0f;
   text-align: left;
   padding: 0;
 }
@@ -627,9 +726,11 @@ html, body {
 }
 
 .q-bento-card:hover .q-corner-circle {
-  background: var(--q-cream);
-  color: var(--q-bg);
-  transform: translateX(2px);
+  background: var(--q-red);
+  border-color: var(--q-red);
+  color: #ffffff;
+  box-shadow: 0 0 16px var(--q-red-glow);
+  transform: translateX(3px);
 }
 
 /* --- INNER SCROLLABLE PANEL SHELL --- */
@@ -681,10 +782,16 @@ html, body {
   transition: all 0.2s ease;
 }
 
-.q-pill-btn:hover,
+.q-pill-btn:hover {
+  border-color: var(--q-red);
+  background: rgba(224, 36, 52, 0.08);
+}
+
 .q-pill-btn.active {
-  border-color: var(--q-cream);
-  background: rgba(239, 231, 210, 0.1);
+  border-color: var(--q-red);
+  background: rgba(224, 36, 52, 0.18);
+  color: #ffffff;
+  box-shadow: 0 0 16px rgba(224, 36, 52, 0.3);
 }
 
 .q-diamond-heading {
@@ -698,13 +805,15 @@ html, body {
 .q-diamond-line {
   width: 54px;
   height: 1px;
-  background: var(--q-border);
+  background: linear-gradient(90deg, transparent, var(--q-red), transparent);
 }
 
 .q-diamond-symbol {
-  width: 7px;
-  height: 7px;
-  border: 1px solid var(--q-border-strong);
+  width: 8px;
+  height: 8px;
+  background: var(--q-red);
+  border: 1px solid #ff4455;
+  box-shadow: 0 0 10px var(--q-red-glow);
   transform: rotate(45deg);
   flex-shrink: 0;
 }
@@ -1186,7 +1295,7 @@ select.q-select option,
   padding: 14px 16px;
   border-radius: 12px;
   border: 1px solid var(--q-border);
-  background: rgba(20, 22, 20, 0.6);
+  background: rgba(18, 12, 14, 0.75);
   cursor: pointer;
   transition: all 0.22s ease;
   display: flex;
@@ -1197,13 +1306,13 @@ select.q-select option,
 
 .q-deposit-card:hover {
   border-color: var(--q-border-strong);
-  background: rgba(28, 30, 28, 0.7);
+  background: rgba(28, 16, 20, 0.85);
 }
 
 .q-deposit-card.active {
-  border-color: var(--q-gold);
-  background: rgba(212, 175, 55, 0.08);
-  box-shadow: 0 0 16px rgba(212, 175, 55, 0.12);
+  border-color: var(--q-red);
+  background: rgba(224, 36, 52, 0.1);
+  box-shadow: 0 0 20px rgba(224, 36, 52, 0.18);
 }
 
 .q-deposit-card-header {
@@ -1215,15 +1324,17 @@ select.q-select option,
 .q-deposit-card-badge {
   font-size: 0.65rem;
   letter-spacing: 0.14em;
-  padding: 2px 7px;
+  padding: 3px 8px;
   border-radius: 100px;
-  background: rgba(212, 175, 55, 0.18);
-  color: var(--q-gold);
-  font-weight: 600;
+  background: rgba(224, 36, 52, 0.18);
+  border: 1px solid rgba(224, 36, 52, 0.35);
+  color: #ff4d5a;
+  font-weight: 700;
 }
 
 .q-deposit-card-badge.q-badge-simple {
   background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   color: var(--q-cream-muted);
 }
 
@@ -1761,11 +1872,55 @@ select.q-select option,
     right: 16px;
     z-index: 210;
     width: auto;
+    display: flex;
+    align-items: center;
     justify-content: space-between;
+  }
+
+  .q-brand-logo {
+    order: 1;
+    padding: 0 4px;
+  }
+
+  .q-nav-book {
+    order: 2;
+    margin-left: auto;
+    margin-right: 8px;
+  }
+
+  .q-Menu-icon-btn {
+    order: 3; /* Hamburger button on the far right on mobile! */
   }
 
   .q-nav-link:not(.q-nav-book) {
     display: none;
+  }
+
+  .qitchen-left-showcase {
+    min-height: 48vh;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .qitchen-hero-bottom {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .qitchen-giant-title {
+    font-size: clamp(2.2rem, 9vw, 3.2rem);
+  }
+
+  .q-hero-subtag {
+    font-size: 0.68rem;
+    padding: 5px 12px;
   }
 
   /* Mobile Fullscreen Backdrop Overlay */
@@ -1948,6 +2103,19 @@ select.q-select option,
   .q-award-row,
   .q-form-row-3 {
     grid-template-columns: 1fr;
+  }
+
+  /* Compact elegant overlay navigation on mobile */
+  .q-overlay-nav {
+    padding: 24px 18px;
+    gap: 6px;
+    max-width: 320px;
+  }
+
+  .q-overlay-link {
+    font-size: 1.22rem;
+    padding: 6px 12px;
+    letter-spacing: 0.02em;
   }
 }
 
@@ -2473,4 +2641,730 @@ select.q-select option,
   border-color: #e6c875;
   color: #0d0e0d;
 }
+
+/* ==========================================================================
+   9. INTERACTIVE PROMOTIONS & ROULETTE ENGINE (S4)
+   ========================================================================== */
+
+/* Floating Ruleta Trigger Pill (Hidden so it does not overlap cards; accessed directly via bento card and menu) */
+.roulette-floating-trigger {
+  display: none !important;
+}
+
+.roulette-trigger-pulse-glow {
+  position: absolute;
+  inset: -3px;
+  border-radius: 999px;
+  border: 2px solid var(--q-red);
+  opacity: 0;
+  animation: rouletteGlowRing 2.8s infinite ease-out;
+  pointer-events: none;
+}
+
+@keyframes rouletteGlowRing {
+  0% { transform: scale(0.96); opacity: 0.85; }
+  60% { transform: scale(1.16); opacity: 0; }
+  100% { transform: scale(1.16); opacity: 0; }
+}
+
+.roulette-trigger-icon {
+  font-size: 1.15rem;
+  filter: drop-shadow(0 0 6px var(--q-red));
+}
+
+.roulette-trigger-stock-pill {
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #4ade80;
+  background: rgba(34, 197, 94, 0.14);
+  border: 1px solid rgba(34, 197, 94, 0.45);
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+
+/* Hide floating trigger while neon curtain is active */
+.neon-intro-curtain:not(.dismissed) ~ .roulette-floating-trigger {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(20px);
+}
+
+/* Overlay Navigation Link for Roulette */
+.roulette-overlay-link {
+  color: var(--q-red) !important;
+  text-shadow: 0 0 16px var(--q-red-glow);
+}
+
+/* Bento Card in Home Stack */
+.q-bento-roulette-card {
+  position: relative;
+  background: linear-gradient(135deg, rgba(224, 36, 52, 0.16) 0%, rgba(18, 12, 14, 0.92) 100%);
+  border: 1px solid var(--q-border-strong);
+  overflow: hidden;
+  text-align: left;
+  padding: 24px 22px;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  cursor: pointer;
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.q-bento-roulette-card:hover {
+  border-color: var(--q-red);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.7), 0 0 24px var(--q-red-glow);
+}
+
+.q-bento-roulette-pill {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: var(--q-red);
+  background: rgba(224, 36, 52, 0.15);
+  border: 1px solid rgba(224, 36, 52, 0.4);
+  padding: 3px 10px;
+  border-radius: 999px;
+  margin-bottom: 8px;
+  width: fit-content;
+}
+
+.q-bento-roulette-title {
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: var(--q-cream);
+  margin: 0 0 4px;
+}
+
+.q-bento-roulette-desc {
+  font-size: 0.85rem;
+  color: var(--q-cream-muted);
+  line-height: 1.4;
+  margin: 0;
+  max-width: 280px;
+}
+
+/* Roulette Modal Backdrop & Card */
+.roulette-modal-backdrop {
+  z-index: 500;
+}
+
+.roulette-modal-card {
+  max-width: 480px;
+  width: 100%;
+  max-height: 94vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #160d11 0%, #0a0809 100%);
+  border: 1px solid var(--q-border-strong);
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.95), 0 0 45px rgba(224, 36, 52, 0.25);
+  padding: 32px 24px 34px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  scrollbar-width: thin;
+  scrollbar-color: var(--q-red) rgba(0, 0, 0, 0.3);
+}
+
+.roulette-modal-header {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.roulette-badges-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.roulette-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 999px;
+}
+
+.roulette-badge.stock-badge {
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  color: #4ade80;
+}
+
+.roulette-badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #4ade80;
+  box-shadow: 0 0 6px #4ade80;
+  animation: q-pulse-dot 2s infinite ease-in-out;
+}
+
+.roulette-badge.spins-badge {
+  background: rgba(224, 36, 52, 0.18);
+  border: 1px solid var(--q-red);
+  color: var(--q-cream);
+  box-shadow: 0 0 10px rgba(224, 36, 52, 0.3);
+}
+
+.roulette-modal-title {
+  font-family: var(--font-sans);
+  font-size: clamp(1.5rem, 4.8vw, 2rem);
+  font-weight: 700;
+  color: var(--q-cream);
+  text-shadow: 0 0 25px rgba(224, 36, 52, 0.45);
+  margin: 0;
+  line-height: 1.15;
+}
+
+.roulette-modal-subtitle {
+  font-size: 0.86rem;
+  color: var(--q-cream-muted);
+  margin: 0;
+  line-height: 1.45;
+  max-width: 380px;
+}
+
+/* Wheel Stage */
+.roulette-wheel-stage {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.roulette-canvas-wrapper {
+  position: relative;
+  width: 340px;
+  height: 340px;
+  max-width: 100%;
+  margin: 10px auto 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 0 28px rgba(224, 36, 52, 0.3));
+}
+
+.roulette-canvas {
+  width: 320px;
+  height: 320px;
+  max-width: 100%;
+  border-radius: 50%;
+}
+
+.roulette-pointer {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 25;
+  filter: drop-shadow(0 0 12px var(--q-red)) drop-shadow(0 4px 10px rgba(0, 0, 0, 0.8));
+  transform-origin: 50% 10%;
+  pointer-events: none;
+}
+
+@keyframes pointerKickAnim {
+  0% { transform: translateX(-50%) rotate(0deg); }
+  40% { transform: translateX(-50%) rotate(-14deg); }
+  100% { transform: translateX(-50%) rotate(0deg); }
+}
+
+.roulette-pointer.kicking {
+  animation: pointerKickAnim 0.09s ease;
+}
+
+/* Spin Button */
+.roulette-spin-btn {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+  padding: 15px 28px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #e02434 0%, #a80f1e 100%);
+  border: 1px solid #ff4455;
+  box-shadow: 0 6px 26px var(--q-red-glow), 0 2px 10px rgba(0, 0, 0, 0.6);
+  color: #ffffff;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.26s ease;
+  animation: spinBtnPulse 2.4s infinite ease-in-out;
+}
+
+@keyframes spinBtnPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 6px 26px var(--q-red-glow), 0 2px 10px rgba(0, 0, 0, 0.6);
+  }
+  50% {
+    transform: scale(1.025);
+    box-shadow: 0 8px 34px rgba(224, 36, 52, 0.7), 0 2px 12px rgba(0, 0, 0, 0.8);
+  }
+}
+
+.roulette-spin-btn:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.03);
+  background: linear-gradient(135deg, #ff2e40 0%, #c41828 100%);
+  border-color: #ff6675;
+}
+
+.roulette-spin-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  animation: none;
+  transform: none;
+  box-shadow: none;
+}
+
+.roulette-my-vouchers-wrap {
+  margin-top: 14px;
+}
+
+.roulette-link-btn {
+  background: none;
+  border: none;
+  color: var(--q-cream-muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.roulette-link-btn:hover {
+  color: var(--q-red);
+}
+
+/* Result & Claim Stage */
+.roulette-result-card {
+  width: 100%;
+  max-width: 420px;
+  background: rgba(24, 14, 18, 0.95);
+  border: 1px solid var(--q-border-strong);
+  border-radius: 16px;
+  padding: 24px 20px;
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.9), 0 0 30px rgba(224, 36, 52, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.roulette-congrats-banner {
+  text-align: center;
+  border-bottom: 1px solid rgba(224, 36, 52, 0.25);
+  padding-bottom: 16px;
+}
+
+.congrats-kicker {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  color: var(--q-red);
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.roulette-prize-name {
+  font-family: var(--font-sans);
+  font-size: 1.55rem;
+  font-weight: 700;
+  color: var(--q-cream);
+  text-shadow: 0 0 20px var(--q-red-glow);
+  margin: 4px 0 6px;
+}
+
+.roulette-prize-condition {
+  font-size: 0.88rem;
+  color: var(--q-cream-muted);
+  line-height: 1.45;
+  margin: 0;
+}
+
+.roulette-claim-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: left;
+}
+
+.claim-form-prompt {
+  font-size: 0.82rem;
+  color: var(--q-cream-muted);
+  line-height: 1.4;
+  margin: 0 0 4px;
+  text-align: center;
+}
+
+.roulette-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.roulette-form-field label {
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--q-cream-muted);
+}
+
+.roulette-form-field input {
+  padding: 12px 14px;
+  background: rgba(8, 7, 8, 0.85);
+  border: 1px solid var(--q-border);
+  border-radius: 8px;
+  color: var(--q-cream);
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.roulette-form-field input:focus {
+  border-color: var(--q-red);
+  box-shadow: 0 0 12px var(--q-red-glow);
+}
+
+.roulette-submit-btn {
+  width: 100%;
+  margin-top: 6px;
+}
+
+.roulette-no-prize-view {
+  text-align: center;
+  padding: 8px 0;
+}
+
+.roulette-again-btn {
+  width: 100%;
+}
+
+/* Voucher Ticket Card */
+.roulette-voucher-card {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.voucher-ticket {
+  background: linear-gradient(145deg, #180f13 0%, #0c080a 100%);
+  border: 1px solid var(--q-red);
+  border-radius: 14px;
+  padding: 24px 20px 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9), 0 0 35px var(--q-red-glow);
+  position: relative;
+  text-align: center;
+}
+
+.voucher-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.voucher-brand {
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--q-cream);
+}
+
+.voucher-tag {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  color: var(--q-red);
+  background: rgba(224, 36, 52, 0.18);
+  border: 1px solid var(--q-red);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.voucher-code-block {
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px dashed rgba(224, 36, 52, 0.5);
+  border-radius: 10px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.voucher-code-label {
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--q-cream-muted);
+}
+
+.voucher-code-val {
+  font-family: 'Plus Jakarta Sans', monospace;
+  font-size: 1.85rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  color: var(--q-red);
+  text-shadow: 0 0 18px var(--q-red-glow);
+}
+
+.voucher-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+}
+
+.vd-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.vd-item-full {
+  grid-column: 1 / -1;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 8px;
+}
+
+.vd-label {
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--q-cream-muted);
+}
+
+.vd-val {
+  font-size: 0.88rem;
+  color: var(--q-cream);
+  font-weight: 600;
+}
+
+.vd-condition {
+  font-size: 0.82rem;
+  color: var(--q-red);
+  line-height: 1.35;
+}
+
+.voucher-tear-line {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin: 16px -20px 14px;
+}
+
+.voucher-notch {
+  width: 18px;
+  height: 18px;
+  background: #160d11;
+  border: 1px solid var(--q-red);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.voucher-notch-left {
+  margin-left: -9px;
+}
+
+.voucher-notch-right {
+  margin-right: -9px;
+}
+
+.voucher-dashed {
+  flex: 1;
+  height: 1px;
+  border-top: 1px dashed rgba(224, 36, 52, 0.45);
+}
+
+.voucher-footer {
+  font-size: 0.74rem;
+  color: var(--q-cream-muted);
+  line-height: 1.35;
+}
+
+.voucher-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.voucher-btn-whatsapp {
+  background: #25d366 !important;
+  border-color: #25d366 !important;
+  color: #0b2212 !important;
+  font-weight: 700;
+}
+
+.voucher-btn-whatsapp:hover {
+  background: #2ee673 !important;
+  border-color: #2ee673 !important;
+}
+
+/* Cooldown Card */
+.roulette-cooldown-card {
+  width: 100%;
+  max-width: 420px;
+  background: rgba(22, 13, 16, 0.95);
+  border: 1px solid var(--q-border);
+  border-radius: 16px;
+  padding: 30px 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  text-align: center;
+}
+
+.cooldown-icon-wrap {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: rgba(224, 36, 52, 0.12);
+  border: 1px solid var(--q-border-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+}
+
+.cooldown-title {
+  font-family: var(--font-sans);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--q-cream);
+  margin: 0;
+}
+
+.cooldown-message {
+  font-size: 0.88rem;
+  color: var(--q-cream-muted);
+  line-height: 1.5;
+  margin: 0;
+  max-width: 360px;
+}
+
+.cooldown-vouchers-list {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid var(--q-border);
+  border-radius: 12px;
+  padding: 14px;
+  text-align: left;
+}
+
+.cooldown-list-title {
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--q-red);
+  margin: 0 0 10px;
+}
+
+.cooldown-vouchers-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cooldown-voucher-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 0.82rem;
+}
+
+.cooldown-voucher-code {
+  font-family: monospace;
+  font-weight: 700;
+  color: var(--q-red);
+}
+
+.cooldown-voucher-prize {
+  color: var(--q-cream);
+  font-weight: 500;
+}
+
+.cooldown-actions {
+  width: 100%;
+  margin-top: 6px;
+}
+
+/* Mobile Responsive */
+@media (max-width: 600px) {
+  .roulette-floating-trigger {
+    bottom: 16px;
+    right: 14px;
+    left: 14px;
+    padding: 10px 16px;
+    font-size: 0.78rem;
+    justify-content: center;
+  }
+
+  .roulette-modal-card {
+    padding: 24px 16px 28px;
+  }
+
+  .roulette-canvas-wrapper {
+    width: 280px;
+    height: 280px;
+    margin: 8px auto 16px;
+  }
+
+  .roulette-canvas {
+    width: 270px;
+    height: 270px;
+  }
+
+  .roulette-spin-btn {
+    padding: 13px 20px;
+    font-size: 0.92rem;
+  }
+
+  .voucher-details-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 

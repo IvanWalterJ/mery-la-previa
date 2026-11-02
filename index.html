@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="dark" />
-  <title>MERY LA PREVIA — Wine Bar &amp; Nightclub</title>
+  <title>MERY LA PREVIA — Tu noche empieza acá | Guernica</title>
   <script>
     (function() {
       try {
@@ -16,11 +16,12 @@
       } catch (_) {}
     })();
   </script>
-  <!-- Exact Qitchen Framer Fonts: Forum (Display Serif) + Plus Jakarta Sans -->
+  <!-- Luxury Editorial Fonts: Satoshi (Clean Modern Sans) + Bodoni Moda (Italic Display Serif) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Forum&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=14" />
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;0,6..96,700;0,6..96,900;1,6..96,500;1,6..96,700;1,6..96,900&family=Forum&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css?v=20" />
 </head>
 <body>
 
@@ -39,7 +40,12 @@
     <button type="button" id="btnIntroUnmute" class="intro-sound-pill" aria-label="Activar sonido">
       <span class="pill-dot"></span>
       <span>TOCÁ PARA ACTIVAR SONIDO</span>
-      <span class="pill-speaker">🔊</span>
+      <span class="pill-speaker">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle;">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        </svg>
+      </span>
     </button>
 
     <div class="intro-enter-wrap">
@@ -61,17 +67,27 @@
     </button>
 
     <nav class="q-overlay-nav" aria-label="Secciones de Mery La Previa">
+      <div class="q-overlay-brand-wrap">
+        <img src="assets/img/logo-mery-la-previa.webp" alt="Mery Jane La Previa" class="q-overlay-brand-img" />
+      </div>
+
       <div class="q-overlay-ornament" aria-hidden="true">
         <span class="diamond"></span>
         <span class="line"></span>
         <span class="diamond"></span>
       </div>
 
-      <button type="button" class="q-overlay-link" data-overlay-goto="home">INICIO</button>
-      <button type="button" class="q-overlay-link" data-overlay-goto="menu">LA CARTA</button>
-      <button type="button" class="q-overlay-link" data-overlay-goto="reservation">CUMPLES &amp; VIP</button>
-      <button type="button" class="q-overlay-link" data-overlay-goto="about">LA PREVIA 13/11</button>
-      <a class="q-overlay-link" href="https://www.instagram.com/meryjane.laprevia/" target="_blank" rel="noopener" style="text-decoration: none;">INSTAGRAM</a>
+      <button type="button" class="q-overlay-link" data-overlay-goto="home">Inicio</button>
+      <button type="button" class="q-overlay-link" data-overlay-goto="menu">La Carta &amp; Tragos</button>
+      <button type="button" class="q-overlay-link" data-overlay-goto="reservation">Cumples &amp; VIP</button>
+      <button type="button" class="q-overlay-link" data-overlay-goto="about">La Previa &amp; 11:11</button>
+      <button type="button" class="q-overlay-link roulette-overlay-link" id="btnOverlayRoulette" data-overlay-goto="roulette">
+        <span>Ruleta de Promos</span>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align: middle; margin-left: 6px;">
+          <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+        </svg>
+      </button>
+      <a class="q-overlay-link" href="https://www.instagram.com/meryjane.laprevia/" target="_blank" rel="noopener" style="text-decoration: none;">Instagram ↗</a>
 
       <div class="q-overlay-ornament" aria-hidden="true">
         <span class="diamond"></span>
@@ -98,25 +114,38 @@
         playsinline
       ></video>
 
-      <!-- Exact Qitchen Floating Top-Left Pill Navbar -->
+      <!-- Floating Pill Navbar: Logo on left, Hamburger on the far right on mobile -->
       <nav class="qitchen-pill-navbar" aria-label="Navegación Principal">
+        <button type="button" class="q-brand-logo" data-goto="home" aria-label="Mery La Previa - Inicio">
+          <img src="assets/img/logo-mery-la-previa.webp" alt="Mery Jane La Previa" class="q-nav-brand-img" />
+        </button>
+        <button type="button" class="q-nav-link" data-goto="menu">La Carta</button>
+        <button type="button" class="q-nav-link" data-goto="about">La Previa &amp; 11:11</button>
+        <button type="button" class="q-nav-link q-nav-book" data-goto="reservation">Cumples &amp; Reservas</button>
         <button type="button" id="btnOpenOverlay" class="q-Menu-icon-btn" title="Abrir Menú" aria-label="Abrir o cerrar menú" aria-expanded="false">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-            <line x1="4" y1="9" x2="20" y2="9" />
-            <line x1="4" y1="15" x2="20" y2="15" />
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <line x1="4" y1="8" x2="20" y2="8" />
+            <line x1="4" y1="16" x2="20" y2="16" />
           </svg>
         </button>
-        <button type="button" class="q-brand-logo" data-goto="home">MERY</button>
-        <button type="button" class="q-nav-link" data-goto="menu">La Carta</button>
-        <button type="button" class="q-nav-link" data-goto="about">La Previa 13/11</button>
-        <button type="button" class="q-nav-link q-nav-book" data-goto="reservation">Cumples &amp; Reservas</button>
       </nav>
 
-      <!-- Bottom-Left Giant Forum Display Title (Clean, without the ugly bottom-right buttons) -->
+      <!-- Bottom-Left Giant Title with Lighter Clean Typography & Pro SVGs without covering the bottle -->
       <div class="qitchen-hero-bottom">
         <h1 id="leftHeroTitle" class="qitchen-giant-title">
           MERY<br />LA PREVIA
         </h1>
+        <div class="q-hero-subtag">
+          <span class="q-hero-subtag-dot"></span>
+          <span>Tu noche empieza acá</span>
+          <span class="q-hero-subtag-icon">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8 22h8M12 15v7M3 4l9 11 9-11H3z"/>
+            </svg>
+          </span>
+          <span style="opacity: 0.5;">•</span>
+          <span>Guernica</span>
+        </div>
       </div>
     </aside>
 
@@ -125,12 +154,25 @@
          ====================================================================== -->
     <main id="qitchenRightCol" class="qitchen-right-column">
 
-      <!-- VIEW 00: HOME 3-CARD STACK (Exact Qitchen Home Right Column) -->
+      <!-- VIEW 00: HOME CARD STACK (Scrollable Bento Column) -->
       <section id="view-home" class="q-view active q-home-stack" aria-label="Secciones Principales">
+        <!-- Interactive Ruleta Bento Card with Optimized WebP -->
+        <button type="button" id="btnOpenRoulette" class="q-bento-card" data-goto="roulette" aria-label="Girar Ruleta de La Previa">
+          <img src="assets/img/ruleta-previa-card.webp" alt="Ruleta de La Previa — Premios y Promos de Hoy" />
+          <div class="q-card-corner-tab">
+            <span class="q-corner-label">Ruleta de Promos</span>
+            <span class="q-corner-circle">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+              </svg>
+            </span>
+          </div>
+        </button>
+
         <button type="button" class="q-bento-card" data-goto="menu">
           <img src="assets/img/ice-cube-previa.jpg" alt="La Carta 11:11" />
           <div class="q-card-corner-tab">
-            <span class="q-corner-label">La Carta</span>
+            <span class="q-corner-label">La Carta &amp; Tragos</span>
             <span class="q-corner-circle">→</span>
           </div>
         </button>
@@ -144,9 +186,9 @@
         </button>
 
         <button type="button" class="q-bento-card" data-goto="about">
-          <img src="assets/img/dj-previa.jpg" alt="La Previa 13/11 y Lineup DJs" />
+          <img src="assets/img/dj-previa.jpg" alt="La Previa &amp; 11:11" />
           <div class="q-card-corner-tab">
-            <span class="q-corner-label">La Previa 13/11</span>
+            <span class="q-corner-label">La Previa &amp; 11:11</span>
             <span class="q-corner-circle">→</span>
           </div>
         </button>
@@ -165,19 +207,19 @@
           <div id="qitchenMenuContainer" class="q-menu-container"></div>
 
           <footer class="q-panel-footer">
-            <span>Mery Jane • Wine &amp; Friends</span>
-            <span>Miércoles a Domingo • Zona Sur</span>
+            <span>Mery Jane • La Previa</span>
+            <span>Calle 101 Nº 85 • Guernica</span>
           </footer>
         </div>
       </section>
 
-      <!-- VIEW 02: /ABOUT — LA PREVIA 13/11, LINEUP DJS & HORARIOS -->
+      <!-- VIEW 02: /ABOUT — LA PREVIA DE MERY & 11:11 -->
       <section id="view-about" class="q-view" aria-label="Eventos, DJs y Horarios">
         <div class="q-panel-bordered">
           <div class="q-diamond-heading">
             <span class="q-diamond-line"></span>
             <span class="q-diamond-symbol"></span>
-            <h2>La Previa 13/11</h2>
+            <h2>La Previa de Mery</h2>
             <span class="q-diamond-symbol"></span>
             <span class="q-diamond-line"></span>
           </div>
@@ -186,40 +228,40 @@
           <div class="q-about-grid">
             <div class="q-about-box">
               <div>
-                <h3>La previa arranca acá</h3>
-                <p style="margin-top: 10px;">
-                  Cena con amigos, tragos de autor, vino bien frío y buena música para calentar motores. Cuando bajan las luces, la cabina sube el volumen con cachengue, R&amp;B y electrónica hasta el cierre.
+                <h3 style="color: var(--q-red); font-size: 1.35rem; letter-spacing: 0.04em;">Tu noche empieza acá</h3>
+                <p style="margin-top: 10px; line-height: 1.6; color: var(--q-cream-muted);">
+                  El outfit lo elegís vos. Del frío nos encargamos nosotros. Salí vestidita para el boliche y vení a hacer la previa cómoda: ambiente calefaccionado, mantitas, cena con amigos, tragos de autor y DJ set en vivo. Vos preocupate por elegir qué drink vas a tomar y disfrutar; los detalles corren por nuestra cuenta.
                 </p>
               </div>
-              <span style="font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--q-gold);">
-                ◇ Canning • San Vicente • Guernica • Longchamps
+              <span style="font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--q-red); font-weight: 600;">
+                ◇ Calle 101 Nº 85 • Guernica • Zona Sur
               </span>
             </div>
 
             <div class="q-bento-card" style="min-height: 230px;" data-goto="reservation">
-              <img src="assets/img/brand-previa-zine.jpg" alt="Tenemos Previa 13/11" />
+              <img src="assets/img/brand-previa-zine.jpg" alt="Tenemos Previa" />
               <div class="q-card-corner-tab">
-                <span class="q-corner-label">Lista 13/11</span>
+                <span class="q-corner-label">Reservar Previa</span>
                 <span class="q-corner-circle">→</span>
               </div>
             </div>
           </div>
 
-          <!-- Middle 3-Column Feature Cards -->
+          <!-- Middle 3-Column Feature Cards: 11:11 Ritual -->
           <div class="q-award-row">
             <div class="q-award-card">
-              <div class="q-award-stars">★ ★ ★ ★ ★</div>
-              <h4>20:00 HS</h4>
-              <span>Cena &amp; Tragos</span>
+              <div class="q-award-stars">★ 19:00 HS ★</div>
+              <h4>Cena &amp; Tragos</h4>
+              <span>Tapeo de autor y cócteles</span>
+            </div>
+            <div class="q-award-card" style="border-color: var(--q-border-strong); background: rgba(224, 36, 52, 0.08);">
+              <div class="q-award-stars" style="color: var(--q-red);">★ 11:11 PM ★</div>
+              <h4 style="color: var(--q-red);">Vuelta Tequila</h4>
+              <span>La paga la previa de la casa</span>
             </div>
             <div class="q-award-card">
-              <div class="q-award-stars">★ ★ ★ ★ ★</div>
-              <h4>23:11 HS</h4>
-              <span>Previa &amp; DJ Set</span>
-            </div>
-            <div class="q-award-card">
-              <div class="q-award-stars">★ ★ ★ ★ ★</div>
-              <h4>01:00 HS</h4>
+              <div class="q-award-stars">★ 01:00 HS ★</div>
+              <h4>Previa &amp; DJ</h4>
               <span>Cachengue &amp; Club</span>
             </div>
           </div>
@@ -227,7 +269,7 @@
           <!-- Bottom 2-Column Bento Row: Horarios Mié-Dom -->
           <div class="q-about-grid">
             <div class="q-bento-card" style="min-height: 220px;" data-goto="menu">
-              <img src="assets/img/cocktails-neon.jpg" alt="Barra 11:11" />
+              <img src="assets/img/cocktails-neon.jpg" alt="Barra de Autor" />
               <div class="q-card-corner-tab">
                 <span class="q-corner-label">Ver Barra</span>
                 <span class="q-corner-circle">→</span>
@@ -236,23 +278,23 @@
 
             <div class="q-about-box">
               <div>
-                <h3>Miércoles a Domingo</h3>
-                <p style="margin-top: 10px;">
+                <h3>Horarios &amp; Lugar</h3>
+                <p style="margin-top: 10px; line-height: 1.6;">
                   <strong>Vie &amp; Sáb:</strong> 19:00 a 03:00 hs (Cena + Previa Club)<br />
-                  <strong>Mié, Jue &amp; Dom:</strong> 19:00 a 01:30 hs (Wine &amp; Friends)<br />
-                  <strong>Dirección:</strong> Calle 101 N° 85<br />
-                  <strong>Concepto:</strong> Tu noche empieza acá 🍸
+                  <strong>Mié, Jue &amp; Dom:</strong> 19:00 a 01:30 hs (Wine, Tapeo &amp; Friends)<br />
+                  <strong>Dirección:</strong> Calle 101 Nº 85, Guernica<br />
+                  <strong>Ritual:</strong> A las 11:11 vuelta de tequila de cortesía
                 </p>
               </div>
               <button type="button" class="q-btn-submit" data-goto="reservation">
-                Reservar Mesa o Lista →
+                Reservar Mesa o Cumple →
               </button>
             </div>
           </div>
 
           <footer class="q-panel-footer">
-            <span>“Disfrutá que la noche vuela”</span>
-            <span>Estacionamiento Privado</span>
+            <span>“Tu noche empieza acá” • Mery Jane</span>
+            <span>Ambiente Calefaccionado • Mantitas VIP</span>
           </footer>
         </div>
       </section>
@@ -314,15 +356,15 @@
                   <span>Festejo de Cumpleaños (con beneficios)</span>
                   <span class="q-option-diamond">◇</span>
                 </li>
-                <li class="q-select-option" data-value="Living VIP Cabina 13/11" role="option" aria-selected="false">
-                  <span>Living VIP / Evento 13/11</span>
+                <li class="q-select-option" data-value="Living VIP Cabina Previa" role="option" aria-selected="false">
+                  <span>Living VIP / Cabina DJ Previa</span>
                   <span class="q-option-diamond">◇</span>
                 </li>
               </ul>
               <select id="resType" class="q-select-native" tabindex="-1" aria-hidden="true" required>
                 <option value="Mesa Cena + Previa" selected>Motivo: Mesa Cena + Quedarse a la Previa</option>
                 <option value="Cumpleaños VIP">Motivo: Festejo de Cumpleaños (con beneficios)</option>
-                <option value="Living VIP Cabina 13/11">Motivo: Living VIP / Evento 13/11</option>
+                <option value="Living VIP Cabina Previa">Motivo: Living VIP / Cabina DJ Previa</option>
               </select>
             </div>
 
@@ -338,7 +380,7 @@
               <!-- Custom Branded Select: Día -->
               <div class="q-custom-select" data-select-id="resDay">
                 <button type="button" class="q-select-trigger" aria-haspopup="listbox" aria-expanded="false">
-                  <span class="q-select-value">Viernes 13/11</span>
+                  <span class="q-select-value">Viernes (Cena &amp; Previa)</span>
                   <span class="q-select-arrow" aria-hidden="true">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <polyline points="6 9 12 15 18 9"></polyline>
@@ -346,28 +388,28 @@
                   </span>
                 </button>
                 <ul class="q-select-menu" role="listbox">
-                  <li class="q-select-option selected" data-value="Viernes 13/11" role="option" aria-selected="true">
-                    <span>Viernes 13/11</span>
+                  <li class="q-select-option selected" data-value="Viernes" role="option" aria-selected="true">
+                    <span>Viernes (Cena &amp; Previa)</span>
                     <span class="q-option-diamond">◇</span>
                   </li>
                   <li class="q-select-option" data-value="Sábado" role="option" aria-selected="false">
-                    <span>Sábado</span>
+                    <span>Sábado (Previa &amp; DJ)</span>
                     <span class="q-option-diamond">◇</span>
                   </li>
                   <li class="q-select-option" data-value="Domingo" role="option" aria-selected="false">
-                    <span>Domingo</span>
+                    <span>Domingo (Wine &amp; Tapeo)</span>
                     <span class="q-option-diamond">◇</span>
                   </li>
                   <li class="q-select-option" data-value="Miércoles / Jueves" role="option" aria-selected="false">
-                    <span>Mié / Jue</span>
+                    <span>Mié / Jue (After &amp; Cocktails)</span>
                     <span class="q-option-diamond">◇</span>
                   </li>
                 </ul>
                 <select id="resDay" class="q-select-native" tabindex="-1" aria-hidden="true" required>
-                  <option value="Viernes 13/11" selected>Viernes 13/11</option>
-                  <option value="Sábado">Sábado</option>
-                  <option value="Domingo">Domingo</option>
-                  <option value="Miércoles / Jueves">Mié / Jue</option>
+                  <option value="Viernes" selected>Viernes (Cena &amp; Previa)</option>
+                  <option value="Sábado">Sábado (Previa &amp; DJ)</option>
+                  <option value="Domingo">Domingo (Wine &amp; Tapeo)</option>
+                  <option value="Miércoles / Jueves">Mié / Jue (After &amp; Cocktails)</option>
                 </select>
               </div>
 
@@ -431,13 +473,13 @@
             </div>
 
             <button type="submit" id="btnSubmitReservation" class="q-btn-submit">
-              Generar Pase de Abordaje QR &amp; Confirmar Reserva
+              Generar Pase VIP QR &amp; Confirmar Reserva
             </button>
           </form>
 
           <footer class="q-panel-footer">
-            <span>Canning • San Vicente • Guernica • Longchamps</span>
-            <span>Concierge Directo</span>
+            <span>Calle 101 Nº 85 • Guernica</span>
+            <span>Mery Jane • La Previa</span>
           </footer>
         </div>
       </section>
@@ -547,7 +589,7 @@
             <strong id="confirmResType" class="res-confirm-val">-</strong>
           </div>
           <div id="confirmResBirthdayRow" class="res-confirm-row res-confirm-row-full" hidden>
-            <span class="res-confirm-label">🎂 Cumpleaños VIP</span>
+            <span class="res-confirm-label">Cumpleaños VIP</span>
             <div class="res-confirm-val">
               DNI: <strong id="confirmResDni">-</strong> • Fecha: <strong id="confirmResBirthDate">-</strong>
             </div>
@@ -759,8 +801,177 @@
     </div>
   </div>
 
+  <!-- 8. INTERACTIVE PROMOTIONS RULETA MODAL (S4) -->
+  <div id="qitchenRouletteModal" class="q-dish-modal-backdrop roulette-modal-backdrop" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="rouletteModalTitle">
+    <div class="q-dish-modal-card roulette-modal-card">
+      <button type="button" id="btnCloseRouletteModal" class="q-dish-modal-close" aria-label="Cerrar Ruleta de La Previa">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <line x1="6" y1="6" x2="18" y2="18" />
+          <line x1="18" y1="6" x2="6" y2="18" />
+        </svg>
+      </button>
+
+      <!-- Modal Header -->
+      <div class="roulette-modal-header">
+        <div class="roulette-badges-row">
+          <span id="rouletteStockBadge" class="roulette-badge stock-badge">
+            <span class="roulette-badge-dot"></span>
+            <span id="rouletteStockCount">38 disponibles</span>
+          </span>
+          <span id="rouletteSpinsBadge" class="roulette-badge spins-badge">
+            <span id="rouletteSpinsLeftText">Tiros: 3 de 3</span>
+          </span>
+        </div>
+        <h2 id="rouletteModalTitle" class="roulette-modal-title">Mery Invita la Previa</h2>
+        <p id="rouletteModalSubtitle" class="roulette-modal-subtitle">Girá la ruleta y ganá shots de tequila, 2x1 y beneficios para tu previa</p>
+      </div>
+
+      <!-- Stage 1: Wheel & Spin Controls -->
+      <div id="rouletteWheelStage" class="roulette-wheel-stage">
+        <div class="roulette-canvas-wrapper">
+          <div id="roulettePointer" class="roulette-pointer" aria-hidden="true">
+            <svg width="32" height="38" viewBox="0 0 32 38" fill="none">
+              <path d="M16 38L3 10C1.5 6.5 4 2 8 2H24C28 2 30.5 6.5 29 10L16 38Z" fill="#e02434" stroke="#ff4455" stroke-width="2" />
+              <circle cx="16" cy="14" r="5" fill="#fbf7ee" />
+            </svg>
+          </div>
+          <canvas id="rouletteCanvas" width="340" height="340" class="roulette-canvas"></canvas>
+        </div>
+
+        <button type="button" id="btnSpinRoulette" class="roulette-spin-btn">
+          <span class="spin-btn-icon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+            </svg>
+          </span>
+          <span class="spin-btn-text">¡GIRAR RULETA!</span>
+        </button>
+
+        <div id="rouletteMyVouchersLinkWrap" class="roulette-my-vouchers-wrap" hidden>
+          <button type="button" id="btnViewMyVouchers" class="roulette-link-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="vertical-align: -2px; margin-right: 4px;">
+              <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v2z"/>
+            </svg>
+            Ver mis cupones ganados (<span id="myVouchersCount">0</span>)
+          </button>
+        </div>
+      </div>
+
+      <!-- Stage 2: Result & Claim Form -->
+      <div id="rouletteResultCard" class="roulette-result-card" hidden>
+        <div class="roulette-congrats-banner">
+          <span class="congrats-kicker">★ ¡FELICITACIONES! GANASTE ★</span>
+          <h3 id="rouletteResultPrizeName" class="roulette-prize-name">-</h3>
+          <p id="rouletteResultCondition" class="roulette-prize-condition">-</p>
+        </div>
+
+        <form id="rouletteClaimForm" class="roulette-claim-form" novalidate>
+          <p class="claim-form-prompt">Ingresá tu nombre y WhatsApp para generar tu cupón digital intransferible:</p>
+          <div class="roulette-form-field">
+            <label for="rouletteClaimName">Nombre y Apellido</label>
+            <input type="text" id="rouletteClaimName" name="name" placeholder="Ej: Valentina López" required autocomplete="name" />
+          </div>
+          <div class="roulette-form-field">
+            <label for="rouletteClaimPhone">WhatsApp (con código de área)</label>
+            <input type="tel" id="rouletteClaimPhone" name="phone" placeholder="Ej: 11 5566-7788" required autocomplete="tel" />
+          </div>
+          <button type="submit" id="btnSubmitClaim" class="q-btn-submit roulette-submit-btn">
+            Obtener mi Cupón Digital →
+          </button>
+        </form>
+
+        <div id="rouletteNoPrizeCard" class="roulette-no-prize-view" hidden>
+          <button type="button" id="btnSpinAgain" class="q-btn-submit roulette-again-btn">
+            ¡Girar de nuevo!
+          </button>
+        </div>
+      </div>
+
+      <!-- Stage 3: Digital Voucher Card (Boarding Ticket Aesthetic) -->
+      <div id="rouletteVoucherCard" class="roulette-voucher-card" hidden>
+        <div class="voucher-ticket">
+          <div class="voucher-header">
+            <span class="voucher-brand">MERY JANE • LA PREVIA</span>
+            <span class="voucher-tag">CUPÓN OFICIAL</span>
+          </div>
+
+          <div class="voucher-code-block">
+            <span class="voucher-code-label">CÓDIGO DE CANJE</span>
+            <strong id="voucherCode" class="voucher-code-val">PREVIA-XXXX</strong>
+          </div>
+
+          <div class="voucher-details-grid">
+            <div class="vd-item">
+              <span class="vd-label">PREMIO</span>
+              <strong id="voucherPrize" class="vd-val">-</strong>
+            </div>
+            <div class="vd-item">
+              <span class="vd-label">BENEFICIARIO/A</span>
+              <strong id="voucherClient" class="vd-val">-</strong>
+            </div>
+            <div class="vd-item vd-item-full">
+              <span class="vd-label">CONDICIÓN DE USO</span>
+              <span id="voucherCondition" class="vd-condition">-</span>
+            </div>
+          </div>
+
+          <div class="voucher-tear-line">
+            <span class="voucher-notch voucher-notch-left"></span>
+            <span class="voucher-dashed"></span>
+            <span class="voucher-notch voucher-notch-right"></span>
+          </div>
+
+          <div class="voucher-footer">
+            <span>Calle 101 Nº 85 • Guernica | Mostrá este código al mozo o en barra</span>
+            <small style="display: block; margin-top: 5px; font-size: 0.69rem; color: var(--q-red); font-weight: 600; letter-spacing: 0.04em;">
+              ● CÓDIGO ÚNICO E INTRANSFERIBLE. QUEDA INVALIDADO TRAS EL PRIMER CANJE.
+            </small>
+          </div>
+        </div>
+
+        <div class="voucher-actions">
+          <button type="button" id="btnShareVoucherWhatsapp" class="q-btn-submit voucher-btn-whatsapp">
+            <span>Compartir por WhatsApp</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-left: 6px;">
+              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+            </svg>
+          </button>
+          <button type="button" id="btnSaveVoucher" class="q-btn-secondary voucher-btn-save">
+            Volver a la Ruleta / Menú
+          </button>
+        </div>
+      </div>
+
+      <!-- Stage 4: Friendly Cooldown / Daily Limit State -->
+      <div id="rouletteCooldownCard" class="roulette-cooldown-card" hidden>
+        <div class="cooldown-icon-wrap">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#e02434" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 22h14M5 2h14M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/>
+          </svg>
+        </div>
+        <h3 class="cooldown-title">Límite de Tiros por Hoy</h3>
+        <p id="rouletteCooldownMsg" class="cooldown-message">
+          Ya completaste los 3 tiros disponibles de hoy para tu dispositivo.
+          ¡Volvé mañana a partir de las 19:00 hs para seguir jugando por más premios o disfrutá tus cupones vigentes en la barra!
+        </p>
+
+        <div id="cooldownVouchersList" class="cooldown-vouchers-list" hidden>
+          <h4 class="cooldown-list-title">Tus cupones ganados hoy:</h4>
+          <div id="cooldownVouchersContainer" class="cooldown-vouchers-container"></div>
+        </div>
+
+        <div class="cooldown-actions">
+          <button type="button" id="btnCloseCooldownBtn" class="q-btn-submit">
+            Explorar La Carta y Tragos →
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js?v=14"></script>
-  <script src="app.js?v=14"></script>
+  <script src="supabase-config.js?v=21"></script>
+  <script src="app.js?v=21"></script>
 </body>
 </html>

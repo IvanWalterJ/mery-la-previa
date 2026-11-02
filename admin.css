@@ -365,6 +365,16 @@ body:has(.admin-modal-backdrop:not([hidden])) {
   gap: 8px;
 }
 
+.admin-brand-logo-img {
+  height: 28px;
+  max-width: 145px;
+  width: auto;
+  object-fit: contain;
+  display: block;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 8px rgba(224, 36, 52, 0.4));
+}
+
 .admin-brand-name {
   font-weight: 700;
   font-size: 1.12rem;
@@ -2959,5 +2969,257 @@ body:has(.admin-modal-backdrop:not([hidden])) {
   .admin-form-row-3 {
     grid-template-columns: 1fr;
   }
+}
+
+/* ==========================================================================
+   ROULETTE & PROMOS MANAGEMENT WORKSPACE
+   ========================================================================== */
+.admin-roulette-container {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  width: 100%;
+}
+
+.admin-roulette-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: var(--q-surface);
+  border: 1px solid var(--q-border);
+  border-radius: 14px;
+  padding: 18px 24px;
+}
+
+.admin-roulette-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.admin-roulette-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.admin-roulette-status-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--q-cream);
+  margin-bottom: 4px;
+}
+
+.admin-roulette-status-desc {
+  font-size: 0.82rem;
+  color: var(--q-cream-muted);
+}
+
+.admin-roulette-toggle-btn {
+  appearance: none;
+  border: 1px solid var(--q-border-strong);
+  background: rgba(224, 36, 52, 0.12);
+  color: var(--q-red);
+  padding: 10px 22px;
+  border-radius: 99px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-roulette-toggle-btn.is-active {
+  background: var(--q-red);
+  color: #ffffff;
+  border-color: var(--q-red);
+  box-shadow: 0 0 16px var(--q-red-glow);
+}
+
+.admin-roulette-settings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px 24px;
+  background: var(--q-surface);
+  border: 1px solid var(--q-border);
+  border-radius: 14px;
+  padding: 24px 28px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .admin-roulette-settings-grid {
+    grid-template-columns: 1fr;
+    padding: 18px 20px;
+    gap: 16px;
+  }
+}
+
+.admin-roulette-actions-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.admin-roulette-actions-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--q-cream);
+  letter-spacing: 0.04em;
+}
+
+.admin-prizes-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.admin-prize-card {
+  background: var(--q-surface);
+  border: 1px solid var(--q-border);
+  border-radius: 12px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.admin-prize-card:hover {
+  border-color: var(--q-border-strong);
+  transform: translateY(-2px);
+}
+
+.admin-prize-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-prize-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-prize-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+}
+
+.admin-prize-name {
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: var(--q-cream);
+}
+
+.admin-prize-prob-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 99px;
+  background: rgba(239, 231, 210, 0.08);
+  border: 1px solid var(--q-border);
+  color: var(--q-cream-muted);
+}
+
+.admin-prize-condition {
+  font-size: 0.8rem;
+  color: var(--q-cream-muted);
+  line-height: 1.45;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.admin-prize-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  gap: 12px;
+}
+
+.admin-prize-stock-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-prize-stock-label {
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  color: var(--q-cream-muted);
+  letter-spacing: 0.06em;
+}
+
+.admin-prize-stock-num {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--q-cream);
+  min-width: 24px;
+  text-align: center;
+}
+
+.admin-prize-stock-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid var(--q-border);
+  background: rgba(239, 231, 210, 0.06);
+  color: var(--q-cream);
+  font-size: 0.9rem;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.admin-prize-stock-btn:hover {
+  background: var(--q-red);
+  border-color: var(--q-red);
+  color: #ffffff;
+}
+
+.admin-prize-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.admin-prize-btn-sm {
+  appearance: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--q-border);
+  background: transparent;
+  color: var(--q-cream);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.admin-prize-btn-sm:hover {
+  border-color: var(--q-cream);
+  background: rgba(239, 231, 210, 0.08);
+}
+
+.admin-prize-btn-danger:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
 }
 

@@ -122,7 +122,7 @@
       <div class="admin-sidebar-top">
         <div class="admin-brand-box">
           <div class="admin-brand-row">
-            <span class="admin-brand-name">Mery La Previa</span>
+            <img src="assets/img/logo-mery-la-previa.webp" alt="Mery Jane La Previa" class="admin-brand-logo-img" />
             <span class="admin-live-badge" title="Los cambios impactan al instante en la carta">
               <span class="live-dot"></span>
               <span>En vivo</span>
@@ -143,6 +143,10 @@
             <button type="button" id="btnNavMenu" class="admin-cat-pill">
               <span>Carta y Categorías</span>
               <span id="adminMenuTotalBadge" class="admin-cat-pill-count">0</span>
+            </button>
+            <button type="button" id="btnNavRoulette" class="admin-cat-pill">
+              <span>Ruleta &amp; Promos</span>
+              <span id="adminRouletteBadge" class="admin-cat-pill-count" style="background: rgba(224, 36, 52, 0.2); color: var(--q-red);">Activa</span>
             </button>
             <button type="button" id="btnNavWhatsapp" class="admin-cat-pill">
               <span>WhatsApp y Señas</span>
@@ -838,6 +842,59 @@
           <button type="button" id="btnFinishNewResModal" class="admin-btn-gold" style="width: 100%;">Listo, volver al listado</button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- 10. MODAL: AGREGAR / EDITAR PREMIO DE LA RULETA -->
+  <div id="adminPrizeModal" class="admin-modal-backdrop" hidden role="dialog" aria-modal="true" aria-labelledby="prizeModalHeading">
+    <div class="admin-modal-card" style="max-width: 500px;">
+      <div class="admin-modal-header">
+        <h3 id="prizeModalHeading">Configurar Premio de la Ruleta</h3>
+        <button type="button" id="btnClosePrizeModal" class="admin-modal-close" aria-label="Cerrar">✕</button>
+      </div>
+
+      <form id="adminPrizeForm" class="admin-item-form">
+        <input type="hidden" id="prizeEditId" value="" />
+
+        <div class="admin-form-group">
+          <label for="prizeNameInput">Nombre del Premio o Promo *</label>
+          <input type="text" id="prizeNameInput" class="admin-input" placeholder="ej. Shot Tequila 11:11" required />
+        </div>
+
+        <div class="admin-form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="admin-form-group">
+            <label for="prizeStockInput">Stock Actual Disponible</label>
+            <input type="number" id="prizeStockInput" class="admin-input" min="0" max="999" value="10" required />
+            <small style="color: var(--q-cream-muted); font-size: 0.72rem;">(999 = ilimitado)</small>
+          </div>
+          <div class="admin-form-group">
+            <label for="prizeTotalStockInput">Cupo Total por Noche</label>
+            <input type="number" id="prizeTotalStockInput" class="admin-input" min="0" max="999" value="10" required />
+            <small style="color: var(--q-cream-muted); font-size: 0.72rem;">Para restablecer stock</small>
+          </div>
+        </div>
+
+        <div class="admin-form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="admin-form-group">
+            <label for="prizeProbInput">Probabilidad / Peso (%)</label>
+            <input type="number" id="prizeProbInput" class="admin-input" min="1" max="100" value="20" required />
+          </div>
+          <div class="admin-form-group">
+            <label for="prizeColorInput">Color del Gajo</label>
+            <input type="color" id="prizeColorInput" class="admin-input" value="#e02434" style="height: 42px; padding: 2px 6px; cursor: pointer;" />
+          </div>
+        </div>
+
+        <div class="admin-form-group">
+          <label for="prizeConditionInput">Condición o Instrucción de Canje *</label>
+          <input type="text" id="prizeConditionInput" class="admin-input" placeholder="ej. Válido hoy a las 11:11 PM en barra" required />
+        </div>
+
+        <div class="admin-modal-actions" style="margin-top: 16px;">
+          <button type="button" id="btnCancelPrizeModal" class="admin-btn-outline">Cancelar</button>
+          <button type="submit" id="btnSavePrizeModal" class="admin-btn-gold">Guardar premio</button>
+        </div>
+      </form>
     </div>
   </div>
 
