@@ -32,6 +32,50 @@
       border-color: var(--q-red) !important;
       color: var(--q-red-bright) !important;
     }
+    /* Custom select menus: max-height, sleek scrollbar, prevent cutting */
+    .q-select-menu {
+      max-height: 220px !important;
+      overflow-y: auto !important;
+      -webkit-overflow-scrolling: touch !important;
+      z-index: 100 !important;
+      scrollbar-width: thin !important;
+      scrollbar-color: var(--q-red) rgba(255, 255, 255, 0.08) !important;
+    }
+    .q-select-menu::-webkit-scrollbar {
+      width: 6px !important;
+      display: block !important;
+    }
+    .q-select-menu::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.4) !important;
+      border-radius: 999px !important;
+    }
+    .q-select-menu::-webkit-scrollbar-thumb {
+      background: var(--q-red) !important;
+      border-radius: 999px !important;
+    }
+    /* Generous bottom spacing for reservation form so dropdowns and button scroll cleanly */
+    #v2WhatsappResForm {
+      padding-bottom: 140px !important;
+    }
+    /* Dynamic z-index layering for custom select elements */
+    [data-select-id="v2ResType"] {
+      position: relative;
+      z-index: 30;
+    }
+    [data-select-id="v2ResDay"] {
+      position: relative;
+      z-index: 25;
+    }
+    [data-select-id="v2ResTime"] {
+      position: relative;
+      z-index: 20;
+    }
+    .q-custom-select.open {
+      z-index: 999 !important;
+    }
+    .q-custom-select.open .q-select-menu {
+      z-index: 1000 !important;
+    }
     .q-about-map-box {
       margin-top: 24px;
       padding: 22px;

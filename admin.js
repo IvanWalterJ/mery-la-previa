@@ -2420,6 +2420,10 @@ document.addEventListener('DOMContentLoaded', () => {
             <span>⚙</span>
             <span>Cupos</span>
           </button>
+          <button type="button" id="btnJumpToResOptions" class="admin-btn-outline" title="Configurar días, motivos y horarios del formulario web">
+            <span>⚙</span>
+            <span>Opciones Web</span>
+          </button>
           <button type="button" id="btnOpenQrScanner" class="admin-btn-gold admin-btn-scanner">
             <span>📷</span>
             <span>Escanear QR</span>
@@ -2543,6 +2547,60 @@ document.addEventListener('DOMContentLoaded', () => {
           `;
         }).join('')}
       </div>
+
+      <!-- Card: Configuración de Opciones de Reserva (Motivos, Días y Horarios) -->
+      <article id="adminResOptionsCard" class="admin-settings-card" style="margin-top:36px;">
+        <div class="admin-modal-title-group">
+          <span class="diamond-dot"></span>
+          <h3 class="admin-settings-title">Opciones de Reserva Web (Motivos, Días y Horarios)</h3>
+        </div>
+        <p class="admin-settings-intro">
+          Personalizá los motivos de festejo, días y horarios disponibles que los clientes ven en el formulario de reservas de la web. Los cambios se sincronizan en vivo.
+        </p>
+
+        <form id="adminReservationOptionsForm" class="admin-settings-form">
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:24px;">
+            <!-- Motivos Column -->
+            <div class="admin-options-group">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <strong style="color:var(--q-cream); font-size:0.92rem;">Motivos de Reserva</strong>
+                <button type="button" id="btnAddResMotivo" class="admin-btn-outline" style="padding:4px 10px; font-size:0.75rem;">
+                  + Agregar Motivo
+                </button>
+              </div>
+              <div id="adminResMotivosList" style="display:flex; flex-direction:column; gap:8px;"></div>
+            </div>
+
+            <!-- Días Column -->
+            <div class="admin-options-group">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <strong style="color:var(--q-cream); font-size:0.92rem;">Días Disponibles</strong>
+                <button type="button" id="btnAddResDia" class="admin-btn-outline" style="padding:4px 10px; font-size:0.75rem;">
+                  + Agregar Día
+                </button>
+              </div>
+              <div id="adminResDiasList" style="display:flex; flex-direction:column; gap:8px;"></div>
+            </div>
+
+            <!-- Horarios Column -->
+            <div class="admin-options-group">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <strong style="color:var(--q-cream); font-size:0.92rem;">Horarios Disponibles</strong>
+                <button type="button" id="btnAddResHorario" class="admin-btn-outline" style="padding:4px 10px; font-size:0.75rem;">
+                  + Agregar Horario
+                </button>
+              </div>
+              <div id="adminResHorariosList" style="display:flex; flex-direction:column; gap:8px;"></div>
+            </div>
+          </div>
+
+          <div style="margin-top:20px; display:flex; justify-content:flex-end;">
+            <button type="submit" id="btnSaveResOptions" class="admin-btn-gold">
+              Guardar Opciones de Reserva
+            </button>
+          </div>
+        </form>
+      </article>
     `;
 
     // Filter pill events
@@ -2657,6 +2715,178 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
     });
+
+    // Jump to Reservation Options button
+    const btnJump = sectionsContainer.querySelector('#btnJumpToResOptions');
+    if (btnJump) {
+      btnJump.addEventListener('click', () => {
+        sectionsContainer.querySelector('#adminResOptionsCard')?.scrollIntoView({ behavior: 'smooth' });
+      });
+    }
+
+    // Reservation Options: Motivos, Días y Horarios
+    const settings = window.MeryStore ? window.MeryStore.getReservationSettings() : {};
+    let currentMotivos = [...(settings.reservationMotivos || [
+      'Mesa Cena + Quedarse a la Previa',
+      'Festejo de Cumpleaños',
+      'Living VIP / Cabina DJ Previa',
+      'Tapeo & Tragos con Amigos'
+    ])];
+    let currentDias = [...(settings.reservationDias || [
+      'Viernes (Cena & Previa)',
+      'Sábado (Previa & DJ)',
+      'Domingo (Wine & Tapeo)',
+      'Mié / Jue (After & Cocktails)'
+    ])];
+    let currentHorarios = [...(settings.reservationHorarios || [
+      '20:30 hs (Cena)',
+      '22:00 hs (Cena Tardía)',
+      '23:30 hs (Previa & Club)',
+      '01:00 hs (DJ Set & Fiesta)'
+    ])];
+
+    const motivosListEl = sectionsContainer.querySelector('#adminResMotivosList');
+    const diasListEl = sectionsContainer.querySelector('#adminResDiasList');
+    const horariosListEl = sectionsContainer.querySelector('#adminResHorariosList');
+
+    function renderMotivosItems() {
+      if (!motivosListEl) return;
+      motivosListEl.innerHTML = currentMotivos.map((m, idx) => `
+        <div style="display:flex; gap:6px; align-items:center;">
+          <input type="text" class="admin-input res-motivo-item" data-idx="${idx}" value="${escapeHtml(m)}" placeholder="Nombre del motivo..." required />
+          <button type="button" class="admin-btn-outline admin-btn-danger btn-del-motivo" data-idx="${idx}" style="padding:6px 10px; font-size:0.8rem;" title="Eliminar motivo">✕</button>
+        </div>
+      `).join('');
+
+      motivosListEl.querySelectorAll('.btn-del-motivo').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const idx = Number(btn.dataset.idx);
+          if (currentMotivos.length <= 1) {
+            showToast('Debe haber al menos 1 motivo');
+            return;
+          }
+          currentMotivos.splice(idx, 1);
+          renderMotivosItems();
+        });
+      });
+
+      motivosListEl.querySelectorAll('.res-motivo-item').forEach((input) => {
+        input.addEventListener('input', () => {
+          const idx = Number(input.dataset.idx);
+          currentMotivos[idx] = input.value;
+        });
+      });
+    }
+
+    function renderDiasItems() {
+      if (!diasListEl) return;
+      diasListEl.innerHTML = currentDias.map((d, idx) => `
+        <div style="display:flex; gap:6px; align-items:center;">
+          <input type="text" class="admin-input res-dia-item" data-idx="${idx}" value="${escapeHtml(d)}" placeholder="Nombre del día..." required />
+          <button type="button" class="admin-btn-outline admin-btn-danger btn-del-dia" data-idx="${idx}" style="padding:6px 10px; font-size:0.8rem;" title="Eliminar día">✕</button>
+        </div>
+      `).join('');
+
+      diasListEl.querySelectorAll('.btn-del-dia').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const idx = Number(btn.dataset.idx);
+          if (currentDias.length <= 1) {
+            showToast('Debe haber al menos 1 día');
+            return;
+          }
+          currentDias.splice(idx, 1);
+          renderDiasItems();
+        });
+      });
+
+      diasListEl.querySelectorAll('.res-dia-item').forEach((input) => {
+        input.addEventListener('input', () => {
+          const idx = Number(input.dataset.idx);
+          currentDias[idx] = input.value;
+        });
+      });
+    }
+
+    function renderHorariosItems() {
+      if (!horariosListEl) return;
+      horariosListEl.innerHTML = currentHorarios.map((h, idx) => `
+        <div style="display:flex; gap:6px; align-items:center;">
+          <input type="text" class="admin-input res-horario-item" data-idx="${idx}" value="${escapeHtml(h)}" placeholder="Nombre del horario..." required />
+          <button type="button" class="admin-btn-outline admin-btn-danger btn-del-horario" data-idx="${idx}" style="padding:6px 10px; font-size:0.8rem;" title="Eliminar horario">✕</button>
+        </div>
+      `).join('');
+
+      horariosListEl.querySelectorAll('.btn-del-horario').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const idx = Number(btn.dataset.idx);
+          if (currentHorarios.length <= 1) {
+            showToast('Debe haber al menos 1 horario');
+            return;
+          }
+          currentHorarios.splice(idx, 1);
+          renderHorariosItems();
+        });
+      });
+
+      horariosListEl.querySelectorAll('.res-horario-item').forEach((input) => {
+        input.addEventListener('input', () => {
+          const idx = Number(input.dataset.idx);
+          currentHorarios[idx] = input.value;
+        });
+      });
+    }
+
+    renderMotivosItems();
+    renderDiasItems();
+    renderHorariosItems();
+
+    const btnAddMotivo = sectionsContainer.querySelector('#btnAddResMotivo');
+    if (btnAddMotivo) {
+      btnAddMotivo.addEventListener('click', () => {
+        currentMotivos.push('Nuevo Motivo de Reserva');
+        renderMotivosItems();
+      });
+    }
+
+    const btnAddDia = sectionsContainer.querySelector('#btnAddResDia');
+    if (btnAddDia) {
+      btnAddDia.addEventListener('click', () => {
+        currentDias.push('Nuevo Día (Cena & Previa)');
+        renderDiasItems();
+      });
+    }
+
+    const btnAddHorario = sectionsContainer.querySelector('#btnAddResHorario');
+    if (btnAddHorario) {
+      btnAddHorario.addEventListener('click', () => {
+        currentHorarios.push('21:00 hs (Cena)');
+        renderHorariosItems();
+      });
+    }
+
+    const formOptions = sectionsContainer.querySelector('#adminReservationOptionsForm');
+    if (formOptions) {
+      formOptions.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const filteredMotivos = currentMotivos.map((m) => m.trim()).filter(Boolean);
+        const filteredDias = currentDias.map((d) => d.trim()).filter(Boolean);
+        const filteredHorarios = currentHorarios.map((h) => h.trim()).filter(Boolean);
+
+        if (filteredMotivos.length === 0 || filteredDias.length === 0 || filteredHorarios.length === 0) {
+          showToast('Debe haber al menos un motivo, un día y un horario');
+          return;
+        }
+
+        if (window.MeryStore && typeof window.MeryStore.saveReservationSettings === 'function') {
+          window.MeryStore.saveReservationSettings({
+            reservationMotivos: filteredMotivos,
+            reservationDias: filteredDias,
+            reservationHorarios: filteredHorarios
+          });
+          showToast('✓ Opciones de reserva (motivos, días y horarios) guardadas');
+        }
+      });
+    }
   }
 
   // --- Proof Viewer Modal Logic ---
@@ -3485,49 +3715,6 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
           </form>
         </article>
-
-        <!-- Card 3: Configuración de Opciones de Reserva (Motivos y Días) -->
-        <article class="admin-settings-card" style="margin-top:24px;">
-          <div class="admin-modal-title-group">
-            <span class="diamond-dot"></span>
-            <h3 class="admin-settings-title">Opciones de Reserva (Días y Motivos)</h3>
-          </div>
-          <p class="admin-settings-intro">
-            Personalizá los motivos de festejo y los días disponibles que aparecen en el formulario de reservas de la web. Los cambios se sincronizan en vivo.
-          </p>
-
-          <form id="adminReservationOptionsForm" class="admin-settings-form">
-            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:24px;">
-              <!-- Motivos Column -->
-              <div class="admin-options-group">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                  <strong style="color:var(--q-cream); font-size:0.92rem;">Motivos de Reserva</strong>
-                  <button type="button" id="btnAddResMotivo" class="admin-btn-outline" style="padding:4px 10px; font-size:0.75rem;">
-                    + Agregar Motivo
-                  </button>
-                </div>
-                <div id="adminResMotivosList" style="display:flex; flex-direction:column; gap:8px;"></div>
-              </div>
-
-              <!-- Días Column -->
-              <div class="admin-options-group">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                  <strong style="color:var(--q-cream); font-size:0.92rem;">Días Disponibles</strong>
-                  <button type="button" id="btnAddResDia" class="admin-btn-outline" style="padding:4px 10px; font-size:0.75rem;">
-                    + Agregar Día
-                  </button>
-                </div>
-                <div id="adminResDiasList" style="display:flex; flex-direction:column; gap:8px;"></div>
-              </div>
-            </div>
-
-            <div style="margin-top:20px; display:flex; justify-content:flex-end;">
-              <button type="submit" id="btnSaveResOptions" class="admin-btn-gold">
-                Guardar Días y Motivos
-              </button>
-            </div>
-          </form>
-        </article>
       </div>
     `;
 
@@ -3624,122 +3811,6 @@ document.addEventListener('DOMContentLoaded', () => {
             depositPaymentLink: paymentLink
           });
           showToast('✓ Datos de seña guardados correctamente');
-        }
-      });
-    }
-
-    // Dynamic Lists: Motivos and Días
-    let currentMotivos = [...(settings.reservationMotivos || [
-      'Mesa Cena + Quedarse a la Previa',
-      'Festejo de Cumpleaños',
-      'Living VIP / Cabina DJ Previa',
-      'Tapeo & Tragos con Amigos'
-    ])];
-    let currentDias = [...(settings.reservationDias || [
-      'Viernes (Cena & Previa)',
-      'Sábado (Previa & DJ)',
-      'Domingo (Wine & Tapeo)',
-      'Mié / Jue (After & Cocktails)'
-    ])];
-
-    const motivosListEl = sectionsContainer.querySelector('#adminResMotivosList');
-    const diasListEl = sectionsContainer.querySelector('#adminResDiasList');
-
-    function renderMotivosItems() {
-      if (!motivosListEl) return;
-      motivosListEl.innerHTML = currentMotivos.map((m, idx) => `
-        <div style="display:flex; gap:6px; align-items:center;">
-          <input type="text" class="admin-input res-motivo-item" data-idx="${idx}" value="${escapeHtml(m)}" placeholder="Nombre del motivo..." required />
-          <button type="button" class="admin-btn-outline admin-btn-danger btn-del-motivo" data-idx="${idx}" style="padding:6px 10px; font-size:0.8rem;" title="Eliminar motivo">✕</button>
-        </div>
-      `).join('');
-
-      motivosListEl.querySelectorAll('.btn-del-motivo').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          const idx = Number(btn.dataset.idx);
-          if (currentMotivos.length <= 1) {
-            showToast('Debe haber al menos 1 motivo');
-            return;
-          }
-          currentMotivos.splice(idx, 1);
-          renderMotivosItems();
-        });
-      });
-
-      motivosListEl.querySelectorAll('.res-motivo-item').forEach((input) => {
-        input.addEventListener('input', () => {
-          const idx = Number(input.dataset.idx);
-          currentMotivos[idx] = input.value;
-        });
-      });
-    }
-
-    function renderDiasItems() {
-      if (!diasListEl) return;
-      diasListEl.innerHTML = currentDias.map((d, idx) => `
-        <div style="display:flex; gap:6px; align-items:center;">
-          <input type="text" class="admin-input res-dia-item" data-idx="${idx}" value="${escapeHtml(d)}" placeholder="Nombre del día..." required />
-          <button type="button" class="admin-btn-outline admin-btn-danger btn-del-dia" data-idx="${idx}" style="padding:6px 10px; font-size:0.8rem;" title="Eliminar día">✕</button>
-        </div>
-      `).join('');
-
-      diasListEl.querySelectorAll('.btn-del-dia').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          const idx = Number(btn.dataset.idx);
-          if (currentDias.length <= 1) {
-            showToast('Debe haber al menos 1 día');
-            return;
-          }
-          currentDias.splice(idx, 1);
-          renderDiasItems();
-        });
-      });
-
-      diasListEl.querySelectorAll('.res-dia-item').forEach((input) => {
-        input.addEventListener('input', () => {
-          const idx = Number(input.dataset.idx);
-          currentDias[idx] = input.value;
-        });
-      });
-    }
-
-    renderMotivosItems();
-    renderDiasItems();
-
-    const btnAddMotivo = sectionsContainer.querySelector('#btnAddResMotivo');
-    if (btnAddMotivo) {
-      btnAddMotivo.addEventListener('click', () => {
-        currentMotivos.push('Nuevo Motivo de Reserva');
-        renderMotivosItems();
-      });
-    }
-
-    const btnAddDia = sectionsContainer.querySelector('#btnAddResDia');
-    if (btnAddDia) {
-      btnAddDia.addEventListener('click', () => {
-        currentDias.push('Nuevo Día (Horario)');
-        renderDiasItems();
-      });
-    }
-
-    const formOptions = sectionsContainer.querySelector('#adminReservationOptionsForm');
-    if (formOptions) {
-      formOptions.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const filteredMotivos = currentMotivos.map((m) => m.trim()).filter(Boolean);
-        const filteredDias = currentDias.map((d) => d.trim()).filter(Boolean);
-
-        if (filteredMotivos.length === 0 || filteredDias.length === 0) {
-          showToast('Debe haber al menos un motivo y un día');
-          return;
-        }
-
-        if (window.MeryStore && typeof window.MeryStore.saveReservationSettings === 'function') {
-          window.MeryStore.saveReservationSettings({
-            reservationMotivos: filteredMotivos,
-            reservationDias: filteredDias
-          });
-          showToast('✓ Días y motivos de reserva guardados correctamente');
         }
       });
     }

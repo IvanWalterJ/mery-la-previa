@@ -59,6 +59,12 @@ const DEFAULT_RESERVATION_SETTINGS = {
     'Domingo (Wine & Tapeo)',
     'Mié / Jue (After & Cocktails)'
   ],
+  reservationHorarios: [
+    '20:30 hs (Cena)',
+    '22:00 hs (Cena Tardía)',
+    '23:30 hs (Previa & Club)',
+    '01:00 hs (DJ Set & Fiesta)'
+  ],
   connectedWhatsappPhone: '5491173727613',
   maxCapacityPerDay: {
     'Viernes 13/11': 60,
@@ -1236,6 +1242,9 @@ const DEFAULT_MENU_SECTIONS = [
           reservationDias: Array.isArray(parsed.reservationDias) && parsed.reservationDias.length > 0
             ? parsed.reservationDias
             : DEFAULT_RESERVATION_SETTINGS.reservationDias,
+          reservationHorarios: Array.isArray(parsed.reservationHorarios) && parsed.reservationHorarios.length > 0
+            ? parsed.reservationHorarios
+            : DEFAULT_RESERVATION_SETTINGS.reservationHorarios,
           connectedWhatsappPhone: parsed.connectedWhatsappPhone || DEFAULT_RESERVATION_SETTINGS.connectedWhatsappPhone,
           evolutionServerUrl: parsed.evolutionServerUrl || DEFAULT_RESERVATION_SETTINGS.evolutionServerUrl,
           evolutionApiKey: parsed.evolutionApiKey || DEFAULT_RESERVATION_SETTINGS.evolutionApiKey,

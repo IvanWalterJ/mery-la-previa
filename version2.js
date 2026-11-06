@@ -536,7 +536,26 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.q-custom-select').forEach(setupCustomSelect);
   }
 
-  // Populate dynamic Motivos and Días from Settings
+  // Close custom select dropdowns when clicking outside or pressing Escape
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.q-custom-select')) {
+      document.querySelectorAll('.q-custom-select.open').forEach((w) => {
+        w.classList.remove('open');
+        w.querySelector('.q-select-trigger')?.setAttribute('aria-expanded', 'false');
+      });
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.q-custom-select.open').forEach((w) => {
+        w.classList.remove('open');
+        w.querySelector('.q-select-trigger')?.setAttribute('aria-expanded', 'false');
+      });
+    }
+  });
+
+  // Populate dynamic Motivos, Días and Horarios from Settings
   function populateReservationOptions() {
     const settings = window.MeryStore ? window.MeryStore.getReservationSettings() : {};
     const motivos = settings.reservationMotivos && settings.reservationMotivos.length > 0
@@ -603,6 +622,39 @@ document.addEventListener('DOMContentLoaded', () => {
         `).join('');
       }
       setupCustomSelect(diaWrap);
+    }
+
+    // 3. Populate Horarios
+    const horarios = settings.reservationHorarios && settings.reservationHorarios.length > 0
+      ? settings.reservationHorarios
+      : [
+        '20:30 hs (Cena)',
+        '22:00 hs (Cena Tardía)',
+        '23:30 hs (Previa & Club)',
+        '01:00 hs (DJ Set & Fiesta)'
+      ];
+
+    const timeWrap = document.querySelector('[data-select-id="v2ResTime"]');
+    if (timeWrap) {
+      const valEl = timeWrap.querySelector('.q-select-value');
+      const menuEl = timeWrap.querySelector('.q-select-menu');
+      const nativeSelect = timeWrap.querySelector('.q-select-native');
+
+      if (valEl) valEl.textContent = horarios[0];
+      if (menuEl) {
+        menuEl.innerHTML = horarios.map((t, idx) => `
+          <li class="q-select-option ${idx === 0 ? 'selected' : ''}" data-value="${escapeHtml(t)}" role="option" aria-selected="${idx === 0}">
+            <span>${escapeHtml(t)}</span>
+            <span class="q-option-diamond">◇</span>
+          </li>
+        `).join('');
+      }
+      if (nativeSelect) {
+        nativeSelect.innerHTML = horarios.map((t, idx) => `
+          <option value="${escapeHtml(t)}" ${idx === 0 ? 'selected' : ''}>${escapeHtml(t)}</option>
+        `).join('');
+      }
+      setupCustomSelect(timeWrap);
     }
   }
 
