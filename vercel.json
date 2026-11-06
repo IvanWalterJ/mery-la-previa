@@ -3,6 +3,7 @@
   "trailingSlash": false,
   "rewrites": [
     { "source": "/admin", "destination": "/admin.html" },
-    { "source": "/pase", "destination": "/pase.html" }
+    { "source": "/pase", "destination": "/pase.html" },
+    { "source": "/version2", "destination": "/version2.html" }
   ]
 }

@@ -47,6 +47,19 @@ const DEFAULT_RESERVATION_SETTINGS = {
   evolutionApiKey: '429683C4C977415CAAFCCE10F7D57E11',
   evolutionInstanceName: 'mery-la-previa',
   whatsappConnected: false,
+  reservationMotivos: [
+    'Mesa Cena + Quedarse a la Previa',
+    'Festejo de Cumpleaños',
+    'Living VIP / Cabina DJ Previa',
+    'Tapeo & Tragos con Amigos'
+  ],
+  reservationDias: [
+    'Viernes (Cena & Previa)',
+    'Sábado (Previa & DJ)',
+    'Domingo (Wine & Tapeo)',
+    'Mié / Jue (After & Cocktails)'
+  ],
+  connectedWhatsappPhone: '5491173727613',
   maxCapacityPerDay: {
     'Viernes 13/11': 60,
     'Sábado': 80,
@@ -1217,6 +1230,13 @@ const DEFAULT_MENU_SECTIONS = [
             ...(parsed.maxCapacityPerDay || {})
           },
           closedDays: Array.isArray(parsed.closedDays) ? parsed.closedDays : [],
+          reservationMotivos: Array.isArray(parsed.reservationMotivos) && parsed.reservationMotivos.length > 0
+            ? parsed.reservationMotivos
+            : DEFAULT_RESERVATION_SETTINGS.reservationMotivos,
+          reservationDias: Array.isArray(parsed.reservationDias) && parsed.reservationDias.length > 0
+            ? parsed.reservationDias
+            : DEFAULT_RESERVATION_SETTINGS.reservationDias,
+          connectedWhatsappPhone: parsed.connectedWhatsappPhone || DEFAULT_RESERVATION_SETTINGS.connectedWhatsappPhone,
           evolutionServerUrl: parsed.evolutionServerUrl || DEFAULT_RESERVATION_SETTINGS.evolutionServerUrl,
           evolutionApiKey: parsed.evolutionApiKey || DEFAULT_RESERVATION_SETTINGS.evolutionApiKey,
           evolutionInstanceName: parsed.evolutionInstanceName || DEFAULT_RESERVATION_SETTINGS.evolutionInstanceName
