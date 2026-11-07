@@ -174,6 +174,38 @@
 </head>
 <body>
 
+  <!-- 1. NEON INTRO CURTAIN (Frame-locked MP4 video with muxed neon ignition audio) -->
+  <div id="neonIntroCurtain" class="neon-intro-curtain" aria-label="Intro Cartel Luminoso Mery La Previa">
+    <video
+      id="neonIntroVideo"
+      src="assets/video/neon-intro-mery.mp4"
+      autoplay
+      playsinline
+      preload="auto"
+    ></video>
+    <div class="neon-vignette-blend" aria-hidden="true"></div>
+
+    <!-- Floating Sound Pill (Appears only if mobile browser blocks unmuted autoplay) -->
+    <button type="button" id="btnIntroUnmute" class="intro-sound-pill" aria-label="Activar sonido">
+      <span class="pill-dot"></span>
+      <span>TOCÁ PARA ACTIVAR SONIDO</span>
+      <span class="pill-speaker">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle;">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        </svg>
+      </span>
+    </button>
+
+    <div class="intro-enter-wrap">
+      <button type="button" id="btnDismissIntro" class="intro-enter-btn">
+        <span class="intro-diamond"></span>
+        <span>ENTRAR A MERY LA PREVIA</span>
+        <span class="intro-diamond"></span>
+      </button>
+    </div>
+  </div>
+
   <!-- FULLSCREEN QITCHEN HAMBURGER MENU OVERLAY -->
   <div id="qitchenMenuOverlay" class="qitchen-menu-overlay" aria-hidden="true" role="dialog" aria-label="Menú Principal">
     <button type="button" id="btnCloseOverlay" class="q-overlay-close-btn" aria-label="Cerrar menú">
@@ -887,6 +919,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js?v=21"></script>
-  <script src="version2.js?v=1"></script>
+  <script src="version2.js?v=2"></script>
 </body>
 </html>

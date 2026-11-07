@@ -1,7 +1,7 @@
 // MERY LA PREVIA — Versión 2 Controller
-// V2 Changes:
-// - Direct page entry (no neon intro curtain)
-// - Complete silence on all videos & views (ice-cube video muted, no synthesized audio)
+// V2 Features:
+// - Portada de inicio con cartel luminoso (neon intro curtain con audio y botón de ingreso)
+// - Complete silence on internal videos & views (ice-cube video muted, no synthesized audio)
 // - Reordered bento cards: 1. La Carta, 2. Promos y Descuentos (ex-Ruleta), 3. Reservas, 4. Nosotros
 // - Navigation & Section renamed: "La Previa 11" -> "Nosotros", with Google Maps embed
 // - Button & Section renamed: "Cumples & Reservas" -> "RESERVA ACÁ" / "Reservas"
@@ -52,12 +52,105 @@ function escapeHtml(str) {
 
 document.addEventListener('DOMContentLoaded', () => {
   const appEl = document.getElementById('qitchenApp');
+  const introCurtain = document.getElementById('neonIntroCurtain');
+  const neonIntroVideo = document.getElementById('neonIntroVideo');
+  const btnDismissIntro = document.getElementById('btnDismissIntro');
+  const btnIntroUnmute = document.getElementById('btnIntroUnmute');
+  const introWrap = document.querySelector('.intro-enter-wrap');
   const leftHeroTitle = document.getElementById('leftHeroTitle');
   const showcaseVideo = document.getElementById('bottleShowcaseVideo');
   const menuOverlay = document.getElementById('qitchenMenuOverlay');
   const btnOpenOverlay = document.getElementById('btnOpenOverlay');
   const btnCloseOverlay = document.getElementById('btnCloseOverlay');
   const heroSubtag = document.querySelector('.q-hero-subtag');
+
+  // 1. Neon Intro Video Autoplay + Delayed Fade-In of Enter Button on Finish
+  let buttonRevealed = false;
+  let audioUnlocked = false;
+
+  function revealEnterButton() {
+    if (buttonRevealed || !introWrap) return;
+    buttonRevealed = true;
+    introWrap.classList.add('visible');
+    if (btnIntroUnmute) btnIntroUnmute.classList.remove('visible');
+  }
+
+  const enterSafetyTimer = setTimeout(revealEnterButton, 3400);
+
+  function activateAudio() {
+    if (!neonIntroVideo) return;
+    neonIntroVideo.muted = false;
+    neonIntroVideo.volume = 1;
+    const p = neonIntroVideo.play();
+    if (p !== undefined) {
+      p.catch(() => {});
+    }
+    audioUnlocked = true;
+    if (btnIntroUnmute) btnIntroUnmute.classList.remove('visible');
+  }
+
+  if (neonIntroVideo) {
+    neonIntroVideo.addEventListener('timeupdate', () => {
+      if (neonIntroVideo.currentTime >= 3.0) {
+        revealEnterButton();
+      }
+    });
+
+    neonIntroVideo.addEventListener('ended', revealEnterButton);
+
+    neonIntroVideo.addEventListener('pause', () => {
+      if (introCurtain && !introCurtain.classList.contains('dismissed')) {
+        setTimeout(revealEnterButton, 500);
+      }
+    });
+
+    neonIntroVideo.addEventListener('error', revealEnterButton);
+
+    neonIntroVideo.muted = false;
+    neonIntroVideo.volume = 1;
+    neonIntroVideo.play().then(() => {
+      if (btnIntroUnmute) btnIntroUnmute.classList.remove('visible');
+    }).catch(() => {
+      neonIntroVideo.muted = true;
+      neonIntroVideo.play().catch(() => {});
+      if (btnIntroUnmute && !buttonRevealed) {
+        btnIntroUnmute.classList.add('visible');
+      }
+    });
+  }
+
+  function handleSoundTap(e) {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    activateAudio();
+  }
+
+  if (btnIntroUnmute) {
+    btnIntroUnmute.addEventListener('click', handleSoundTap);
+    btnIntroUnmute.addEventListener('touchend', handleSoundTap);
+  }
+
+  if (introCurtain) {
+    introCurtain.addEventListener('click', (e) => {
+      if (btnDismissIntro && btnDismissIntro.contains(e.target)) return;
+      if (btnIntroUnmute && btnIntroUnmute.contains(e.target)) return;
+      if (!audioUnlocked) activateAudio();
+    });
+  }
+
+  if (btnDismissIntro && introCurtain) {
+    btnDismissIntro.addEventListener('click', (e) => {
+      e.stopPropagation();
+      clearTimeout(enterSafetyTimer);
+      if (neonIntroVideo) neonIntroVideo.pause();
+      introCurtain.classList.add('dismissed');
+      if (showcaseVideo) {
+        showcaseVideo.play().catch(() => {});
+      }
+    });
+  }
 
   // Ensure showcase video starts muted and silent
   if (showcaseVideo) {
@@ -66,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showcaseVideo.play().catch(() => {});
   }
 
-  // 1. Qitchen Fullscreen Hamburger Menu Overlay Controls
+  // 2. Qitchen Fullscreen Hamburger Menu Overlay Controls
   function toggleOverlay(openState) {
     if (!menuOverlay) return;
     const shouldOpen = typeof openState === 'boolean'
@@ -366,6 +459,45 @@ document.addEventListener('DOMContentLoaded', () => {
         renderQitchenMenu();
       }
     });
+  }
+
+  function applySiteVideos(videos) {
+    if (!videos) return;
+    if (videos.intro && neonIntroVideo) {
+      if (neonIntroVideo.getAttribute('src') !== videos.intro) {
+        neonIntroVideo.setAttribute('src', videos.intro);
+        neonIntroVideo.load();
+      }
+    }
+    if (videos.main) {
+      VIEW_CONFIG.home.video = videos.main;
+      VIEW_CONFIG.menu.video = videos.main;
+      VIEW_CONFIG.reservation.video = videos.main;
+    }
+    if (videos.previa) {
+      VIEW_CONFIG.about.video = videos.previa;
+    }
+    if (showcaseVideo && currentView && VIEW_CONFIG[currentView]) {
+      const activeCfg = VIEW_CONFIG[currentView];
+      if (showcaseVideo.getAttribute('src') !== activeCfg.video) {
+        showcaseVideo.setAttribute('src', activeCfg.video);
+        showcaseVideo.load();
+        showcaseVideo.play().catch(() => {});
+      }
+    }
+  }
+
+  if (window.MeryStore && typeof window.MeryStore.getSiteVideos === 'function') {
+    const maybePromise = window.MeryStore.getSiteVideos();
+    if (maybePromise && typeof maybePromise.then === 'function') {
+      maybePromise.then(applySiteVideos).catch(() => {});
+    } else if (maybePromise) {
+      applySiteVideos(maybePromise);
+    }
+  }
+
+  if (window.MeryStore && typeof window.MeryStore.subscribeToVideoChanges === 'function') {
+    window.MeryStore.subscribeToVideoChanges(applySiteVideos);
   }
 
   // 4. Directional Slide View Transition + Left Video Swap (Always Silent)
