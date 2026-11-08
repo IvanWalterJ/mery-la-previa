@@ -134,6 +134,7 @@ const DEFAULT_MENU_SECTIONS = [
     id: 'cocktails',
     title: 'Cocktails 11:11',
     sort_order: 1,
+    group: 'drinks',
     items: [
       {
         id: 'crimson-coupe',
@@ -189,6 +190,7 @@ const DEFAULT_MENU_SECTIONS = [
     id: 'cortes',
     title: 'Carnes & Tapeo',
     sort_order: 2,
+    group: 'food',
     items: [
       {
         id: 'ojo-de-bife-imperial',
@@ -244,6 +246,7 @@ const DEFAULT_MENU_SECTIONS = [
     id: 'vinos',
     title: 'Mery Jane Wines',
     sort_order: 3,
+    group: 'drinks',
     items: [
       {
         id: 'mery-jane-blanc',
@@ -368,6 +371,19 @@ const DEFAULT_MENU_SECTIONS = [
     return JSON.parse(JSON.stringify(DEFAULT_MENU_SECTIONS));
   }
 
+  // Groups every category into the two public menu blocks:
+  // 'drinks' -> Tragos & Bebidas (barra) | 'food' -> La Carta (cocina & tapeo)
+  const DRINKS_GROUP_PATTERN = /cocktail|trago|bebida|vino|wine|drink|barra|cerveza|champagne|espumante|aperitivo|gin|vodka|fernet|mojito/i;
+
+  function getCategoryGroup(sec) {
+    if (!sec) return 'food';
+    if (sec.group === 'drinks' || sec.group === 'food') return sec.group;
+    const haystack = [sec.title, sec.id, sec.slug]
+      .filter((value) => typeof value === 'string' && value.trim() !== '')
+      .join(' ');
+    return DRINKS_GROUP_PATTERN.test(haystack) ? 'drinks' : 'food';
+  }
+
   function getLocalSections() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY_MENU);
@@ -432,6 +448,7 @@ const DEFAULT_MENU_SECTIONS = [
         db_id: cat.id,
         title: cat.title,
         sort_order: cat.sort_order ?? 1,
+        group: cat.section_type || cat.group || getCategoryGroup(cat),
         items: items
           .filter((it) => it.category_id === (cat.slug || cat.id) || it.category_id === cat.id)
           .map((it) => ({
@@ -534,7 +551,8 @@ const DEFAULT_MENU_SECTIONS = [
       await client.from('menu_categories').upsert({
         slug: sec.id,
         title: sec.title,
-        sort_order: i + 1
+        sort_order: i + 1,
+        section_type: getCategoryGroup(sec)
       }, { onConflict: 'slug' });
 
       for (let j = 0; j < sec.items.length; j++) {
@@ -2095,6 +2113,7 @@ const DEFAULT_MENU_SECTIONS = [
     setSupabaseConfig,
     isSupabaseConfigured,
     getClient,
+    getCategoryGroup,
     getLocalSections,
     saveLocalSections,
     fetchMenuSections,

@@ -17,6 +17,9 @@ CREATE TABLE IF NOT EXISTS public.menu_categories (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Menu block discriminator: 'drinks' (Tragos & Bebidas) | 'food' (La Carta)
+ALTER TABLE public.menu_categories ADD COLUMN IF NOT EXISTS section_type TEXT NOT NULL DEFAULT 'drinks';
+
 -- 2. TABLA DE PLATOS, TRAGOS Y VINOS
 CREATE TABLE IF NOT EXISTS public.menu_items (
   id TEXT PRIMARY KEY,
@@ -111,13 +114,14 @@ BEGIN
 END $$;
 
 -- 6. DATOS INICIALES (Carta Oficial de Mery La Previa)
-INSERT INTO public.menu_categories (slug, title, sort_order) VALUES
-  ('cocktails', 'Cocktails 11:11', 1),
-  ('cortes', 'Carnes & Tapeo', 2),
-  ('vinos', 'Mery Jane Wines', 3)
+INSERT INTO public.menu_categories (slug, title, sort_order, section_type) VALUES
+  ('cocktails', 'Cocktails 11:11', 1, 'drinks'),
+  ('cortes', 'Carnes & Tapeo', 2, 'food'),
+  ('vinos', 'Mery Jane Wines', 3, 'drinks')
 ON CONFLICT (slug) DO UPDATE
   SET title = EXCLUDED.title,
-      sort_order = EXCLUDED.sort_order;
+      sort_order = EXCLUDED.sort_order,
+      section_type = EXCLUDED.section_type;
 
 INSERT INTO public.menu_items (
   id, category_id, name, badge, price, short_desc, detail_copy, pairing_note, tags, image_url, available, sort_order

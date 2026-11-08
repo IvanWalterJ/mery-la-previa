@@ -7,8 +7,14 @@ const FALLBACK_SECTIONS = window.MeryStore
 const VIEW_CONFIG = {
   home: {
     title: 'MERY<br />LA PREVIA',
-    video: 'assets/video/bottle-360-loop.mp4',
-    poster: 'assets/img/bottle-hero-isolated.jpg',
+    video: 'assets/video/ice-cube-1311.mp4',
+    poster: 'assets/img/ice-cube-previa.jpg',
+    unmute: false
+  },
+  drinks: {
+    title: 'TRAGOS &amp;<br />BEBIDAS',
+    video: 'assets/video/ice-cube-1311.mp4',
+    poster: 'assets/img/ice-cube-previa.jpg',
     unmute: false
   },
   menu: {
@@ -21,7 +27,7 @@ const VIEW_CONFIG = {
     title: 'LA PREVIA<br />DE MERY',
     video: 'assets/video/ice-cube-1311.mp4',
     poster: 'assets/img/ice-cube-previa.jpg',
-    unmute: true
+    unmute: false
   },
   reservation: {
     title: 'CUMPLES<br />&amp; RESERVAS',
@@ -46,9 +52,63 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnDismissIntro = document.getElementById('btnDismissIntro');
   const leftHeroTitle = document.getElementById('leftHeroTitle');
   const showcaseVideo = document.getElementById('bottleShowcaseVideo');
+  const btnShowcaseSound = document.getElementById('btnShowcaseSound');
   const menuOverlay = document.getElementById('qitchenMenuOverlay');
   const btnOpenOverlay = document.getElementById('btnOpenOverlay');
   const btnCloseOverlay = document.getElementById('btnCloseOverlay');
+
+  // 1b. Hero showcase sound: opt-in, subtle, auto-muted after one video cycle
+  const SHOWCASE_SOUND_CYCLE_MS = 10000;
+  let showcaseSoundTimer = null;
+
+  function updateShowcaseSoundUI(isActive) {
+    if (!btnShowcaseSound) return;
+    btnShowcaseSound.classList.toggle('is-active', isActive);
+    btnShowcaseSound.setAttribute('aria-pressed', String(isActive));
+    btnShowcaseSound.setAttribute(
+      'aria-label',
+      isActive ? 'Silenciar el sonido del video' : 'Activar el sonido del video'
+    );
+  }
+
+  function clearShowcaseSoundTimer() {
+    if (showcaseSoundTimer) {
+      clearTimeout(showcaseSoundTimer);
+      showcaseSoundTimer = null;
+    }
+  }
+
+  function muteShowcaseSound() {
+    clearShowcaseSoundTimer();
+    if (showcaseVideo) {
+      showcaseVideo.muted = true;
+      showcaseVideo.volume = 0;
+    }
+    updateShowcaseSoundUI(false);
+  }
+
+  function enableShowcaseSound() {
+    if (!showcaseVideo) return;
+    clearShowcaseSoundTimer();
+    showcaseVideo.muted = false;
+    showcaseVideo.volume = 0.85;
+    const playAttempt = showcaseVideo.play();
+    if (playAttempt && typeof playAttempt.catch === 'function') {
+      playAttempt.catch(() => muteShowcaseSound());
+    }
+    updateShowcaseSoundUI(true);
+    showcaseSoundTimer = setTimeout(muteShowcaseSound, SHOWCASE_SOUND_CYCLE_MS);
+  }
+
+  if (btnShowcaseSound && showcaseVideo) {
+    btnShowcaseSound.addEventListener('click', () => {
+      if (showcaseVideo.muted) {
+        enableShowcaseSound();
+      } else {
+        muteShowcaseSound();
+      }
+    });
+  }
 
   // 1. Neon Intro Video Autoplay + Delayed Fade-In of Enter Button on Finish
   const introWrap = document.querySelector('.intro-enter-wrap');
@@ -63,12 +123,19 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnIntroUnmute) btnIntroUnmute.classList.remove('visible');
   }
 
-  const enterSafetyTimer = setTimeout(revealEnterButton, 3400);
+  let enterSafetyTimer = setTimeout(revealEnterButton, 3400);
 
   function activateAudio() {
     if (!neonIntroVideo) return;
+    try {
+      neonIntroVideo.currentTime = 0;
+    } catch (_) {}
     neonIntroVideo.muted = false;
     neonIntroVideo.volume = 1;
+    buttonRevealed = false;
+    if (introWrap) introWrap.classList.remove('visible');
+    clearTimeout(enterSafetyTimer);
+    enterSafetyTimer = setTimeout(revealEnterButton, 3800);
     const p = neonIntroVideo.play();
     if (p !== undefined) {
       p.catch(() => {});
@@ -309,97 +376,144 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // 4. Render Qitchen /menu Sections + Dynamic Filter Pills + Real-Time Sync
+  // 4. Render Qitchen /drinks + /menu Sections + Dynamic Filter Pills + Real-Time Sync
   const menuContainer = document.getElementById('qitchenMenuContainer');
-  const filterPillsWrap = document.querySelector('#view-menu .q-filter-pills');
+  const drinksContainer = document.getElementById('qitchenDrinksContainer');
+  const foodPillsWrap = document.querySelector('#view-menu .q-filter-pills');
+  const drinksPillsWrap = document.getElementById('drinksFilterPills');
   let menuSections = window.MeryStore
     ? window.MeryStore.getLocalSections()
     : FALLBACK_SECTIONS;
-  let currentFilter = 'all';
+  let currentMenuFilter = 'all';
+  let currentDrinksFilter = 'all';
 
-  function renderFilterPills() {
-    if (!filterPillsWrap) return;
-    const validIds = menuSections.map((s) => s.id);
-    if (currentFilter !== 'all' && !validIds.includes(currentFilter)) {
-      currentFilter = 'all';
+  const DRINKS_GROUP_PATTERN = /cocktail|trago|bebida|vino|wine|drink|barra|cerveza|champagne|espumante|aperitivo|gin|vodka|fernet|mojito/i;
+
+  function getSectionGroup(sec) {
+    if (window.MeryStore && typeof window.MeryStore.getCategoryGroup === 'function') {
+      return window.MeryStore.getCategoryGroup(sec);
     }
+    if (!sec) return 'food';
+    if (sec.group === 'drinks' || sec.group === 'food') return sec.group;
+    const haystack = [sec.title, sec.id, sec.slug].filter(Boolean).join(' ');
+    return DRINKS_GROUP_PATTERN.test(haystack) ? 'drinks' : 'food';
+  }
 
-    const pillsHtml = [
-      `<button type="button" class="q-pill-btn ${currentFilter === 'all' ? 'active' : ''}" data-filter="all">Todo</button>`,
-      ...menuSections.map((sec) => `
-        <button type="button" class="q-pill-btn ${currentFilter === sec.id ? 'active' : ''}" data-filter="${escapeHtml(sec.id)}">
+  function sectionsByGroup(group) {
+    return menuSections.filter((sec) => getSectionGroup(sec) === group);
+  }
+
+  function scrollMenuPanelToTop(viewSelector) {
+    const panel = document.querySelector(`${viewSelector} .q-panel-bordered`);
+    if (panel) panel.scrollTop = 0;
+  }
+
+  function renderFilterPillsInto(wrap, sections, activeFilter, onSelect) {
+    if (!wrap) return activeFilter;
+    const validIds = sections.map((sec) => sec.id);
+    const nextFilter = activeFilter !== 'all' && validIds.includes(activeFilter)
+      ? activeFilter
+      : 'all';
+
+    wrap.innerHTML = [
+      `<button type="button" class="q-pill-btn ${nextFilter === 'all' ? 'active' : ''}" data-filter="all">Todo</button>`,
+      ...sections.map((sec) => `
+        <button type="button" class="q-pill-btn ${nextFilter === sec.id ? 'active' : ''}" data-filter="${escapeHtml(sec.id)}">
           ${escapeHtml(sec.title)}
         </button>
       `)
     ].join('');
 
-    filterPillsWrap.innerHTML = pillsHtml;
-    filterPillsWrap.querySelectorAll('.q-pill-btn').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        currentFilter = btn.dataset.filter || 'all';
-        renderFilterPills();
-        renderQitchenMenu();
-        const menuPanel = document.querySelector('#view-menu .q-panel-bordered');
-        if (menuPanel) menuPanel.scrollTop = 0;
-      });
+    wrap.querySelectorAll('.q-pill-btn').forEach((btn) => {
+      btn.addEventListener('click', () => onSelect(btn.dataset.filter || 'all'));
     });
+
+    return nextFilter;
   }
 
-  function renderQitchenMenu() {
-    if (!menuContainer) return;
-    const sections = currentFilter === 'all'
-      ? menuSections
-      : menuSections.filter((sec) => sec.id === currentFilter);
+  function renderFilterPills() {
+    currentMenuFilter = renderFilterPillsInto(
+      foodPillsWrap,
+      sectionsByGroup('food'),
+      currentMenuFilter,
+      (nextFilter) => {
+        currentMenuFilter = nextFilter;
+        renderFilterPills();
+        renderQitchenMenu();
+        scrollMenuPanelToTop('#view-menu');
+      }
+    );
 
-    menuContainer.innerHTML = sections.map((sec) => {
-      const visibleItems = (sec.items || []).filter((it) => it.available !== false);
-      if (visibleItems.length === 0) return '';
-      return `
-        <div class="q-menu-group" data-section-id="${escapeHtml(sec.id)}">
-          <div class="q-diamond-heading">
-            <span class="q-diamond-line"></span>
-            <span class="q-diamond-symbol"></span>
-            <h2>${escapeHtml(sec.title)}</h2>
-            <span class="q-diamond-symbol"></span>
-            <span class="q-diamond-line"></span>
-          </div>
-          ${visibleItems.map((item, idx) => `
-            <article
-              class="q-dish-row"
-              role="button"
-              tabindex="0"
-              data-sec-id="${escapeHtml(sec.id)}"
-              data-item-idx="${idx}"
-              aria-label="Ver detalle de ${escapeHtml(item.name)}"
-            >
-              <div class="q-dish-thumb-wrap">
-                <img
-                  class="q-dish-thumb"
-                  src="${escapeHtml(item.image)}"
-                  alt="${escapeHtml(item.name)}"
-                  style="object-position: ${escapeHtml(item.imagePosition || '50% 50%')}; transform-origin: ${escapeHtml(item.imagePosition || '50% 50%')}; transform: scale(${Number(item.imageZoom) || 1});"
-                  loading="lazy"
-                />
-              </div>
-              <div class="q-dish-body">
-                <div class="q-dish-header">
-                  <div class="q-dish-title-wrap">
-                    <h3 class="q-dish-name">${escapeHtml(item.name)}</h3>
-                    <span class="q-leaf-badge">${escapeHtml(item.badge || '★')}</span>
-                  </div>
-                  <span class="q-dotted-leader"></span>
-                  <span class="q-dish-price">${escapeHtml(item.price)}</span>
-                </div>
-                <p class="q-dish-desc">${escapeHtml(item.desc)}</p>
-                <span class="q-dish-cta-hint">Ver detalle &amp; ritual →</span>
-              </div>
-            </article>
-          `).join('')}
+    currentDrinksFilter = renderFilterPillsInto(
+      drinksPillsWrap,
+      sectionsByGroup('drinks'),
+      currentDrinksFilter,
+      (nextFilter) => {
+        currentDrinksFilter = nextFilter;
+        renderFilterPills();
+        renderQitchenMenu();
+        scrollMenuPanelToTop('#view-drinks');
+      }
+    );
+  }
+
+  function buildSectionHtml(sec) {
+    const visibleItems = (sec.items || []).filter((it) => it.available !== false);
+    if (visibleItems.length === 0) return '';
+    return `
+      <div class="q-menu-group" data-section-id="${escapeHtml(sec.id)}">
+        <div class="q-diamond-heading">
+          <span class="q-diamond-line"></span>
+          <span class="q-diamond-symbol"></span>
+          <h2>${escapeHtml(sec.title)}</h2>
+          <span class="q-diamond-symbol"></span>
+          <span class="q-diamond-line"></span>
         </div>
-      `;
-    }).join('');
+        ${visibleItems.map((item, idx) => `
+          <article
+            class="q-dish-row"
+            role="button"
+            tabindex="0"
+            data-sec-id="${escapeHtml(sec.id)}"
+            data-item-idx="${idx}"
+            aria-label="Ver detalle de ${escapeHtml(item.name)}"
+          >
+            <div class="q-dish-thumb-wrap">
+              <img
+                class="q-dish-thumb"
+                src="${escapeHtml(item.image)}"
+                alt="${escapeHtml(item.name)}"
+                style="object-position: ${escapeHtml(item.imagePosition || '50% 50%')}; transform-origin: ${escapeHtml(item.imagePosition || '50% 50%')}; transform: scale(${Number(item.imageZoom) || 1});"
+                loading="lazy"
+              />
+            </div>
+            <div class="q-dish-body">
+              <div class="q-dish-header">
+                <div class="q-dish-title-wrap">
+                  <h3 class="q-dish-name">${escapeHtml(item.name)}</h3>
+                  <span class="q-leaf-badge">${escapeHtml(item.badge || '★')}</span>
+                </div>
+                <span class="q-dotted-leader"></span>
+                <span class="q-dish-price">${escapeHtml(item.price)}</span>
+              </div>
+              <p class="q-dish-desc">${escapeHtml(item.desc)}</p>
+              <span class="q-dish-cta-hint">Ver detalle &amp; ritual →</span>
+            </div>
+          </article>
+        `).join('')}
+      </div>
+    `;
+  }
 
-    menuContainer.querySelectorAll('.q-dish-row').forEach((row) => {
+  function renderSectionsInto(container, sections, activeFilter) {
+    if (!container) return;
+    const visibleSections = activeFilter === 'all'
+      ? sections
+      : sections.filter((sec) => sec.id === activeFilter);
+
+    container.innerHTML = visibleSections.map(buildSectionHtml).join('');
+
+    container.querySelectorAll('.q-dish-row').forEach((row) => {
       const handleOpen = () => {
         const secId = row.getAttribute('data-sec-id');
         const idx = Number(row.getAttribute('data-item-idx'));
@@ -418,6 +532,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
     });
+  }
+
+  function renderQitchenMenu() {
+    renderSectionsInto(drinksContainer, sectionsByGroup('drinks'), currentDrinksFilter);
+    renderSectionsInto(menuContainer, sectionsByGroup('food'), currentMenuFilter);
 
     // If the modal is currently open for a dish, refresh its content in real time too
     if (activeModalDish && activeModalDish.item && dishModal?.classList.contains('open')) {
@@ -463,7 +582,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
       if (videos.main) {
-        VIEW_CONFIG.home.video = videos.main;
         VIEW_CONFIG.menu.video = videos.main;
         VIEW_CONFIG.reservation.video = videos.main;
       }
@@ -510,8 +628,8 @@ document.addEventListener('DOMContentLoaded', () => {
         showcaseVideo.setAttribute('poster', cfg.poster);
         showcaseVideo.load();
       }
-      showcaseVideo.muted = !cfg.unmute;
-      showcaseVideo.volume = cfg.unmute ? 0.85 : 0;
+      // Sound is opt-in via #btnShowcaseSound and never survives a view change.
+      muteShowcaseSound();
       showcaseVideo.play().catch(() => {
         showcaseVideo.muted = true;
         showcaseVideo.play().catch(() => {});
@@ -528,6 +646,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     currentView = targetView;
 
+    scrollToActiveSection(targetView);
+  }
+
+  function scrollToActiveSection(targetView) {
     const targetSection = document.getElementById(`view-${targetView}`);
     if (targetSection) {
       const panel = targetSection.querySelector('.q-panel-bordered');
@@ -538,12 +660,20 @@ document.addEventListener('DOMContentLoaded', () => {
     if (rightCol) rightCol.scrollTop = 0;
 
     if (window.innerWidth <= 1024) {
-      if (targetView !== 'home' && rightCol) {
-        rightCol.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      } else {
+      if (targetView === 'home') {
         window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
         document.documentElement.scrollTop = 0;
         document.body.scrollTop = 0;
+      } else {
+        const targetEl = targetSection || rightCol;
+        if (targetEl) {
+          const navbar = document.querySelector('.qitchen-pill-navbar');
+          const navBottom = navbar ? navbar.getBoundingClientRect().bottom : 70;
+          const rect = targetEl.getBoundingClientRect();
+          const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+          const targetY = scrollTop + rect.top - (navBottom + 12);
+          window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
+        }
       }
     } else {
       window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
@@ -554,35 +684,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function navigateView(targetView) {
     if (targetView === currentView) {
-      if (window.innerWidth <= 1024 && targetView !== 'home') {
-        const rightCol = document.getElementById('qitchenRightCol');
-        if (rightCol) {
-          rightCol.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      }
+      scrollToActiveSection(targetView);
       return;
     }
 
-    const scrollToActiveSection = () => {
-      if (window.innerWidth <= 1024 && targetView !== 'home') {
-        const rightCol = document.getElementById('qitchenRightCol');
-        if (rightCol) {
-          rightCol.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      }
-    };
-
     if (!document.startViewTransition) {
       updateDOMView(targetView);
-      scrollToActiveSection();
+      scrollToActiveSection(targetView);
+      requestAnimationFrame(() => scrollToActiveSection(targetView));
+      setTimeout(() => scrollToActiveSection(targetView), 60);
       return;
     }
 
     const vt = document.startViewTransition(() => updateDOMView(targetView));
     if (vt && vt.finished) {
-      vt.finished.then(scrollToActiveSection).catch(scrollToActiveSection);
+      vt.finished.then(() => {
+        scrollToActiveSection(targetView);
+        requestAnimationFrame(() => scrollToActiveSection(targetView));
+        setTimeout(() => scrollToActiveSection(targetView), 60);
+      }).catch(() => {
+        scrollToActiveSection(targetView);
+      });
     } else {
-      setTimeout(scrollToActiveSection, 50);
+      setTimeout(() => scrollToActiveSection(targetView), 50);
     }
   }
 

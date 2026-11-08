@@ -18,6 +18,19 @@ function slugify(text) {
     .replace(/^-+|-+$/g, '') || `item-${Date.now()}`;
 }
 
+// Two public menu blocks: Tragos & Bebidas (barra) vs La Carta (cocina & tapeo)
+const CATEGORY_GROUP_LABELS = {
+  drinks: '🍸 Tragos & Bebidas',
+  food: '🍽️ La Carta'
+};
+
+function getSectionGroup(sec) {
+  if (window.MeryStore && typeof window.MeryStore.getCategoryGroup === 'function') {
+    return window.MeryStore.getCategoryGroup(sec);
+  }
+  return sec && sec.group === 'food' ? 'food' : 'drinks';
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const loginScreen = document.getElementById('adminLoginScreen');
   const dashboardScreen = document.getElementById('adminDashboardScreen');
@@ -188,6 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const categoryForm = document.getElementById('adminCategoryForm');
   const catFormSlug = document.getElementById('catFormSlug');
   const catFormTitle = document.getElementById('catFormTitle');
+  const catFormGroup = document.getElementById('catFormGroup');
 
   // Unified Custom Confirmation Modal controls
   const confirmModal = document.getElementById('adminConfirmModal');
@@ -1010,6 +1024,7 @@ document.addEventListener('DOMContentLoaded', () => {
           ${menuSections.map((s) => {
             const count = (s.items || []).length;
             const isActive = sec && s.id === sec.id;
+            const sectionGroup = getSectionGroup(s);
             return `
               <button
                 type="button"
@@ -1019,6 +1034,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 aria-selected="${isActive}"
               >
                 <span>${escapeHtml(s.title)}</span>
+                <span class="admin-cat-pill-group is-${sectionGroup}">${CATEGORY_GROUP_LABELS[sectionGroup]}</span>
                 <span class="admin-cat-pill-count">${count}</span>
               </button>
             `;
@@ -1068,7 +1084,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (activeCategoryTitle) activeCategoryTitle.textContent = sec.title;
     if (activeCategoryCount) {
-      activeCategoryCount.textContent = `${allItems.length} ${allItems.length === 1 ? 'ítem cargado' : 'ítems cargados'} en esta categoría`;
+      const sectionGroup = getSectionGroup(sec);
+      activeCategoryCount.innerHTML = `${allItems.length} ${allItems.length === 1 ? 'ítem cargado' : 'ítems cargados'} en esta categoría <span class="admin-cat-group-badge is-${sectionGroup}">${CATEGORY_GROUP_LABELS[sectionGroup]}</span>`;
     }
     if (btnDeleteActiveCat) {
       btnDeleteActiveCat.hidden = menuSections.length <= 1;
@@ -1867,8 +1884,8 @@ document.addEventListener('DOMContentLoaded', () => {
     },
     {
       key: 'main',
-      title: 'Video principal y La Carta (Botella 360°)',
-      desc: 'Video en bucle que acompaña la portada de inicio, el menú y la vista de reservas.',
+      title: 'Video de La Carta & Reservas (Botella 360°)',
+      desc: 'Video en bucle para las vistas La Carta y Reservas. La portada de inicio y Tragos & Bebidas usan el video del hielo 13/11.',
       defaultUrl: 'assets/video/bottle-360-loop.mp4'
     },
     {
@@ -2223,10 +2240,12 @@ document.addEventListener('DOMContentLoaded', () => {
       catModalHeading.textContent = 'Renombrar categoría';
       catFormSlug.value = sec.id;
       catFormTitle.value = sec.title;
+      if (catFormGroup) catFormGroup.value = getSectionGroup(sec);
     } else {
       catModalHeading.textContent = 'Nueva categoría';
       catFormSlug.value = '';
       catFormTitle.value = '';
+      if (catFormGroup) catFormGroup.value = 'drinks';
     }
     categoryModal.hidden = false;
   }
@@ -2248,17 +2267,22 @@ document.addEventListener('DOMContentLoaded', () => {
       const existingSlug = catFormSlug.value.trim();
       const title = catFormTitle.value.trim();
       if (!title) return;
+      const sectionGroup = catFormGroup && catFormGroup.value === 'food' ? 'food' : 'drinks';
 
       let targetSlug = existingSlug;
       if (existingSlug) {
         const sec = menuSections.find((s) => s.id === existingSlug);
-        if (sec) sec.title = title;
+        if (sec) {
+          sec.title = title;
+          sec.group = sectionGroup;
+        }
       } else {
         targetSlug = slugify(title);
         menuSections.push({
           id: targetSlug,
           title,
           sort_order: menuSections.length + 1,
+          group: sectionGroup,
           items: []
         });
         activeCategoryId = targetSlug;
@@ -2272,7 +2296,8 @@ document.addEventListener('DOMContentLoaded', () => {
         client.from('menu_categories').upsert({
           slug: targetSlug,
           title,
-          sort_order: menuSections.length
+          sort_order: menuSections.length,
+          section_type: sectionGroup
         }, { onConflict: 'slug' }).then(() => {}).catch(() => {});
       }
     });

@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,900&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;0,6..96,700;0,6..96,900;1,6..96,500;1,6..96,700;1,6..96,900&family=Forum&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20" />
+  <link rel="stylesheet" href="styles.css?v=23" />
   <style>
     /* V2 Specific styles & Google Maps embed box */
     .qitchen-app[data-view]:not([data-view="home"]) .q-hero-subtag {
@@ -227,7 +227,8 @@
       </div>
 
       <button type="button" class="q-overlay-link" data-overlay-goto="home">Inicio</button>
-      <button type="button" class="q-overlay-link" data-overlay-goto="menu">La Carta &amp; Tragos</button>
+      <button type="button" class="q-overlay-link" data-overlay-goto="drinks">Tragos &amp; Bebidas</button>
+      <button type="button" class="q-overlay-link" data-overlay-goto="menu">La Carta</button>
       <button type="button" class="q-overlay-link roulette-overlay-link" id="btnOverlayRoulette" data-overlay-goto="roulette">
         <span>Promos y Descuentos</span>
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align: middle; margin-left: 6px;">
@@ -249,12 +250,12 @@
   <!-- QITCHEN FRAMER SPLIT-SCREEN BENTO SHELL -->
   <div id="qitchenApp" class="qitchen-app" data-view="home">
 
-    <!-- LEFT BENTO SHOWCASE (Always muted, video loop) -->
+    <!-- LEFT BENTO SHOWCASE (Video loop with optional subtle sound toggle) -->
     <aside class="qitchen-left-showcase">
       <video
         id="bottleShowcaseVideo"
-        src="assets/video/bottle-360-loop.mp4"
-        poster="assets/img/bottle-hero-isolated.jpg"
+        src="assets/video/ice-cube-1311.mp4"
+        poster="assets/img/ice-cube-previa.jpg"
         autoplay
         loop
         muted
@@ -266,6 +267,7 @@
         <button type="button" class="q-brand-logo" data-goto="home" aria-label="Mery La Previa - Inicio">
           <img src="assets/img/logo-mery-la-previa.webp" alt="Mery Jane La Previa" class="q-nav-brand-img" />
         </button>
+        <button type="button" class="q-nav-link" data-goto="drinks">Tragos &amp; Bebidas</button>
         <button type="button" class="q-nav-link" data-goto="menu">La Carta</button>
         <button type="button" class="q-nav-link" data-goto="about">Nosotros</button>
         <button type="button" class="q-nav-link q-nav-book" data-goto="reservation">RESERVA ACÁ</button>
@@ -276,6 +278,32 @@
           </svg>
         </button>
       </nav>
+
+      <!-- Subtle sound toggle for the ice cube hero video (auto-mutes after one loop) -->
+      <button
+        type="button"
+        id="btnShowcaseSound"
+        class="q-showcase-sound-btn"
+        aria-pressed="false"
+        aria-label="Activar el sonido del video"
+        title="Sonido del video"
+      >
+        <span class="q-showcase-sound-icon q-showcase-sound-icon--muted" aria-hidden="true">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 5 6 9H3v6h3l5 4V5z"/>
+            <line x1="22" y1="9" x2="16" y2="15"/>
+            <line x1="16" y1="9" x2="22" y2="15"/>
+          </svg>
+        </span>
+        <span class="q-showcase-sound-icon q-showcase-sound-icon--on" aria-hidden="true">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 5 6 9H3v6h3l5 4V5z"/>
+            <path d="M15.5 8.5a5 5 0 0 1 0 7"/>
+            <path d="M18.5 5.5a9.5 9.5 0 0 1 0 13"/>
+          </svg>
+        </span>
+        <span class="q-showcase-sound-label">Sonido</span>
+      </button>
 
       <!-- Bottom-Left Giant Title -->
       <div class="qitchen-hero-bottom">
@@ -299,19 +327,28 @@
     <!-- RIGHT BENTO COLUMN -->
     <main id="qitchenRightCol" class="qitchen-right-column">
 
-      <!-- VIEW 00: HOME CARD STACK (Orden: Carta primero, luego Promos y Descuentos, luego Reservas, luego Nosotros) -->
+      <!-- VIEW 00: HOME CARD STACK (Orden: Tragos primero, luego La Carta, luego Promos, luego Reservas, luego Nosotros) -->
       <section id="view-home" class="q-view active q-home-stack" aria-label="Secciones Principales">
         
-        <!-- CARD 1: LA CARTA -->
-        <button type="button" class="q-bento-card" data-goto="menu">
-          <img src="assets/img/ice-cube-previa.jpg" alt="La Carta &amp; Tragos" />
+        <!-- CARD 1: TRAGOS & BEBIDAS -->
+        <button type="button" class="q-bento-card" data-goto="drinks">
+          <img src="assets/img/cocktails-neon.jpg" alt="Tragos &amp; Bebidas" />
           <div class="q-card-corner-tab">
-            <span class="q-corner-label">La Carta &amp; Tragos</span>
+            <span class="q-corner-label">Tragos &amp; Bebidas</span>
             <span class="q-corner-circle">→</span>
           </div>
         </button>
 
-        <!-- CARD 2: PROMOS Y DESCUENTOS (RULETA) -->
+        <!-- CARD 2: LA CARTA -->
+        <button type="button" class="q-bento-card" data-goto="menu">
+          <img src="assets/img/steak-flash.jpg" alt="La Carta" />
+          <div class="q-card-corner-tab">
+            <span class="q-corner-label">La Carta</span>
+            <span class="q-corner-circle">→</span>
+          </div>
+        </button>
+
+        <!-- CARD 3: PROMOS Y DESCUENTOS (RULETA) -->
         <button type="button" id="btnOpenRoulette" class="q-bento-card" data-goto="roulette" aria-label="Ver Promos y Descuentos">
           <img src="assets/img/ruleta-previa-card.webp" alt="Promos y Descuentos — Beneficios Exclusivos" />
           <div class="q-card-corner-tab">
@@ -324,16 +361,16 @@
           </div>
         </button>
 
-        <!-- CARD 3: RESERVAS -->
+        <!-- CARD 4: RESERVAS -->
         <button type="button" class="q-bento-card" data-goto="reservation">
-          <img src="assets/img/steak-flash.jpg" alt="Reservas" />
+          <img src="assets/img/neon-wall-mery.jpg" alt="Reservas" />
           <div class="q-card-corner-tab">
             <span class="q-corner-label">Reservas</span>
             <span class="q-corner-circle">→</span>
           </div>
         </button>
 
-        <!-- CARD 4: NOSOTROS -->
+        <!-- CARD 5: NOSOTROS -->
         <button type="button" class="q-bento-card" data-goto="about">
           <img src="assets/img/dj-previa.jpg" alt="Nosotros" />
           <div class="q-card-corner-tab">
@@ -343,14 +380,30 @@
         </button>
       </section>
 
+      <!-- VIEW 01a: /DRINKS — TRAGOS & BEBIDAS (Barra: cocktails, vinos, espumantes) -->
+      <section id="view-drinks" class="q-view" aria-label="Tragos y Bebidas">
+        <div class="q-panel-bordered">
+          <div id="drinksFilterPills" class="q-filter-pills" role="tablist">
+            <button type="button" class="q-pill-btn active" data-filter="all">Todo</button>
+            <button type="button" class="q-pill-btn" data-filter="cocktails">Cocktails 11:11</button>
+            <button type="button" class="q-pill-btn" data-filter="vinos">Mery Jane Wines</button>
+          </div>
+
+          <div id="qitchenDrinksContainer" class="q-menu-container"></div>
+
+          <footer class="q-panel-footer">
+            <span>Mery Jane • La Previa</span>
+            <span>Barra de autor • Calle 101 Nº 85 • Guernica</span>
+          </footer>
+        </div>
+      </section>
+
       <!-- VIEW 01: /MENU (La Carta) -->
       <section id="view-menu" class="q-view" aria-label="La Carta">
         <div class="q-panel-bordered">
           <div class="q-filter-pills" role="tablist">
             <button type="button" class="q-pill-btn active" data-filter="all">Todo</button>
-            <button type="button" class="q-pill-btn" data-filter="cocktails">Cocktails 11:11</button>
             <button type="button" class="q-pill-btn" data-filter="cortes">Carnes &amp; Tapeo</button>
-            <button type="button" class="q-pill-btn" data-filter="vinos">Mery Jane Wines</button>
           </div>
 
           <div id="qitchenMenuContainer" class="q-menu-container"></div>
@@ -918,7 +971,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js?v=21"></script>
-  <script src="version2.js?v=2"></script>
+  <script src="supabase-config.js?v=22"></script>
+  <script src="version2.js?v=3"></script>
 </body>
 </html>
