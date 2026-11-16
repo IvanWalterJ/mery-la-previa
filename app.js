@@ -22,7 +22,7 @@ const SHOWCASE_MEDIA = {
   }
 };
 const LEGACY_PREVIA_VIDEO = 'assets/video/ice-cube-1311.mp4';
-const HERO_TEXT_REVEAL_TIME = 6.45;
+const HERO_TEXT_REVEAL_TIME = 6.6;
 
 const MOBILE_SHOWCASE_MQ =
   typeof window !== 'undefined' && typeof window.matchMedia === 'function'
@@ -90,6 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnDismissIntro = document.getElementById('btnDismissIntro');
   const leftHeroTitle = document.getElementById('leftHeroTitle');
   const showcaseVideo = document.getElementById('bottleShowcaseVideo');
+  const showcaseLoopVideo = document.getElementById('bottleShowcaseLoopVideo');
   const btnShowcaseSound = document.getElementById('btnShowcaseSound');
   const menuOverlay = document.getElementById('qitchenMenuOverlay');
   const btnOpenOverlay = document.getElementById('btnOpenOverlay');
@@ -205,10 +206,56 @@ document.addEventListener('DOMContentLoaded', () => {
       .catch(() => {});
   }
 
+  function syncPreloadedLoopLayer(variant) {
+    if (!showcaseLoopVideo || !variant) return;
+    const loopSrc = variant.loopVideo;
+    const dims = getShowcaseDimensions(loopSrc);
+    showcaseLoopVideo.loop = true;
+    showcaseLoopVideo.muted = true;
+    showcaseLoopVideo.volume = 0;
+    showcaseLoopVideo.dataset.logicalSrc = loopSrc;
+    showcaseLoopVideo.setAttribute('width', String(dims.width));
+    showcaseLoopVideo.setAttribute('height', String(dims.height));
+    if (variant.loopPoster) {
+      showcaseLoopVideo.setAttribute('poster', variant.loopPoster);
+    }
+    if (showcaseLoopVideo.getAttribute('src') !== loopSrc) {
+      showcaseLoopVideo.setAttribute('src', loopSrc);
+      showcaseLoopVideo.load();
+    }
+  }
+
+  function shouldUseLoopLayer(targetView) {
+    if (!showcaseLoopVideo || !showcaseIntroCompleted) return false;
+    const viewKey = targetView || currentView;
+    if (viewKey === 'about' && showcaseCustomPrevia) return false;
+    return viewKey === 'home' || viewKey === 'drinks' || viewKey === 'about';
+  }
+
+  function activateShowcaseLayer(useLoopLayer) {
+    if (!showcaseVideo) return;
+    if (useLoopLayer && showcaseLoopVideo) {
+      showcaseLoopVideo.classList.remove('is-instant-hidden');
+      showcaseLoopVideo.muted = true;
+      showcaseLoopVideo.volume = 0;
+      showcaseLoopVideo.play().catch(() => {});
+      showcaseVideo.classList.add('is-instant-hidden');
+      showcaseVideo.pause();
+    } else {
+      showcaseVideo.classList.remove('is-instant-hidden');
+      if (showcaseLoopVideo) {
+        showcaseLoopVideo.classList.add('is-instant-hidden');
+        showcaseLoopVideo.pause();
+      }
+    }
+  }
+
   if (showcaseVideo) {
     const initialVariant = syncShowcaseViewConfig();
     const curtainVisible = introCurtain && !introCurtain.classList.contains('dismissed');
     setShowcaseSource(VIEW_CONFIG.home.video, VIEW_CONFIG.home.poster, false);
+    syncPreloadedLoopLayer(initialVariant);
+    activateShowcaseLayer(false);
 
     if (curtainVisible) {
       showcaseVideo.autoplay = false;
@@ -222,6 +269,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     syncHeroTextVisibility();
     warmShowcaseLoop(initialVariant);
+
+    showcaseVideo.addEventListener('playing', () => {
+      if (showcaseVideo.hasAttribute('poster')) {
+        showcaseVideo.removeAttribute('poster');
+      }
+    });
 
     showcaseVideo.addEventListener('timeupdate', () => {
       const currentLogical =
@@ -237,9 +290,15 @@ document.addEventListener('DOMContentLoaded', () => {
       if (isHeroIntroVideo(currentLogical)) {
         showcaseIntroCompleted = true;
         revealHeroText();
+        muteShowcaseSound();
         const variant = syncShowcaseViewConfig();
-        setShowcaseSource(variant.loopVideo, variant.loopPoster, true);
-        showcaseVideo.play().catch(() => {});
+        syncPreloadedLoopLayer(variant);
+        if (showcaseLoopVideo) {
+          activateShowcaseLayer(true);
+        } else {
+          setShowcaseSource(variant.loopVideo, variant.loopPoster, true);
+          showcaseVideo.play().catch(() => {});
+        }
       }
     });
 
@@ -249,8 +308,14 @@ document.addEventListener('DOMContentLoaded', () => {
       MOBILE_SHOWCASE_MQ.addEventListener('change', () => {
         const variant = syncShowcaseViewConfig();
         warmShowcaseLoop(variant);
+        syncPreloadedLoopLayer(variant);
         const cfg = VIEW_CONFIG[currentView];
         if (!cfg) return;
+        if (shouldUseLoopLayer(currentView)) {
+          activateShowcaseLayer(true);
+          return;
+        }
+        activateShowcaseLayer(false);
         const currentLogical =
           showcaseVideo.dataset.logicalSrc || showcaseVideo.getAttribute('src');
         if (currentLogical !== cfg.video) {
@@ -306,7 +371,12 @@ document.addEventListener('DOMContentLoaded', () => {
     showcaseVideo.volume = 0.85;
     const playAttempt = showcaseVideo.play();
     if (playAttempt && typeof playAttempt.catch === 'function') {
-      playAttempt.catch(() => muteShowcaseSound());
+      playAttempt.catch(() => {
+        muteShowcaseSound();
+        showcaseVideo.play().catch(() => {
+          revealHeroText();
+        });
+      });
     }
     updateShowcaseSoundUI(true);
     showcaseSoundTimer = setTimeout(muteShowcaseSound, SHOWCASE_SOUND_CYCLE_MS);
@@ -417,15 +487,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentLogical =
           showcaseVideo.dataset.logicalSrc || showcaseVideo.getAttribute('src');
         if (isHeroIntroVideo(currentLogical)) {
+          activateShowcaseLayer(false);
           showcaseVideo.loop = false;
           try {
             showcaseVideo.currentTime = 0;
           } catch (_) {}
           syncHeroTextVisibility();
           scheduleHeroTextSafetyReveal();
-          showcaseVideo.play().catch(() => {
-            revealHeroText();
-          });
+          enableShowcaseSound();
         }
       }
     });
@@ -817,10 +886,15 @@ document.addEventListener('DOMContentLoaded', () => {
         VIEW_CONFIG.about.video = videos.previa;
       }
       if (showcaseVideo && currentView && VIEW_CONFIG[currentView]) {
+        if (shouldUseLoopLayer(currentView)) {
+          activateShowcaseLayer(true);
+          return;
+        }
         const activeCfg = VIEW_CONFIG[currentView];
         const currentLogical =
           showcaseVideo.dataset.logicalSrc || showcaseVideo.getAttribute('src');
         if (currentLogical !== activeCfg.video) {
+          activateShowcaseLayer(false);
           setShowcaseSource(
             activeCfg.video,
             activeCfg.poster,
@@ -856,21 +930,26 @@ document.addEventListener('DOMContentLoaded', () => {
     if (leftHeroTitle) leftHeroTitle.innerHTML = cfg.title;
 
     if (showcaseVideo) {
-      const currentLogical =
-        showcaseVideo.dataset.logicalSrc || showcaseVideo.getAttribute('src');
-      const shouldLoop = !isHeroIntroVideo(cfg.video);
-      if (currentLogical !== cfg.video) {
-        setShowcaseSource(cfg.video, cfg.poster, shouldLoop);
+      if (shouldUseLoopLayer(targetView)) {
+        activateShowcaseLayer(true);
       } else {
-        showcaseVideo.loop = shouldLoop;
-      }
-      // Sound is opt-in via #btnShowcaseSound and never survives a view change.
-      muteShowcaseSound();
-      if (!introCurtain || introCurtain.classList.contains('dismissed')) {
-        showcaseVideo.play().catch(() => {
-          showcaseVideo.muted = true;
-          showcaseVideo.play().catch(() => {});
-        });
+        activateShowcaseLayer(false);
+        const currentLogical =
+          showcaseVideo.dataset.logicalSrc || showcaseVideo.getAttribute('src');
+        const shouldLoop = !isHeroIntroVideo(cfg.video);
+        if (currentLogical !== cfg.video) {
+          setShowcaseSource(cfg.video, cfg.poster, shouldLoop);
+        } else {
+          showcaseVideo.loop = shouldLoop;
+        }
+        // Sound is opt-in via #btnShowcaseSound and never survives a view change.
+        muteShowcaseSound();
+        if (!introCurtain || introCurtain.classList.contains('dismissed')) {
+          showcaseVideo.play().catch(() => {
+            showcaseVideo.muted = true;
+            showcaseVideo.play().catch(() => {});
+          });
+        }
       }
     }
 
