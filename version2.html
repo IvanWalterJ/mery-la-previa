@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,900&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;0,6..96,700;0,6..96,900;1,6..96,500;1,6..96,700;1,6..96,900&family=Forum&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=23" />
+  <link rel="stylesheet" href="styles.css?v=25" />
   <style>
     /* V2 Specific styles & Google Maps embed box */
     .qitchen-app[data-view]:not([data-view="home"]) .q-hero-subtag {
@@ -250,16 +250,18 @@
   <!-- QITCHEN FRAMER SPLIT-SCREEN BENTO SHELL -->
   <div id="qitchenApp" class="qitchen-app" data-view="home">
 
-    <!-- LEFT BENTO SHOWCASE (Video loop with optional subtle sound toggle) -->
+    <!-- LEFT BENTO SHOWCASE (Part 1 Intro -> Seamless Part 2 Loop, or 360° Bottle) -->
     <aside class="qitchen-left-showcase">
       <video
         id="bottleShowcaseVideo"
-        src="assets/video/ice-cube-1311.mp4"
-        poster="assets/img/ice-cube-previa.jpg"
+        src="assets/video/variaciones-flow/v5-parte1-wide-16x9.mp4"
+        poster="assets/img/portada-barra-wide-empieza-aca.jpg"
+        width="1920"
+        height="1080"
         autoplay
-        loop
         muted
         playsinline
+        aria-hidden="true"
       ></video>
 
       <!-- Floating Pill Navbar: Logo on left, Hamburger on the far right on mobile -->
@@ -308,7 +310,7 @@
       <!-- Bottom-Left Giant Title -->
       <div class="qitchen-hero-bottom">
         <h1 id="leftHeroTitle" class="qitchen-giant-title">
-          MERY<br />LA PREVIA
+          MERY JANE<br />LA PREVIA
         </h1>
         <div class="q-hero-subtag">
           <span class="q-hero-subtag-dot"></span>
@@ -972,6 +974,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js?v=22"></script>
-  <script src="version2.js?v=3"></script>
+  <script src="version2.js?v=4"></script>
 </body>
 </html>

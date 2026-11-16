@@ -665,6 +665,39 @@ html, body {
   margin-top: auto;
 }
 
+.qitchen-hero-bottom .qitchen-giant-title,
+.qitchen-hero-bottom .q-hero-subtag {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 1.15s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .qitchen-hero-bottom .qitchen-giant-title,
+  .qitchen-hero-bottom .q-hero-subtag {
+    transform: translate3d(0, 10px, 0) scale(0.985);
+    filter: blur(8px);
+    will-change: opacity, transform, filter;
+    transition:
+      opacity 1.15s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 1.25s cubic-bezier(0.22, 1, 0.36, 1),
+      filter 1.15s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+
+.qitchen-hero-bottom.is-revealed .qitchen-giant-title,
+.qitchen-hero-bottom.is-revealed .q-hero-subtag {
+  opacity: 1;
+  pointer-events: auto;
+  transform: none;
+  filter: none;
+  will-change: auto;
+}
+
+.qitchen-hero-bottom.is-revealed .q-hero-subtag {
+  transition-delay: 0.16s;
+}
+
 .qitchen-giant-title {
   font-family: var(--font-forum);
   font-weight: 400;
@@ -1978,6 +2011,7 @@ select.q-select option,
   .qitchen-app[data-view="home"] {
     height: auto;
     min-height: 100vh;
+    min-height: 100dvh;
     grid-template-columns: 1fr;
     padding: 16px;
     padding-top: 76px;
@@ -2078,8 +2112,20 @@ select.q-select option,
   }
 
   .qitchen-left-showcase {
-    min-height: 52vh;
+    height: auto;
+    min-height: 52dvh;
     padding: 24px;
+  }
+
+  /* Portrait phones/tablets: expand the 9:16 hero video grid cell so the full video renders uncropped */
+  @media (orientation: portrait) {
+    .qitchen-app:is([data-view="home"], [data-view="drinks"], [data-view="about"]) .qitchen-left-showcase {
+      width: 100%;
+      height: auto;
+      aspect-ratio: 9 / 16;
+      min-height: 0;
+      max-height: none;
+    }
   }
 
   .q-home-stack {
@@ -2138,8 +2184,15 @@ select.q-select option,
     display: none;
   }
 
+  .qitchen-app,
+  .qitchen-app[data-view="home"] {
+    padding: 10px;
+    padding-top: 72px;
+    gap: 14px;
+  }
+
   .qitchen-left-showcase {
-    min-height: 46vh;
+    min-height: 46dvh;
     padding: 18px;
   }
 

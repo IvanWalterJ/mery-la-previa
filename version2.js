@@ -15,17 +15,55 @@ const FALLBACK_SECTIONS = window.MeryStore
   ? window.MeryStore.DEFAULT_MENU_SECTIONS
   : [];
 
+const SHOWCASE_MEDIA = {
+  wide: {
+    introVideo: 'assets/video/variaciones-flow/v5-parte1-wide-16x9.mp4',
+    introPoster: 'assets/img/portada-barra-wide-empieza-aca.jpg',
+    loopVideo: 'assets/video/variaciones-flow/v5-parte2-wide-loop.mp4',
+    loopPoster: 'assets/img/portada-barra-wide-clean.jpg',
+    width: 1920,
+    height: 1080
+  },
+  portrait: {
+    introVideo: 'assets/video/variaciones-flow/v5-parte1-texto-adelante.mp4',
+    introPoster: 'assets/img/portada-barra-empieza-aca.jpg',
+    loopVideo: 'assets/video/variaciones-flow/v5-parte2-loop.mp4',
+    loopPoster: 'assets/img/portada-barra-clean-notext.jpg',
+    width: 1080,
+    height: 1920
+  }
+};
+const LEGACY_PREVIA_VIDEO = 'assets/video/ice-cube-1311.mp4';
+const HERO_TEXT_REVEAL_TIME = 6.45;
+
+const MOBILE_SHOWCASE_MQ =
+  typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+    ? window.matchMedia('(max-width: 1024px) and (orientation: portrait)')
+    : null;
+
+function getActiveShowcaseVariant() {
+  return MOBILE_SHOWCASE_MQ && MOBILE_SHOWCASE_MQ.matches
+    ? SHOWCASE_MEDIA.portrait
+    : SHOWCASE_MEDIA.wide;
+}
+
+function isHeroIntroVideo(src) {
+  return src === SHOWCASE_MEDIA.wide.introVideo || src === SHOWCASE_MEDIA.portrait.introVideo;
+}
+
+const INITIAL_SHOWCASE_VARIANT = getActiveShowcaseVariant();
+
 const VIEW_CONFIG = {
   home: {
-    title: 'MERY<br />LA PREVIA',
-    video: 'assets/video/ice-cube-1311.mp4',
-    poster: 'assets/img/ice-cube-previa.jpg',
+    title: 'MERY JANE<br />LA PREVIA',
+    video: INITIAL_SHOWCASE_VARIANT.introVideo,
+    poster: INITIAL_SHOWCASE_VARIANT.introPoster,
     unmute: false
   },
   drinks: {
     title: 'TRAGOS &amp;<br />BEBIDAS',
-    video: 'assets/video/ice-cube-1311.mp4',
-    poster: 'assets/img/ice-cube-previa.jpg',
+    video: INITIAL_SHOWCASE_VARIANT.introVideo,
+    poster: INITIAL_SHOWCASE_VARIANT.introPoster,
     unmute: false
   },
   menu: {
@@ -36,8 +74,8 @@ const VIEW_CONFIG = {
   },
   about: {
     title: 'NOSOTROS<br />MERY JANE',
-    video: 'assets/video/ice-cube-1311.mp4',
-    poster: 'assets/img/ice-cube-previa.jpg',
+    video: INITIAL_SHOWCASE_VARIANT.introVideo,
+    poster: INITIAL_SHOWCASE_VARIANT.introPoster,
     unmute: false
   },
   reservation: {
@@ -69,9 +107,183 @@ document.addEventListener('DOMContentLoaded', () => {
   const menuOverlay = document.getElementById('qitchenMenuOverlay');
   const btnOpenOverlay = document.getElementById('btnOpenOverlay');
   const btnCloseOverlay = document.getElementById('btnCloseOverlay');
+  const heroBottom = document.querySelector('.qitchen-hero-bottom');
   const heroSubtag = document.querySelector('.q-hero-subtag');
 
-  // 1b. Hero showcase sound: opt-in, subtle, auto-muted after one video cycle
+  // 1b. Hero showcase sequence: desktop 16:9 wide vs portrait 9:16, Part 1 intro -> Part 2 loop
+  let currentView = 'home';
+  let showcaseIntroCompleted = false;
+  let showcaseCustomPrevia = false;
+  let heroTextSafetyTimer = null;
+  const showcaseLoopBlobs = Object.create(null);
+
+  function clearHeroTextSafetyTimer() {
+    if (heroTextSafetyTimer) {
+      clearTimeout(heroTextSafetyTimer);
+      heroTextSafetyTimer = null;
+    }
+  }
+
+  function revealHeroText() {
+    clearHeroTextSafetyTimer();
+    if (heroBottom) {
+      heroBottom.classList.add('is-revealed');
+    }
+  }
+
+  function scheduleHeroTextSafetyReveal() {
+    clearHeroTextSafetyTimer();
+    heroTextSafetyTimer = setTimeout(revealHeroText, 7600);
+  }
+
+  function syncHeroTextVisibility() {
+    if (!heroBottom) return;
+    const cfg = VIEW_CONFIG[currentView] || VIEW_CONFIG.home;
+    if (!isHeroIntroVideo(cfg.video) || showcaseIntroCompleted) {
+      revealHeroText();
+      return;
+    }
+    if (showcaseVideo && showcaseVideo.currentTime >= HERO_TEXT_REVEAL_TIME) {
+      revealHeroText();
+      return;
+    }
+    heroBottom.classList.remove('is-revealed');
+  }
+
+  function getShowcaseDimensions(logicalSrc) {
+    if (
+      logicalSrc === SHOWCASE_MEDIA.portrait.introVideo ||
+      logicalSrc === SHOWCASE_MEDIA.portrait.loopVideo
+    ) {
+      return { width: SHOWCASE_MEDIA.portrait.width, height: SHOWCASE_MEDIA.portrait.height };
+    }
+    if (
+      logicalSrc === SHOWCASE_MEDIA.wide.introVideo ||
+      logicalSrc === SHOWCASE_MEDIA.wide.loopVideo
+    ) {
+      return { width: SHOWCASE_MEDIA.wide.width, height: SHOWCASE_MEDIA.wide.height };
+    }
+    return { width: 1280, height: 720 };
+  }
+
+  function setShowcaseSource(logicalSrc, posterSrc, shouldLoop) {
+    if (!showcaseVideo) return;
+    const targetSrc = showcaseLoopBlobs[logicalSrc] || logicalSrc;
+    const dims = getShowcaseDimensions(logicalSrc);
+    showcaseVideo.loop = Boolean(shouldLoop);
+    showcaseVideo.dataset.logicalSrc = logicalSrc;
+    showcaseVideo.setAttribute('width', String(dims.width));
+    showcaseVideo.setAttribute('height', String(dims.height));
+    if (posterSrc) {
+      showcaseVideo.setAttribute('poster', posterSrc);
+    }
+    if (showcaseVideo.getAttribute('src') !== targetSrc) {
+      showcaseVideo.setAttribute('src', targetSrc);
+      showcaseVideo.load();
+    }
+  }
+
+  function syncShowcaseViewConfig() {
+    const variant = getActiveShowcaseVariant();
+    const targetVideo = showcaseIntroCompleted ? variant.loopVideo : variant.introVideo;
+    const targetPoster = showcaseIntroCompleted ? variant.loopPoster : variant.introPoster;
+    VIEW_CONFIG.home.video = targetVideo;
+    VIEW_CONFIG.home.poster = targetPoster;
+    VIEW_CONFIG.drinks.video = targetVideo;
+    VIEW_CONFIG.drinks.poster = targetPoster;
+    if (!showcaseCustomPrevia) {
+      VIEW_CONFIG.about.video = targetVideo;
+      VIEW_CONFIG.about.poster = targetPoster;
+    }
+    return variant;
+  }
+
+  function warmShowcaseLoop(variant) {
+    if (
+      !variant ||
+      showcaseLoopBlobs[variant.loopVideo] ||
+      typeof window.fetch !== 'function' ||
+      window.location.protocol === 'file:'
+    ) {
+      return;
+    }
+    const loopUrl = variant.loopVideo;
+    showcaseLoopBlobs[loopUrl] = loopUrl;
+    fetch(loopUrl)
+      .then((res) => (res.ok ? res.blob() : null))
+      .then((blob) => {
+        if (blob) {
+          showcaseLoopBlobs[loopUrl] = URL.createObjectURL(blob);
+        }
+      })
+      .catch(() => {});
+  }
+
+  if (showcaseVideo) {
+    const initialVariant = syncShowcaseViewConfig();
+    const curtainVisible = introCurtain && !introCurtain.classList.contains('dismissed');
+    setShowcaseSource(VIEW_CONFIG.home.video, VIEW_CONFIG.home.poster, false);
+
+    if (curtainVisible) {
+      showcaseVideo.autoplay = false;
+      showcaseVideo.pause();
+      try {
+        showcaseVideo.currentTime = 0;
+      } catch (_) {}
+    } else {
+      scheduleHeroTextSafetyReveal();
+    }
+
+    syncHeroTextVisibility();
+    warmShowcaseLoop(initialVariant);
+
+    showcaseVideo.addEventListener('timeupdate', () => {
+      const currentLogical =
+        showcaseVideo.dataset.logicalSrc || showcaseVideo.getAttribute('src');
+      if (isHeroIntroVideo(currentLogical) && showcaseVideo.currentTime >= HERO_TEXT_REVEAL_TIME) {
+        revealHeroText();
+      }
+    });
+
+    showcaseVideo.addEventListener('ended', () => {
+      const currentLogical =
+        showcaseVideo.dataset.logicalSrc || showcaseVideo.getAttribute('src');
+      if (isHeroIntroVideo(currentLogical)) {
+        showcaseIntroCompleted = true;
+        revealHeroText();
+        const variant = syncShowcaseViewConfig();
+        setShowcaseSource(variant.loopVideo, variant.loopPoster, true);
+        showcaseVideo.play().catch(() => {});
+      }
+    });
+
+    showcaseVideo.addEventListener('error', revealHeroText);
+
+    if (MOBILE_SHOWCASE_MQ && typeof MOBILE_SHOWCASE_MQ.addEventListener === 'function') {
+      MOBILE_SHOWCASE_MQ.addEventListener('change', () => {
+        const variant = syncShowcaseViewConfig();
+        warmShowcaseLoop(variant);
+        const cfg = VIEW_CONFIG[currentView];
+        if (!cfg) return;
+        const currentLogical =
+          showcaseVideo.dataset.logicalSrc || showcaseVideo.getAttribute('src');
+        if (currentLogical !== cfg.video) {
+          setShowcaseSource(cfg.video, cfg.poster, !isHeroIntroVideo(cfg.video));
+          syncHeroTextVisibility();
+          if (!introCurtain || introCurtain.classList.contains('dismissed')) {
+            if (isHeroIntroVideo(cfg.video) && !showcaseIntroCompleted) {
+              scheduleHeroTextSafetyReveal();
+            }
+            showcaseVideo.play().catch(() => {});
+          }
+        }
+      });
+    }
+  } else {
+    revealHeroText();
+  }
+
+  // Hero showcase sound: opt-in, subtle, auto-muted after one video cycle
   const SHOWCASE_SOUND_CYCLE_MS = 10000;
   let showcaseSoundTimer = null;
 
@@ -213,17 +425,33 @@ document.addEventListener('DOMContentLoaded', () => {
       clearTimeout(enterSafetyTimer);
       if (neonIntroVideo) neonIntroVideo.pause();
       introCurtain.classList.add('dismissed');
-      if (showcaseVideo) {
-        showcaseVideo.play().catch(() => {});
+      if (showcaseVideo && !showcaseIntroCompleted) {
+        const currentLogical =
+          showcaseVideo.dataset.logicalSrc || showcaseVideo.getAttribute('src');
+        if (isHeroIntroVideo(currentLogical)) {
+          showcaseVideo.loop = false;
+          try {
+            showcaseVideo.currentTime = 0;
+          } catch (_) {}
+          syncHeroTextVisibility();
+          scheduleHeroTextSafetyReveal();
+          showcaseVideo.play().catch(() => {
+            revealHeroText();
+          });
+        }
       }
     });
   }
 
-  // Ensure showcase video starts muted and silent
+  // Ensure showcase video starts muted and silent; only play immediately if intro curtain is already dismissed
   if (showcaseVideo) {
     showcaseVideo.muted = true;
     showcaseVideo.volume = 0;
-    showcaseVideo.play().catch(() => {});
+    if (!introCurtain || introCurtain.classList.contains('dismissed')) {
+      showcaseVideo.play().catch(() => {
+        revealHeroText();
+      });
+    }
   }
 
   // 2. Qitchen Fullscreen Hamburger Menu Overlay Controls
@@ -596,15 +824,24 @@ document.addEventListener('DOMContentLoaded', () => {
       VIEW_CONFIG.menu.video = videos.main;
       VIEW_CONFIG.reservation.video = videos.main;
     }
-    if (videos.previa) {
+    if (videos.previa && videos.previa !== LEGACY_PREVIA_VIDEO) {
+      showcaseCustomPrevia = true;
       VIEW_CONFIG.about.video = videos.previa;
     }
     if (showcaseVideo && currentView && VIEW_CONFIG[currentView]) {
       const activeCfg = VIEW_CONFIG[currentView];
-      if (showcaseVideo.getAttribute('src') !== activeCfg.video) {
-        showcaseVideo.setAttribute('src', activeCfg.video);
-        showcaseVideo.load();
-        showcaseVideo.play().catch(() => {});
+      const currentLogical =
+        showcaseVideo.dataset.logicalSrc || showcaseVideo.getAttribute('src');
+      if (currentLogical !== activeCfg.video) {
+        setShowcaseSource(
+          activeCfg.video,
+          activeCfg.poster,
+          !isHeroIntroVideo(activeCfg.video)
+        );
+        syncHeroTextVisibility();
+        if (!introCurtain || introCurtain.classList.contains('dismissed')) {
+          showcaseVideo.play().catch(() => {});
+        }
       }
     }
   }
@@ -623,8 +860,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // 4. Directional Slide View Transition + Left Video Swap (Always Silent)
-  let currentView = 'home';
-
   function updateDOMView(targetView) {
     muteShowcaseSound();
     const cfg = VIEW_CONFIG[targetView] || VIEW_CONFIG.home;
@@ -638,15 +873,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (showcaseVideo) {
-      const currentSrc = showcaseVideo.getAttribute('src');
-      if (currentSrc !== cfg.video) {
-        showcaseVideo.setAttribute('src', cfg.video);
-        showcaseVideo.setAttribute('poster', cfg.poster);
-        showcaseVideo.load();
+      const currentLogical =
+        showcaseVideo.dataset.logicalSrc || showcaseVideo.getAttribute('src');
+      const shouldLoop = !isHeroIntroVideo(cfg.video);
+      if (currentLogical !== cfg.video) {
+        setShowcaseSource(cfg.video, cfg.poster, shouldLoop);
+      } else {
+        showcaseVideo.loop = shouldLoop;
       }
       showcaseVideo.muted = true;
       showcaseVideo.volume = 0;
-      showcaseVideo.play().catch(() => {});
+      if (!introCurtain || introCurtain.classList.contains('dismissed')) {
+        showcaseVideo.play().catch(() => {});
+      }
     }
 
     document.querySelectorAll('.q-view').forEach((sec) => {
@@ -658,6 +897,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     currentView = targetView;
+    syncHeroTextVisibility();
 
     scrollToActiveSection(targetView);
   }
