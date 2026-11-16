@@ -17,7 +17,7 @@ const FALLBACK_SECTIONS = window.MeryStore
 
 const SHOWCASE_MEDIA = {
   wide: {
-    introVideo: 'assets/video/variaciones-flow/v5-parte1-wide-16x9.mp4',
+    introVideo: 'assets/video/variaciones-flow/v5-hero-wide.mp4',
     introPoster: 'assets/img/portada-barra-wide-empieza-aca.jpg',
     loopVideo: 'assets/video/variaciones-flow/v5-parte2-wide-loop.mp4',
     loopPoster: 'assets/img/portada-barra-wide-clean.jpg',
@@ -25,7 +25,7 @@ const SHOWCASE_MEDIA = {
     height: 1080
   },
   portrait: {
-    introVideo: 'assets/video/variaciones-flow/v5-parte1-texto-adelante.mp4',
+    introVideo: 'assets/video/variaciones-flow/v5-hero-portrait.mp4',
     introPoster: 'assets/img/portada-barra-empieza-aca.jpg',
     loopVideo: 'assets/video/variaciones-flow/v5-parte2-loop.mp4',
     loopPoster: 'assets/img/portada-barra-clean-notext.jpg',
@@ -252,13 +252,39 @@ document.addEventListener('DOMContentLoaded', () => {
       showcaseLoopVideo.classList.remove('is-instant-hidden');
       showcaseLoopVideo.muted = true;
       showcaseLoopVideo.volume = 0;
-      showcaseLoopVideo.play().catch(() => {});
-      showcaseVideo.classList.add('is-instant-hidden');
-      showcaseVideo.pause();
+
+      const revealLoopLayer = () => {
+        if (!shouldUseLoopLayer(currentView)) return;
+        showcaseVideo.classList.add('is-instant-hidden');
+        showcaseVideo.classList.remove('is-top-layer');
+        showcaseVideo.pause();
+      };
+
+      const waitForPaintedFrame = () => {
+        if (typeof showcaseLoopVideo.requestVideoFrameCallback === 'function') {
+          showcaseLoopVideo.requestVideoFrameCallback(() => revealLoopLayer());
+        } else {
+          requestAnimationFrame(() => requestAnimationFrame(revealLoopLayer));
+        }
+      };
+
+      const playPromise = showcaseLoopVideo.play();
+      if (playPromise && typeof playPromise.then === 'function') {
+        playPromise.then(waitForPaintedFrame).catch(revealLoopLayer);
+      } else {
+        waitForPaintedFrame();
+      }
     } else {
       showcaseVideo.classList.remove('is-instant-hidden');
+      showcaseVideo.classList.add('is-top-layer');
       if (showcaseLoopVideo) {
-        showcaseLoopVideo.classList.add('is-instant-hidden');
+        const cfg = VIEW_CONFIG[currentView] || VIEW_CONFIG.home;
+        if (isHeroIntroVideo(cfg.video)) {
+          // Keep loop layer composited behind the top hero video so handoff never flashes black.
+          showcaseLoopVideo.classList.remove('is-instant-hidden');
+        } else {
+          showcaseLoopVideo.classList.add('is-instant-hidden');
+        }
         showcaseLoopVideo.pause();
       }
     }
@@ -290,13 +316,15 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    showcaseVideo.addEventListener('timeupdate', () => {
+    const checkHeroTextReveal = () => {
       const currentLogical =
         showcaseVideo.dataset.logicalSrc || showcaseVideo.getAttribute('src');
       if (isHeroIntroVideo(currentLogical) && showcaseVideo.currentTime >= HERO_TEXT_REVEAL_TIME) {
         revealHeroText();
       }
-    });
+    };
+    showcaseVideo.addEventListener('timeupdate', checkHeroTextReveal);
+    showcaseVideo.addEventListener('seeked', checkHeroTextReveal);
 
     showcaseVideo.addEventListener('ended', () => {
       const currentLogical =
@@ -308,7 +336,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const variant = syncShowcaseViewConfig();
         syncPreloadedLoopLayer(variant);
         if (showcaseLoopVideo) {
-          activateShowcaseLayer(true);
+          if (shouldUseLoopLayer(currentView)) {
+            activateShowcaseLayer(true);
+          }
         } else {
           setShowcaseSource(variant.loopVideo, variant.loopPoster, true);
           showcaseVideo.play().catch(() => {});

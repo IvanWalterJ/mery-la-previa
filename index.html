@@ -21,7 +21,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,900&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;0,6..96,700;0,6..96,900;1,6..96,500;1,6..96,700;1,6..96,900&family=Forum&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=26" />
+  <link rel="stylesheet" href="styles.css?v=27" />
 </head>
 <body>
 
@@ -102,7 +102,7 @@
   <div id="qitchenApp" class="qitchen-app" data-view="home">
 
     <!-- ======================================================================
-         LEFT BENTO SHOWCASE (Part 1 Intro -> Seamless Preloaded Part 2 Loop, or 360° Bottle)
+         LEFT BENTO SHOWCASE (Joined Intro+Part2 Hero Video -> Seamless Preloaded Loop, or 360° Bottle)
          ====================================================================== -->
     <aside class="qitchen-left-showcase">
       <video
@@ -115,18 +115,18 @@
         muted
         playsinline
         preload="auto"
-        class="is-instant-hidden"
         aria-hidden="true"
       ></video>
       <video
         id="bottleShowcaseVideo"
-        src="assets/video/variaciones-flow/v5-parte1-wide-16x9.mp4"
+        src="assets/video/variaciones-flow/v5-hero-wide.mp4"
         poster="assets/img/portada-barra-wide-empieza-aca.jpg"
         width="1920"
         height="1080"
         muted
         playsinline
         preload="auto"
+        class="is-top-layer"
         aria-hidden="true"
       ></video>
 
@@ -1043,6 +1043,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js?v=22"></script>
-  <script src="app.js?v=25"></script>
+  <script src="app.js?v=26"></script>
 </body>
 </html>
