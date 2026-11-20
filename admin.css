@@ -1239,6 +1239,10 @@ body:has(.admin-modal-backdrop:not([hidden])) {
   display: block;
 }
 
+.admin-video-player.is-portrait {
+  object-fit: contain;
+}
+
 .admin-video-meta {
   display: flex;
   flex-direction: column;
@@ -1267,6 +1271,161 @@ body:has(.admin-modal-backdrop:not([hidden])) {
 
 .admin-upload-label {
   cursor: pointer;
+}
+
+/* ==========================================================================
+   6b. SECTION IMAGES & DISTINCTIONS WORKSPACE CONTROLS
+   ========================================================================== */
+.admin-section-images-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.admin-section-img-card {
+  background: var(--q-surface);
+  border: 1px solid var(--q-border);
+  border-radius: 14px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.admin-section-img-preview-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #080908;
+  border: 1px solid var(--q-border);
+}
+
+.admin-section-img-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.admin-webp-pill {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 99px;
+  background: rgba(10, 11, 10, 0.82);
+  border: 1px solid rgba(207, 190, 145, 0.45);
+  color: var(--q-gold);
+  backdrop-filter: blur(6px);
+}
+
+.admin-label-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.admin-link-btn {
+  appearance: none;
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--q-gold);
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.admin-link-btn:hover {
+  color: var(--q-cream);
+}
+
+.admin-distinction-manager {
+  margin-top: 8px;
+  padding: 12px;
+  border-radius: 10px;
+  background: #101210;
+  border: 1px solid var(--q-border);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-distinction-manager[hidden] {
+  display: none !important;
+}
+
+.admin-distinction-add-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.admin-distinction-symbol-input {
+  width: 54px;
+  text-align: center;
+  flex-shrink: 0;
+  padding-left: 6px;
+  padding-right: 6px;
+}
+
+.admin-distinction-label-input {
+  flex: 1 1 0%;
+  min-width: 0;
+}
+
+.admin-btn-sm {
+  padding: 8px 12px;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.admin-distinction-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.admin-distinction-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px 4px 10px;
+  border-radius: 99px;
+  background: rgba(207, 190, 145, 0.1);
+  border: 1px solid rgba(207, 190, 145, 0.32);
+  color: var(--q-cream);
+  font-size: 0.75rem;
+}
+
+.admin-distinction-chip-del {
+  appearance: none;
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--q-cream-muted);
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: inline-grid;
+  place-items: center;
+  font-size: 0.72rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.admin-distinction-chip-del:hover {
+  background: rgba(224, 36, 52, 0.3);
+  color: #fff;
 }
 
 #adminConfirmModal {
@@ -1638,8 +1797,8 @@ body:has(.admin-modal-backdrop:not([hidden])) {
 
 .ig-crop-viewport.mode-modal {
   width: 464px;
-  height: 200px;
-  aspect-ratio: 580 / 250;
+  height: 244px;
+  aspect-ratio: 600 / 315;
 }
 
 .ig-crop-viewport:active,
@@ -1853,7 +2012,7 @@ body:has(.admin-modal-backdrop:not([hidden])) {
 
 .ig-preview-modal-box {
   width: 174px;
-  height: 75px;
+  height: 91px;
   border-radius: 6px;
 }
 

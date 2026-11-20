@@ -25,13 +25,13 @@ CREATE TABLE IF NOT EXISTS public.menu_items (
   id TEXT PRIMARY KEY,
   category_id TEXT NOT NULL REFERENCES public.menu_categories(slug) ON UPDATE CASCADE ON DELETE CASCADE,
   name TEXT NOT NULL,
-  badge TEXT NOT NULL DEFAULT '★',
+  badge TEXT NOT NULL DEFAULT '',
   price TEXT NOT NULL,
   short_desc TEXT NOT NULL DEFAULT '',
   detail_copy TEXT NOT NULL DEFAULT '',
   pairing_note TEXT NOT NULL DEFAULT '',
   tags JSONB NOT NULL DEFAULT '[]'::jsonb,
-  image_url TEXT NOT NULL DEFAULT 'assets/img/ice-cube-previa.jpg',
+  image_url TEXT NOT NULL DEFAULT 'assets/img/ice-cube-previa.webp',
   image_position TEXT NOT NULL DEFAULT '50% 50%',
   image_zoom NUMERIC NOT NULL DEFAULT 1,
   modal_image_position TEXT NOT NULL DEFAULT '50% 50%',
@@ -136,7 +136,7 @@ INSERT INTO public.menu_items (
     'El cocktail insignia que da inicio al ritual de Mery La Previa. Maceramos cerezas negras patagónicas durante 48 horas con botánicos cítricos y lo integramos con una reducción tibia de nuestro Malbec Mery Jane. Se sirve sobre cristal tallado con un bloque de hielo traslúcido sellado en barra frente a vos.',
     'Ideal para abrir la noche en barra a las 20:30 hs o acompañar mollejas crocantes.',
     '["Autor 11:11", "Hielo Sellado en Vivo", "Perfil Frutal & Especiado"]'::jsonb,
-    'assets/img/ice-cube-previa.jpg',
+    'assets/img/ice-cube-previa.webp',
     true,
     1
   ),
@@ -150,7 +150,7 @@ INSERT INTO public.menu_items (
     'Una reversión nocturna y sedosa del clásico aperitivo italiano. Equilibramos el amargor elegante del Campari con un cordial casero de pomelo rosado asado y gin de enebro salvaje. Al servirlo, encerramos la copa en una campana de cristal con humo denso de romero fresco y corteza de naranja.',
     'Perfecto para la transición entre la cena y el primer set de DJ.',
     '["Ahumado en Barra", "Cítrico & Herbal", "Favorito 11:11"]'::jsonb,
-    'assets/img/cocktails-neon.jpg',
+    'assets/img/cocktails-neon.webp',
     true,
     2
   ),
@@ -164,7 +164,7 @@ INSERT INTO public.menu_items (
     'Fresco, vibrante y eléctrico. Elaborado sobre la base de nuestro Mery Jane blanco bien frío, sumamos un bitter artesanal de naranjas sanguíneas y burbuja fina con toque de cardamomo. Coronado con piel de cítricos y aceituna verde carnosa.',
     'Refrescante de principio a fin, pensado para brindar en grupo en el sector living.',
     '["Fresco & Burbujeante", "Copa Balón", "Base Mery Jane"]'::jsonb,
-    'assets/img/brand-tutto-passa.jpg',
+    'assets/img/brand-tutto-passa.webp',
     true,
     3
   ),
@@ -172,13 +172,13 @@ INSERT INTO public.menu_items (
     'ojo-de-bife-imperial',
     'cortes',
     'Ojo de Bife en Bandeja Imperial',
-    '★',
+    '',
     '$44.000',
     '750g fileteados a punto rouge en fuente de plata con caracú asado a las brasas, manteca de hierbas ahumadas y papas triple cocción para compartir.',
     'Nuestro corte emblema pensado para el centro de la mesa. Seleccionamos ojo de bife de pastura de 750 gramos, sellado a fuego vivo en quebracho colorado para lograr costra dorada y corazón jugoso a punto rouge. Llega trinchado en bandeja imperial de plata junto a un hueso de caracú braseado, manteca batida de hierbas ahumadas y papas triple cocción ultra crocantes.',
     'Pensado para compartir entre 2 a 3 personas junto a un Mery Jane Reserva Malbec Orgánico.',
     '["Para Compartir (750g)", "Brasas de Quebracho", "Bandeja de Plata"]'::jsonb,
-    'assets/img/steak-flash.jpg',
+    'assets/img/steak-flash.webp',
     true,
     1
   ),
@@ -186,13 +186,13 @@ INSERT INTO public.menu_items (
     'mollejas-crocantes',
     'cortes',
     'Mollejas Crocantes & Brioche',
-    '★',
+    '',
     '$19.800',
     'Doradas a la plancha de hierro con miel de caña, lima asada, emulsión de ajo negro y pan brioche tostado para picar al centro.',
     'Mollejas de corazón limpias y confitadas lentamente antes de pasar por plancha de hierro al rojo vivo, logrando un exterior ultra crocante y un interior tierno y mantecoso. Se laquean al final con un toque sutil de miel de caña y jugo de lima asada, servidas sobre tostón de brioche artesanal con puntos de emulsión de ajo negro fermentado.',
     'El tapeo obligado para abrir la mesa mientras llegan los primeros tragos de autor.',
     '["Tapeo al Centro", "Plancha de Hierro", "Ajo Negro & Lima"]'::jsonb,
-    'assets/img/cocktails-neon.jpg',
+    'assets/img/cocktails-neon.webp',
     true,
     2
   ),
@@ -206,7 +206,7 @@ INSERT INTO public.menu_items (
     'Dos texturas nobles unidas por el hueso en T: la terneza absoluta del lomo y el sabor profundo del bife angosto, madurados en cámara durante 35 días para concentrar su carácter. Asado a las brasas y terminado con gremolata fresca de perejil y limón, cabezas de ajo dulces confitadas en aceite de oliva virgen extra y pimientos del padrón.',
     'Corte de colección para mesas que buscan una cena potente antes del club.',
     '["Maduración 35 Días", "900g con Hueso", "Edición Limitada"]'::jsonb,
-    'assets/img/steak-flash.jpg',
+    'assets/img/steak-flash.webp',
     true,
     3
   ),
@@ -220,7 +220,7 @@ INSERT INTO public.menu_items (
     'Creado especialmente para la noche de Mery La Previa. Un blanco aromático, tenso y sumamente refrescante que se toma bien frío desde la cena hasta que arranca la cabina de DJ. Llega a tu mesa en frapera labrada con hielo cristal para mantener su temperatura exacta.',
     'Versátil y magnético: acompaña tanto tapeo caliente como brindis de medianoche.',
     '["Servicio en Frapera", "Etiqueta Insignia", "Fresco & Aromático"]'::jsonb,
-    'assets/img/wine-mery.jpg',
+    'assets/img/wine-mery.webp',
     true,
     1
   ),
@@ -234,7 +234,7 @@ INSERT INTO public.menu_items (
     'La experiencia completa para mesas de amigos y festejos VIP. Incluye nuestra icónica caja Mery Jane con 3 etiquetas a elección (Blanc de Nuit o Reserva Malbec) más una botella de Espumante Extra Brut para el brindis de las 00:00 hs, servida en mesa con bengalas y frapera.',
     'Recomendado para grupos de 6 a 12 amigos en previa o cumpleaños.',
     '["Pack 4 Botellas", "Especial Cumpleaños", "Incluye Extra Brut"]'::jsonb,
-    'assets/img/brand-previa-zine.jpg',
+    'assets/img/brand-previa-zine.webp',
     true,
     2
   ),
@@ -248,7 +248,7 @@ INSERT INTO public.menu_items (
     'Proveniente de viñedos orgánicos de altura en Valle de Uco, este Malbec busca fluidez y elegancia por encima de la madera pesada. Expresa fruta negra nítida, violetas y un final especiado muy amable que invita a la segunda copa.',
     'El compañero indiscutido del Ojo de Bife en Bandeja Imperial y el T-Bone Madurado.',
     '["Valle de Uco", "Orgánico", "Taninos de Terciopelo"]'::jsonb,
-    'assets/img/bottle-hero-isolated.jpg',
+    'assets/img/bottle-hero-isolated.webp',
     true,
     3
   )
@@ -339,7 +339,7 @@ INSERT INTO public.table_reservations (
     '22:00 hs (Cena Tardía)',
     'con_sena',
     'comprobante_subido',
-    'assets/img/ice-cube-previa.jpg',
+    'assets/img/ice-cube-previa.webp',
     now(),
     false,
     'Festejo de 25 años. Solicitó caja Mery Jane y ubicación cercana a la cabina de DJ.'
@@ -491,6 +491,47 @@ BEGIN
     ALTER PUBLICATION supabase_realtime ADD TABLE public.roulette_vouchers;
   END IF;
 END $$;
+
+-- Seed configurable dish distinctions, section videos, and section images in site_settings
+INSERT INTO public.site_settings (key, value, updated_at)
+VALUES (
+  'dish_distinctions',
+  '[
+    {"id":"★","symbol":"★","label":"Recomendado de la casa"},
+    {"id":"◇","symbol":"◇","label":"Especialidad 11:11"}
+  ]'::jsonb,
+  now()
+)
+ON CONFLICT (key) DO NOTHING;
+
+INSERT INTO public.site_settings (key, value, updated_at)
+VALUES (
+  'site_videos',
+  '{
+    "intro": "assets/video/neon-intro-mery.mp4",
+    "hero_wide": "assets/video/variaciones-flow/v5-hero-wide.mp4",
+    "hero_portrait": "assets/video/variaciones-flow/v5-hero-portrait.mp4",
+    "main": "assets/video/bottle-360-loop.mp4"
+  }'::jsonb,
+  now()
+)
+ON CONFLICT (key) DO NOTHING;
+
+INSERT INTO public.site_settings (key, value, updated_at)
+VALUES (
+  'site_section_images',
+  '{
+    "drinks": "assets/img/cocktails-neon.webp",
+    "menu": "assets/img/steak-flash.webp",
+    "roulette": "assets/img/ruleta-previa-card.webp",
+    "reservation": "assets/img/neon-wall-mery.webp",
+    "about": "assets/img/dj-previa.webp",
+    "about_reserve": "assets/img/brand-previa-zine.webp",
+    "about_bar": "assets/img/cocktails-neon.webp"
+  }'::jsonb,
+  now()
+)
+ON CONFLICT (key) DO NOTHING;
 
 
 

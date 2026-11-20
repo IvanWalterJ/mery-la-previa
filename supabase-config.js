@@ -11,6 +11,8 @@ const DEFAULT_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3Mi
 const STORAGE_KEY_MENU = 'mery_menu_sections_v2';
 const STORAGE_KEY_SUPA_CFG = 'mery_supabase_config_v1';
 const STORAGE_KEY_VIDEOS = 'mery_site_videos_v1';
+const STORAGE_KEY_SECTION_IMAGES = 'mery_site_section_images_v1';
+const STORAGE_KEY_DISTINCTIONS = 'mery_dish_distinctions_v1';
 const STORAGE_KEY_RESERVATIONS = 'mery_reservations_v1';
 const STORAGE_KEY_RES_SETTINGS = 'mery_reservation_settings_v1';
 const STORAGE_KEY_ROULETTE_SETTINGS = 'mery_roulette_settings_v1';
@@ -18,6 +20,21 @@ const STORAGE_KEY_VOUCHERS = 'mery_roulette_vouchers_v1';
 const BROADCAST_CHANNEL_NAME = 'mery_la_previa_realtime_v1';
 const IDB_NAME = 'mery_media_idb_v1';
 const IDB_STORE = 'media';
+
+const DEFAULT_DISH_DISTINCTIONS = [
+  { id: '★', symbol: '★', label: 'Recomendado de la casa' },
+  { id: '◇', symbol: '◇', label: 'Especialidad 11:11' }
+];
+
+const DEFAULT_SECTION_IMAGES = {
+  drinks: 'assets/img/cocktails-neon.webp',
+  menu: 'assets/img/steak-flash.webp',
+  roulette: 'assets/img/ruleta-previa-card.webp',
+  reservation: 'assets/img/neon-wall-mery.webp',
+  about: 'assets/img/dj-previa.webp',
+  about_reserve: 'assets/img/brand-previa-zine.webp',
+  about_bar: 'assets/img/cocktails-neon.webp'
+};
 
 const DEFAULT_ROULETTE_SETTINGS = {
   enabled: true,
@@ -90,7 +107,7 @@ const DEFAULT_RESERVATIONS = [
     res_time: '22:00 hs (Cena Tardía)',
     deposit_mode: 'con_sena',
     deposit_status: 'comprobante_subido',
-    proof_url: 'assets/img/ice-cube-previa.jpg',
+    proof_url: 'assets/img/ice-cube-previa.webp',
     proof_uploaded_at: '2025-11-13T19:30:00.000Z',
     attended: false,
     checked_in_at: null,
@@ -124,8 +141,9 @@ const DEFAULT_RESERVATIONS = [
 
 const DEFAULT_SITE_VIDEOS = {
   intro: 'assets/video/neon-intro-mery.mp4',
-  main: 'assets/video/bottle-360-loop.mp4',
-  previa: 'assets/video/ice-cube-1311.mp4'
+  hero_wide: 'assets/video/variaciones-flow/v5-hero-wide.mp4',
+  hero_portrait: 'assets/video/variaciones-flow/v5-hero-portrait.mp4',
+  main: 'assets/video/bottle-360-loop.mp4'
 };
 
 // Initial curated menu with rich detail copy for the Dish Detail Modal
@@ -145,7 +163,7 @@ const DEFAULT_MENU_SECTIONS = [
         detailCopy: 'El cocktail insignia que da inicio al ritual de Mery La Previa. Maceramos cerezas negras patagónicas durante 48 horas con botánicos cítricos y lo integramos con una reducción tibia de nuestro Malbec Mery Jane. Se sirve sobre cristal tallado con un bloque de hielo traslúcido sellado en barra frente a vos.',
         pairing: 'Ideal para abrir la noche en barra a las 20:30 hs o acompañar mollejas crocantes.',
         tags: ['Autor 11:11', 'Hielo Sellado en Vivo', 'Perfil Frutal & Especiado'],
-        image: 'assets/img/ice-cube-previa.jpg',
+        image: 'assets/img/ice-cube-previa.webp',
         imagePosition: '50% 50%',
         imageZoom: 1,
         modalImagePosition: '50% 50%',
@@ -161,7 +179,7 @@ const DEFAULT_MENU_SECTIONS = [
         detailCopy: 'Una reversión nocturna y sedosa del clásico aperitivo italiano. Equilibramos el amargor elegante del Campari con un cordial casero de pomelo rosado asado y gin de enebro salvaje. Al servirlo, encerramos la copa en una campana de cristal con humo denso de romero fresco y corteza de naranja.',
         pairing: 'Perfecto para la transición entre la cena y el primer set de DJ.',
         tags: ['Ahumado en Barra', 'Cítrico & Herbal', 'Favorito 11:11'],
-        image: 'assets/img/cocktails-neon.jpg',
+        image: 'assets/img/cocktails-neon.webp',
         imagePosition: '50% 50%',
         imageZoom: 1,
         modalImagePosition: '50% 50%',
@@ -177,7 +195,7 @@ const DEFAULT_MENU_SECTIONS = [
         detailCopy: 'Fresco, vibrante y eléctrico. Elaborado sobre la base de nuestro Mery Jane blanco bien frío, sumamos un bitter artesanal de naranjas sanguíneas y burbuja fina con toque de cardamomo. Coronado con piel de cítricos y aceituna verde carnosa.',
         pairing: 'Refrescante de principio a fin, pensado para brindar en grupo en el sector living.',
         tags: ['Fresco & Burbujeante', 'Copa Balón', 'Base Mery Jane'],
-        image: 'assets/img/brand-tutto-passa.jpg',
+        image: 'assets/img/brand-tutto-passa.webp',
         imagePosition: '50% 50%',
         imageZoom: 1,
         modalImagePosition: '50% 50%',
@@ -201,7 +219,7 @@ const DEFAULT_MENU_SECTIONS = [
         detailCopy: 'Nuestro corte emblema pensado para el centro de la mesa. Seleccionamos ojo de bife de pastura de 750 gramos, sellado a fuego vivo en quebracho colorado para lograr costra dorada y corazón jugoso a punto rouge. Llega trinchado en bandeja imperial de plata junto a un hueso de caracú braseado, manteca batida de hierbas ahumadas y papas triple cocción ultra crocantes.',
         pairing: 'Pensado para compartir entre 2 a 3 personas junto a un Mery Jane Reserva Malbec Orgánico.',
         tags: ['Para Compartir (750g)', 'Brasas de Quebracho', 'Bandeja de Plata'],
-        image: 'assets/img/steak-flash.jpg',
+        image: 'assets/img/steak-flash.webp',
         imagePosition: '50% 50%',
         imageZoom: 1,
         modalImagePosition: '50% 50%',
@@ -217,7 +235,7 @@ const DEFAULT_MENU_SECTIONS = [
         detailCopy: 'Mollejas de corazón limpias y confitadas lentamente antes de pasar por plancha de hierro al rojo vivo, logrando un exterior ultra crocante y un interior tierno y mantecoso. Se laquean al final con un toque sutil de miel de caña y jugo de lima asada, servidas sobre tostón de brioche artesanal con puntos de emulsión de ajo negro fermentado.',
         pairing: 'El tapeo obligado para abrir la mesa mientras llegan los primeros tragos de autor.',
         tags: ['Tapeo al Centro', 'Plancha de Hierro', 'Ajo Negro & Lima'],
-        image: 'assets/img/cocktails-neon.jpg',
+        image: 'assets/img/cocktails-neon.webp',
         imagePosition: '50% 50%',
         imageZoom: 1,
         modalImagePosition: '50% 50%',
@@ -233,7 +251,7 @@ const DEFAULT_MENU_SECTIONS = [
         detailCopy: 'Dos texturas nobles unidas por el hueso en T: la terneza absoluta del lomo y el sabor profundo del bife angosto, madurados en cámara durante 35 días para concentrar su carácter. Asado a las brasas y terminado con gremolata fresca de perejil y limón, cabezas de ajo dulces confitadas en aceite de oliva virgen extra y pimientos del padrón.',
         pairing: 'Corte de colección para mesas que buscan una cena potente antes del club.',
         tags: ['Maduración 35 Días', '900g con Hueso', 'Edición Limitada'],
-        image: 'assets/img/steak-flash.jpg',
+        image: 'assets/img/steak-flash.webp',
         imagePosition: '50% 50%',
         imageZoom: 1,
         modalImagePosition: '50% 50%',
@@ -257,7 +275,7 @@ const DEFAULT_MENU_SECTIONS = [
         detailCopy: 'Creado especialmente para la noche de Mery La Previa. Un blanco aromático, tenso y sumamente refrescante que se toma bien frío desde la cena hasta que arranca la cabina de DJ. Llega a tu mesa en frapera labrada con hielo cristal para mantener su temperatura exacta.',
         pairing: 'Versátil y magnético: acompaña tanto tapeo caliente como brindis de medianoche.',
         tags: ['Servicio en Frapera', 'Etiqueta Insignia', 'Fresco & Aromático'],
-        image: 'assets/img/wine-mery.jpg',
+        image: 'assets/img/wine-mery.webp',
         imagePosition: '50% 50%',
         imageZoom: 1,
         modalImagePosition: '50% 50%',
@@ -273,7 +291,7 @@ const DEFAULT_MENU_SECTIONS = [
         detailCopy: 'La experiencia completa para mesas de amigos y festejos VIP. Incluye nuestra icónica caja Mery Jane con 3 etiquetas a elección (Blanc de Nuit o Reserva Malbec) más una botella de Espumante Extra Brut para el brindis de las 00:00 hs, servida en mesa con bengalas y frapera.',
         pairing: 'Recomendado para grupos de 6 a 12 amigos en previa o cumpleaños.',
         tags: ['Pack 4 Botellas', 'Especial Cumpleaños', 'Incluye Extra Brut'],
-        image: 'assets/img/brand-previa-zine.jpg',
+        image: 'assets/img/brand-previa-zine.webp',
         imagePosition: '50% 50%',
         imageZoom: 1,
         modalImagePosition: '50% 50%',
@@ -289,7 +307,7 @@ const DEFAULT_MENU_SECTIONS = [
         detailCopy: 'Proveniente de viñedos orgánicos de altura en Valle de Uco, este Malbec busca fluidez y elegancia por encima de la madera pesada. Expresa fruta negra nítida, violetas y un final especiado muy amable que invita a la segunda copa.',
         pairing: 'El compañero indiscutido del Ojo de Bife en Bandeja Imperial y el T-Bone Madurado.',
         tags: ['Valle de Uco', 'Orgánico', 'Taninos de Terciopelo'],
-        image: 'assets/img/bottle-hero-isolated.jpg',
+        image: 'assets/img/bottle-hero-isolated.webp',
         imagePosition: '50% 50%',
         imageZoom: 1,
         modalImagePosition: '50% 50%',
@@ -454,13 +472,13 @@ const DEFAULT_MENU_SECTIONS = [
           .map((it) => ({
             id: it.id,
             name: it.name,
-            badge: it.badge || '★',
+            badge: typeof it.badge === 'string' ? it.badge : '',
             price: it.price,
             desc: it.short_desc || '',
             detailCopy: it.detail_copy || it.short_desc || '',
             pairing: it.pairing_note || '',
             tags: Array.isArray(it.tags) ? it.tags : [],
-            image: it.image_url || 'assets/img/ice-cube-previa.jpg',
+            image: it.image_url || 'assets/img/ice-cube-previa.webp',
             imagePosition: it.image_position || '50% 50%',
             imageZoom: typeof it.image_zoom === 'number' ? it.image_zoom : (parseFloat(it.image_zoom) || 1),
             modalImagePosition: it.modal_image_position || it.image_position || '50% 50%',
@@ -561,13 +579,13 @@ const DEFAULT_MENU_SECTIONS = [
           id: it.id,
           category_id: sec.id,
           name: it.name,
-          badge: it.badge || '★',
+          badge: typeof it.badge === 'string' ? it.badge : '',
           price: it.price,
           short_desc: it.desc || '',
           detail_copy: it.detailCopy || it.desc || '',
           pairing_note: it.pairing || '',
           tags: Array.isArray(it.tags) ? it.tags : [],
-          image_url: it.image || 'assets/img/ice-cube-previa.jpg',
+          image_url: it.image || 'assets/img/ice-cube-previa.webp',
           image_position: it.imagePosition || '50% 50%',
           image_zoom: typeof it.imageZoom === 'number' ? it.imageZoom : 1,
           modal_image_position: it.modalImagePosition || it.imagePosition || '50% 50%',
@@ -580,7 +598,25 @@ const DEFAULT_MENU_SECTIONS = [
     return { ok: true };
   }
 
-  function compressImageToWebP(file, maxDim = 1200, quality = 0.86) {
+  function dataUrlToBlob(dataUrl) {
+    try {
+      const parts = String(dataUrl || '').split(',');
+      if (parts.length < 2) return null;
+      const mimeMatch = parts[0].match(/:(.*?);/);
+      const mime = mimeMatch ? mimeMatch[1] : 'image/webp';
+      const bstr = atob(parts[1]);
+      let n = bstr.length;
+      const u8arr = new Uint8Array(n);
+      while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+      }
+      return new Blob([u8arr], { type: mime });
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function compressImageToWebP(file, maxDim = 1200, quality = 0.82) {
     return new Promise((resolve, reject) => {
       if (typeof document === 'undefined' || typeof Image === 'undefined') {
         return resolve({ blob: file, dataUrl: '' });
@@ -609,12 +645,20 @@ const DEFAULT_MENU_SECTIONS = [
             ctx.drawImage(img, 0, 0, width, height);
           }
           const dataUrl = canvas.toDataURL('image/webp', quality);
+          const isWebpDataUrl = typeof dataUrl === 'string' && dataUrl.startsWith('data:image/webp');
           if (typeof canvas.toBlob === 'function') {
             canvas.toBlob((blob) => {
-              resolve({ blob: blob || file, dataUrl });
+              if (blob && (blob.type === 'image/webp' || !isWebpDataUrl)) {
+                resolve({ blob, dataUrl });
+              } else if (isWebpDataUrl) {
+                resolve({ blob: dataUrlToBlob(dataUrl) || blob || file, dataUrl });
+              } else {
+                resolve({ blob: blob || file, dataUrl });
+              }
             }, 'image/webp', quality);
           } else {
-            resolve({ blob: file, dataUrl });
+            const fallbackBlob = isWebpDataUrl ? dataUrlToBlob(dataUrl) : null;
+            resolve({ blob: fallbackBlob || file, dataUrl });
           }
         };
         img.onerror = () => resolve({ blob: file, dataUrl: e.target.result });
@@ -627,16 +671,18 @@ const DEFAULT_MENU_SECTIONS = [
 
   async function uploadDishImage(file) {
     if (!file) throw new Error('No se seleccionó ningún archivo');
-    const { blob, dataUrl } = await compressImageToWebP(file, 1200, 0.86);
+    const { blob, dataUrl } = await compressImageToWebP(file, 1200, 0.82);
     const client = getClient();
+    const contentType = blob && blob.type ? blob.type : 'image/webp';
+    const ext = contentType === 'image/webp' ? 'webp' : 'jpg';
 
     if (client) {
       try {
-        const fileName = `dishes/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.webp`;
+        const fileName = `dishes/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
         const { error: uploadError } = await client.storage
           .from('menu-images')
           .upload(fileName, blob, {
-            contentType: 'image/webp',
+            contentType,
             cacheControl: '31536000',
             upsert: true
           });
@@ -652,7 +698,236 @@ const DEFAULT_MENU_SECTIONS = [
       }
     }
 
-    return dataUrl || 'assets/img/ice-cube-previa.jpg';
+    return dataUrl || 'assets/img/ice-cube-previa.webp';
+  }
+
+  // ---------------------------------------------------------------------------
+  // DISH DISTINCTIONS MANAGEMENT (Sin distinción / Recomendado / Custom)
+  // ---------------------------------------------------------------------------
+  function normalizeDistinctionsList(list) {
+    if (!Array.isArray(list)) return DEFAULT_DISH_DISTINCTIONS.map((d) => ({ ...d }));
+    const seen = new Set();
+    const cleaned = [];
+    for (const item of list) {
+      if (!item || typeof item !== 'object') continue;
+      const id = String(item.id || '').trim();
+      const label = String(item.label || '').trim();
+      const symbol = String(item.symbol || '').trim();
+      if (!id || !label || seen.has(id)) continue;
+      seen.add(id);
+      cleaned.push({ id, symbol, label });
+    }
+    return cleaned;
+  }
+
+  function getDishDistinctions() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_DISTINCTIONS);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          return normalizeDistinctionsList(parsed);
+        }
+      }
+    } catch (_) {}
+    return DEFAULT_DISH_DISTINCTIONS.map((d) => ({ ...d }));
+  }
+
+  function saveDishDistinctions(list, notify = true) {
+    const cleaned = normalizeDistinctionsList(list);
+    try {
+      localStorage.setItem(STORAGE_KEY_DISTINCTIONS, JSON.stringify(cleaned));
+    } catch (_) {}
+
+    if (notify && broadcastChannel) {
+      broadcastChannel.postMessage({
+        type: 'DISTINCTIONS_UPDATED',
+        distinctions: cleaned,
+        timestamp: Date.now()
+      });
+    }
+
+    const client = getClient();
+    if (client) {
+      client.from('site_settings').upsert({
+        key: 'dish_distinctions',
+        value: cleaned,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'key' }).then((res) => {
+        if (res && res.error) console.warn('Supabase dish_distinctions upsert fallback:', res.error.message || res.error);
+      }).catch((err) => {
+        console.warn('Supabase dish_distinctions upsert fallback:', err.message || err);
+      });
+    }
+
+    return cleaned;
+  }
+
+  function addDishDistinction({ symbol = '✦', label = '' }) {
+    const cleanLabel = String(label || '').trim();
+    const cleanSymbol = String(symbol || '').trim();
+    if (!cleanLabel) throw new Error('Ingresá un nombre para la distinción');
+    const id = cleanSymbol ? `${cleanSymbol} ${cleanLabel}` : cleanLabel;
+    const current = getDishDistinctions();
+    const existing = current.find((d) => d.id === id || d.label.toLowerCase() === cleanLabel.toLowerCase());
+    if (existing) return { created: existing, list: current };
+    const created = { id, symbol: cleanSymbol, label: cleanLabel };
+    const list = saveDishDistinctions([...current, created], true);
+    return { created, list };
+  }
+
+  function deleteDishDistinction(id) {
+    const targetId = String(id || '').trim();
+    if (!targetId) return getDishDistinctions();
+    const current = getDishDistinctions();
+    const next = current.filter((d) => d.id !== targetId);
+    return saveDishDistinctions(next, true);
+  }
+
+  function resolveDishDistinction(badge) {
+    const raw = String(badge || '').trim();
+    if (!raw || raw === 'none') return null;
+    const list = getDishDistinctions();
+    const match = list.find((d) => d.id === raw);
+    if (match) return match;
+    if (raw === '★') return { id: '★', symbol: '★', label: 'Recomendado de la casa' };
+    if (raw === '◇') return { id: '◇', symbol: '◇', label: 'Especialidad 11:11' };
+    const parts = raw.split(/\s+/);
+    const first = parts[0] || '';
+    const hasSymbol = parts.length > 1 && first.length <= 2;
+    return {
+      id: raw,
+      symbol: hasSymbol ? first : '✦',
+      label: hasSymbol ? parts.slice(1).join(' ') : raw
+    };
+  }
+
+  // ---------------------------------------------------------------------------
+  // SECTION IMAGES MANAGEMENT (WebP auto-optimization + Supabase Storage)
+  // ---------------------------------------------------------------------------
+  function getSectionImages() {
+    let current = { ...DEFAULT_SECTION_IMAGES };
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_SECTION_IMAGES);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') {
+          for (const [k, v] of Object.entries(parsed)) {
+            if (typeof v === 'string' && v.trim()) {
+              current[k] = v.trim();
+            }
+          }
+        }
+      }
+    } catch (_) {}
+    return current;
+  }
+
+  function saveSectionImages(images, notify = true) {
+    const merged = { ...DEFAULT_SECTION_IMAGES };
+    for (const [k, v] of Object.entries(images || {})) {
+      if (typeof v === 'string' && v.trim()) {
+        merged[k] = v.trim();
+      }
+    }
+    try {
+      localStorage.setItem(STORAGE_KEY_SECTION_IMAGES, JSON.stringify(merged));
+    } catch (err) {
+      console.warn('Error saving section images:', err);
+    }
+
+    if (notify && broadcastChannel) {
+      broadcastChannel.postMessage({
+        type: 'SECTION_IMAGES_UPDATED',
+        images: merged,
+        timestamp: Date.now()
+      });
+    }
+
+    const client = getClient();
+    if (client) {
+      client.from('site_settings').upsert({
+        key: 'site_section_images',
+        value: merged,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'key' }).then((res) => {
+        if (res && res.error) console.warn('Supabase site_section_images upsert fallback:', res.error.message || res.error);
+      }).catch((err) => {
+        console.warn('Supabase site_section_images upsert fallback:', err.message || err);
+      });
+    }
+    return merged;
+  }
+
+  function subscribeToSectionImageChanges(onUpdate) {
+    if (typeof onUpdate !== 'function') return () => {};
+    const handleBroadcast = (event) => {
+      if (event.data && event.data.type === 'SECTION_IMAGES_UPDATED' && event.data.images) {
+        onUpdate(event.data.images);
+      }
+    };
+    if (broadcastChannel) broadcastChannel.addEventListener('message', handleBroadcast);
+
+    const handleStorage = (event) => {
+      if (event.key === STORAGE_KEY_SECTION_IMAGES && event.newValue) {
+        try {
+          const parsed = JSON.parse(event.newValue);
+          if (parsed) onUpdate({ ...DEFAULT_SECTION_IMAGES, ...parsed });
+        } catch (_) {}
+      }
+    };
+    global.addEventListener('storage', handleStorage);
+
+    return () => {
+      if (broadcastChannel) broadcastChannel.removeEventListener('message', handleBroadcast);
+      global.removeEventListener('storage', handleStorage);
+    };
+  }
+
+  async function uploadSectionImage(slotKey, file) {
+    if (!file) throw new Error('No se seleccionó ninguna imagen');
+    const validSlots = Object.keys(DEFAULT_SECTION_IMAGES);
+    if (!validSlots.includes(slotKey)) throw new Error('Sección inválida: ' + slotKey);
+
+    const { blob, dataUrl } = await compressImageToWebP(file, 1400, 0.84);
+    const client = getClient();
+    const contentType = blob && blob.type ? blob.type : 'image/webp';
+    const ext = contentType === 'image/webp' ? 'webp' : 'jpg';
+    let finalUrl = dataUrl || DEFAULT_SECTION_IMAGES[slotKey];
+
+    if (client) {
+      try {
+        const fileName = `sections/${slotKey}-${Date.now()}.${ext}`;
+        const { error: uploadError } = await client.storage
+          .from('menu-images')
+          .upload(fileName, blob, {
+            contentType,
+            cacheControl: '31536000',
+            upsert: true
+          });
+
+        if (!uploadError) {
+          const { data } = client.storage.from('menu-images').getPublicUrl(fileName);
+          if (data && data.publicUrl) {
+            finalUrl = data.publicUrl;
+          }
+        }
+      } catch (err) {
+        console.warn('Supabase section image upload fallback:', err.message || err);
+      }
+    }
+
+    const current = getSectionImages();
+    current[slotKey] = finalUrl;
+    saveSectionImages(current, true);
+    return { ok: true, url: finalUrl, images: current };
+  }
+
+  async function restoreSectionImage(slotKey) {
+    const current = getSectionImages();
+    current[slotKey] = DEFAULT_SECTION_IMAGES[slotKey] || '';
+    const updated = saveSectionImages(current, true);
+    return { ok: true, url: updated[slotKey], images: updated };
   }
 
   // ---------------------------------------------------------------------------
@@ -725,20 +1000,39 @@ const DEFAULT_MENU_SECTIONS = [
     });
   }
 
+  function sanitizeVideosMap(rawObj) {
+    const merged = { ...DEFAULT_SITE_VIDEOS };
+    if (rawObj && typeof rawObj === 'object') {
+      for (const k of Object.keys(DEFAULT_SITE_VIDEOS)) {
+        if (typeof rawObj[k] === 'string' && rawObj[k].trim()) {
+          merged[k] = rawObj[k].trim();
+        }
+      }
+      // Migrate legacy custom `previa` only if it wasn't the obsolete 13/11 default video
+      if (
+        !rawObj.hero_wide &&
+        typeof rawObj.previa === 'string' &&
+        rawObj.previa.trim() &&
+        rawObj.previa.trim() !== 'assets/video/ice-cube-1311.mp4'
+      ) {
+        merged.hero_wide = rawObj.previa.trim();
+      }
+    }
+    return merged;
+  }
+
   async function getSiteVideos() {
     let current = { ...DEFAULT_SITE_VIDEOS };
     try {
       const raw = localStorage.getItem(STORAGE_KEY_VIDEOS);
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (parsed && typeof parsed === 'object') {
-          current = { ...current, ...parsed };
-        }
+        current = sanitizeVideosMap(parsed);
       }
     } catch (_) {}
 
     // Check IndexedDB binary blobs for offline / local-stored videos
-    for (const slotKey of ['intro', 'main', 'previa']) {
+    for (const slotKey of Object.keys(DEFAULT_SITE_VIDEOS)) {
       try {
         const blob = await getBlobFromIDB(`video_${slotKey}`);
         if (blob && typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function') {
@@ -752,10 +1046,10 @@ const DEFAULT_MENU_SECTIONS = [
 
   function saveSiteVideos(videos, notify = true) {
     try {
-      const cleanToStore = {};
-      for (const [k, v] of Object.entries(videos || {})) {
-        if (typeof v === 'string' && !v.startsWith('blob:')) {
-          cleanToStore[k] = v;
+      const cleanToStore = sanitizeVideosMap(videos);
+      for (const [k, v] of Object.entries(cleanToStore)) {
+        if (typeof v === 'string' && v.startsWith('blob:')) {
+          cleanToStore[k] = DEFAULT_SITE_VIDEOS[k] || '';
         }
       }
       localStorage.setItem(STORAGE_KEY_VIDEOS, JSON.stringify(cleanToStore));
@@ -763,8 +1057,21 @@ const DEFAULT_MENU_SECTIONS = [
       if (notify && broadcastChannel) {
         broadcastChannel.postMessage({
           type: 'VIDEOS_UPDATED',
-          videos,
+          videos: cleanToStore,
           timestamp: Date.now()
+        });
+      }
+
+      const client = getClient();
+      if (client) {
+        client.from('site_settings').upsert({
+          key: 'site_videos',
+          value: cleanToStore,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'key' }).then((res) => {
+          if (res && res.error) console.warn('Supabase site_videos upsert fallback:', res.error.message || res.error);
+        }).catch((err) => {
+          console.warn('Supabase site_videos upsert fallback:', err.message || err);
         });
       }
     } catch (err) {
@@ -777,7 +1084,7 @@ const DEFAULT_MENU_SECTIONS = [
 
     const handleBroadcast = (event) => {
       if (event.data && event.data.type === 'VIDEOS_UPDATED' && event.data.videos) {
-        onUpdate(event.data.videos);
+        onUpdate(sanitizeVideosMap(event.data.videos));
       }
     };
     if (broadcastChannel) {
@@ -788,7 +1095,7 @@ const DEFAULT_MENU_SECTIONS = [
       if (event.key === STORAGE_KEY_VIDEOS && event.newValue) {
         try {
           const parsed = JSON.parse(event.newValue);
-          if (parsed) onUpdate({ ...DEFAULT_SITE_VIDEOS, ...parsed });
+          if (parsed) onUpdate(sanitizeVideosMap(parsed));
         } catch (_) {}
       }
     };
@@ -802,7 +1109,7 @@ const DEFAULT_MENU_SECTIONS = [
 
   async function uploadSectionVideo(slotKey, file) {
     if (!file) throw new Error('No se seleccionó ningún archivo de video');
-    const validSlot = ['intro', 'main', 'previa'].includes(slotKey);
+    const validSlot = Object.keys(DEFAULT_SITE_VIDEOS).includes(slotKey);
     if (!validSlot) throw new Error('Slot de video inválido: ' + slotKey);
 
     const client = getClient();
@@ -858,23 +1165,7 @@ const DEFAULT_MENU_SECTIONS = [
     await deleteBlobFromIDB(`video_${slotKey}`);
     const current = await getSiteVideos();
     current[slotKey] = DEFAULT_SITE_VIDEOS[slotKey] || '';
-
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY_VIDEOS);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        delete parsed[slotKey];
-        localStorage.setItem(STORAGE_KEY_VIDEOS, JSON.stringify(parsed));
-      }
-    } catch (_) {}
-
-    if (broadcastChannel) {
-      broadcastChannel.postMessage({
-        type: 'VIDEOS_UPDATED',
-        videos: current,
-        timestamp: Date.now()
-      });
-    }
+    saveSiteVideos(current, true);
 
     return { ok: true, url: current[slotKey] };
   }
@@ -1301,7 +1592,15 @@ const DEFAULT_MENU_SECTIONS = [
 
   async function fetchSiteSettingsFromSupabase() {
     const client = getClient();
-    if (!client) return { resSettings: getReservationSettings(), rouletteSettings: getRouletteSettings() };
+    if (!client) {
+      return {
+        resSettings: getReservationSettings(),
+        rouletteSettings: getRouletteSettings(),
+        distinctions: getDishDistinctions(),
+        sectionImages: getSectionImages(),
+        siteVideos: await getSiteVideos()
+      };
+    }
     try {
       const { data, error } = await client.from('site_settings').select('*');
       if (!error && Array.isArray(data)) {
@@ -1321,10 +1620,80 @@ const DEFAULT_MENU_SECTIONS = [
             localStorage.setItem(STORAGE_KEY_ROULETTE_SETTINGS, JSON.stringify(mergedR));
           } catch (_) {}
         }
-        return { resSettings: getReservationSettings(), rouletteSettings: getRouletteSettings() };
+        const distRow = data.find((r) => r.key === 'dish_distinctions');
+        if (distRow && Array.isArray(distRow.value)) {
+          try {
+            localStorage.setItem(STORAGE_KEY_DISTINCTIONS, JSON.stringify(normalizeDistinctionsList(distRow.value)));
+          } catch (_) {}
+        }
+        const videosRow = data.find((r) => r.key === 'site_videos');
+        if (videosRow && videosRow.value && typeof videosRow.value === 'object') {
+          try {
+            localStorage.setItem(STORAGE_KEY_VIDEOS, JSON.stringify(sanitizeVideosMap(videosRow.value)));
+          } catch (_) {}
+        }
+        const imagesRow = data.find((r) => r.key === 'site_section_images');
+        if (imagesRow && imagesRow.value && typeof imagesRow.value === 'object') {
+          const mergedImgs = { ...DEFAULT_SECTION_IMAGES };
+          for (const [k, v] of Object.entries(imagesRow.value)) {
+            if (typeof v === 'string' && v.trim()) mergedImgs[k] = v.trim();
+          }
+          try {
+            localStorage.setItem(STORAGE_KEY_SECTION_IMAGES, JSON.stringify(mergedImgs));
+          } catch (_) {}
+        }
+        return {
+          resSettings: getReservationSettings(),
+          rouletteSettings: getRouletteSettings(),
+          distinctions: getDishDistinctions(),
+          sectionImages: getSectionImages(),
+          siteVideos: await getSiteVideos()
+        };
       }
     } catch (_) {}
-    return { resSettings: getReservationSettings(), rouletteSettings: getRouletteSettings() };
+    return {
+      resSettings: getReservationSettings(),
+      rouletteSettings: getRouletteSettings(),
+      distinctions: getDishDistinctions(),
+      sectionImages: getSectionImages(),
+      siteVideos: await getSiteVideos()
+    };
+  }
+
+  function subscribeToSiteSettingsChanges(onUpdate) {
+    if (typeof onUpdate !== 'function') return () => {};
+    const handleBroadcast = (event) => {
+      if (!event.data) return;
+      if (['SETTINGS_UPDATED', 'ROULETTE_SETTINGS_UPDATED', 'DISTINCTIONS_UPDATED', 'VIDEOS_UPDATED', 'SECTION_IMAGES_UPDATED'].includes(event.data.type)) {
+        onUpdate(event.data);
+      }
+    };
+    if (broadcastChannel) broadcastChannel.addEventListener('message', handleBroadcast);
+
+    const client = getClient();
+    let channel = null;
+    if (client && typeof client.channel === 'function') {
+      try {
+        channel = client
+          .channel('mery-site-settings-sync-' + Math.random().toString(36).slice(2, 7))
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'site_settings' },
+            async () => {
+              const all = await fetchSiteSettingsFromSupabase();
+              onUpdate({ type: 'SITE_SETTINGS_REMOTE_UPDATED', ...all });
+            }
+          )
+          .subscribe();
+      } catch (_) {}
+    }
+
+    return () => {
+      if (broadcastChannel) broadcastChannel.removeEventListener('message', handleBroadcast);
+      if (client && channel && typeof client.removeChannel === 'function') {
+        try { client.removeChannel(channel); } catch (_) {}
+      }
+    };
   }
 
   // ===========================================================================
@@ -2107,6 +2476,8 @@ const DEFAULT_MENU_SECTIONS = [
   global.MeryStore = {
     DEFAULT_MENU_SECTIONS,
     DEFAULT_SITE_VIDEOS,
+    DEFAULT_SECTION_IMAGES,
+    DEFAULT_DISH_DISTINCTIONS,
     DEFAULT_RESERVATIONS,
     DEFAULT_RESERVATION_SETTINGS,
     getSupabaseConfig,
@@ -2120,11 +2491,22 @@ const DEFAULT_MENU_SECTIONS = [
     subscribeToMenuChanges,
     seedSupabaseIfEmpty,
     uploadDishImage,
+    getDishDistinctions,
+    saveDishDistinctions,
+    addDishDistinction,
+    deleteDishDistinction,
+    resolveDishDistinction,
+    getSectionImages,
+    saveSectionImages,
+    uploadSectionImage,
+    restoreSectionImage,
+    subscribeToSectionImageChanges,
     uploadSectionVideo,
     restoreSectionVideo,
     getSiteVideos,
     saveSiteVideos,
     subscribeToVideoChanges,
+    subscribeToSiteSettingsChanges,
     deleteBlobFromIDB,
     // Reservations, Availability & Evolution API
     DEFAULT_AVAILABLE_DAYS,

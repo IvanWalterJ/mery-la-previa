@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="admin.css?v=17" />
+  <link rel="stylesheet" href="admin.css?v=18" />
   <style>
     /* Menu section (Tragos & Bebidas vs La Carta) badges in the admin panel */
     .admin-cat-pill-group {
@@ -71,7 +71,7 @@
   <section id="adminLoginScreen" class="admin-login-screen" aria-label="Acceso Administrativo Mery La Previa">
     <div class="admin-neon-stage">
       <img
-        src="assets/img/neon-wall-mery.jpg"
+        src="assets/img/neon-wall-mery.webp"
         alt="Cartel Luminoso Mery La Previa"
         class="admin-neon-frame-img"
       />
@@ -206,6 +206,9 @@
             <button type="button" id="btnNavVideos" class="admin-cat-pill">
               <span>Videos de secciones</span>
             </button>
+            <button type="button" id="btnNavSectionImages" class="admin-cat-pill">
+              <span>Imágenes de secciones</span>
+            </button>
           </nav>
         </div>
       </div>
@@ -294,11 +297,42 @@
           </div>
 
           <div class="admin-field">
-            <label for="itemFormBadge">Distinción en la carta</label>
+            <div class="admin-label-action-row">
+              <label for="itemFormBadge">Distinción en la carta</label>
+              <button type="button" id="btnToggleDistinctionManager" class="admin-link-btn">
+                + Agregar / quitar
+              </button>
+            </div>
             <select id="itemFormBadge" class="admin-input">
+              <option value="">Sin distinción (ninguna)</option>
               <option value="★">★ Recomendado de la casa</option>
               <option value="◇">◇ Especialidad 11:11</option>
             </select>
+
+            <div id="adminDistinctionManager" class="admin-distinction-manager" hidden>
+              <div class="admin-distinction-add-row">
+                <input
+                  type="text"
+                  id="newDistinctionSymbol"
+                  class="admin-input admin-distinction-symbol-input"
+                  value="✦"
+                  maxlength="4"
+                  placeholder="✦"
+                  aria-label="Símbolo o emoji"
+                />
+                <input
+                  type="text"
+                  id="newDistinctionLabel"
+                  class="admin-input admin-distinction-label-input"
+                  placeholder="Ej. Edición Limitada, Sin TACC..."
+                  aria-label="Nombre de la nueva distinción"
+                />
+                <button type="button" id="btnAddDistinction" class="admin-btn-gold admin-btn-sm">
+                  Agregar
+                </button>
+              </div>
+              <div id="adminDistinctionChips" class="admin-distinction-chips"></div>
+            </div>
           </div>
         </div>
 
@@ -309,20 +343,20 @@
               <div class="admin-dual-preview-item">
                 <span class="admin-dual-preview-label">Vista en lista</span>
                 <div class="admin-dual-thumb-wrap">
-                  <img id="itemFormPreview" src="assets/img/ice-cube-previa.jpg" alt="Vista previa en lista" class="admin-photo-preview" style="object-position: 50% 50%;" />
+                  <img id="itemFormPreview" src="assets/img/ice-cube-previa.webp" alt="Vista previa en lista" class="admin-photo-preview" style="object-position: 50% 50%;" />
                 </div>
               </div>
               <div class="admin-dual-preview-item">
                 <span class="admin-dual-preview-label">Vista en ventana de detalle</span>
                 <div class="admin-dual-modal-wrap">
-                  <img id="itemFormModalPreview" src="assets/img/ice-cube-previa.jpg" alt="Vista previa en ventana de detalle" class="admin-photo-preview" style="object-position: 50% 50%;" />
+                  <img id="itemFormModalPreview" src="assets/img/ice-cube-previa.webp" alt="Vista previa en ventana de detalle" class="admin-photo-preview" style="object-position: 50% 50%;" />
                 </div>
               </div>
               <span class="admin-crop-badge" aria-hidden="true">Clic para encuadrar</span>
             </div>
             <div class="admin-photo-controls">
               <p class="admin-photo-hint">
-                Arrastrá la imagen con el mouse o el dedo para acomodar el encuadre. Podés calibrar de forma independiente la miniatura de la carta y la cabecera del detalle.
+                Arrastrá la imagen con el mouse o el dedo para acomodar el encuadre. Todas las fotos subidas se optimizan automáticamente a WebP para cargar rápido.
               </p>
               <div class="admin-photo-actions-row">
                 <label for="itemFormFile" class="admin-btn-outline admin-upload-label">
@@ -336,7 +370,7 @@
                 </button>
               </div>
               <input type="file" id="itemFormFile" accept="image/*" hidden />
-              <input type="hidden" id="itemFormImageUrl" value="assets/img/ice-cube-previa.jpg" />
+              <input type="hidden" id="itemFormImageUrl" value="assets/img/ice-cube-previa.webp" />
               <input type="hidden" id="itemFormImagePos" value="50% 50%" />
               <input type="hidden" id="itemFormImageZoom" value="1" />
               <input type="hidden" id="itemFormModalImagePos" value="50% 50%" />
@@ -488,16 +522,16 @@
           <span class="ig-tab-num">2</span>
           <span class="ig-tab-copy">
             <span class="ig-tab-title">2. Ventana de detalle del plato</span>
-            <span class="ig-tab-ratio">Cabecera (580 × 250)</span>
+            <span class="ig-tab-ratio">Cabecera (600 × 315)</span>
           </span>
         </button>
       </div>
 
       <div class="ig-crop-workspace">
         <div class="ig-crop-viewport-container">
-          <!-- Viewport switches aspect ratio smoothly: mode-thumb (115/86) vs mode-modal (580/250) -->
+          <!-- Viewport switches aspect ratio smoothly: mode-thumb (115/86) vs mode-modal (600/315) -->
           <div id="igCropViewport" class="ig-crop-viewport mode-thumb" title="Arrastrá para encuadrar o usá la rueda del mouse para zoom">
-            <img id="igCropImage" src="assets/img/ice-cube-previa.jpg" alt="Foto para encuadrar" draggable="false" />
+            <img id="igCropImage" src="assets/img/ice-cube-previa.webp" alt="Foto para encuadrar" draggable="false" />
             <div id="igCropGrid" class="ig-crop-grid" aria-hidden="true">
               <span class="ig-grid-line ig-line-h1"></span>
               <span class="ig-grid-line ig-line-h2"></span>
@@ -542,7 +576,7 @@
             <div id="igLivePreviewThumbWrap" class="ig-preview-item" data-switch-mode="thumb" title="Clic para editar encuadre de lista">
               <span class="ig-preview-tag">Lista de la carta</span>
               <div class="ig-preview-box ig-preview-thumb-box">
-                <img id="igLivePreviewThumb" src="assets/img/ice-cube-previa.jpg" alt="Vista previa en lista (Miniatura)" />
+                <img id="igLivePreviewThumb" src="assets/img/ice-cube-previa.webp" alt="Vista previa en lista (Miniatura)" />
               </div>
               <span class="ig-preview-desc">Miniatura (115 × 86)</span>
             </div>
@@ -550,9 +584,9 @@
             <div id="igLivePreviewModalWrap" class="ig-preview-item" data-switch-mode="modal" title="Clic para editar encuadre de detalle">
               <span class="ig-preview-tag">Ventana de detalle</span>
               <div class="ig-preview-box ig-preview-modal-box">
-                <img id="igLivePreviewModal" src="assets/img/ice-cube-previa.jpg" alt="Vista previa al abrir plato (Detalle)" />
+                <img id="igLivePreviewModal" src="assets/img/ice-cube-previa.webp" alt="Vista previa al abrir plato (Detalle)" />
               </div>
-              <span class="ig-preview-desc">Detalle (580 × 250)</span>
+              <span class="ig-preview-desc">Detalle (600 × 315)</span>
             </div>
           </div>
         </div>
@@ -960,7 +994,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/js/qrcode.min.js"></script>
   <script src="assets/js/jsqr.min.js"></script>
-  <script src="supabase-config.js?v=18"></script>
-  <script src="admin.js?v=19"></script>
+  <script src="supabase-config.js?v=23"></script>
+  <script src="admin.js?v=20"></script>
 </body>
 </html>

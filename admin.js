@@ -55,6 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const adminRouletteBadge = document.getElementById('adminRouletteBadge');
   const btnNavWhatsapp = document.getElementById('btnNavWhatsapp');
   const btnNavVideos = document.getElementById('btnNavVideos');
+  const btnNavSectionImages = document.getElementById('btnNavSectionImages');
   const adminSearchInput = document.getElementById('adminSearchInput');
   const sectionsContainer = document.getElementById('adminSectionsContainer');
   const toastEl = document.getElementById('adminToast');
@@ -161,6 +162,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const itemFormPrice = document.getElementById('itemFormPrice');
   const itemFormName = document.getElementById('itemFormName');
   const itemFormBadge = document.getElementById('itemFormBadge');
+  const btnToggleDistinctionManager = document.getElementById('btnToggleDistinctionManager');
+  const adminDistinctionManager = document.getElementById('adminDistinctionManager');
+  const newDistinctionSymbol = document.getElementById('newDistinctionSymbol');
+  const newDistinctionLabel = document.getElementById('newDistinctionLabel');
+  const btnAddDistinction = document.getElementById('btnAddDistinction');
+  const adminDistinctionChips = document.getElementById('adminDistinctionChips');
   const itemPhotoCropStage = document.getElementById('itemPhotoCropStage');
   const itemFormPreview = document.getElementById('itemFormPreview');
   const itemFormModalPreview = document.getElementById('itemFormModalPreview');
@@ -256,6 +263,8 @@ document.addEventListener('DOMContentLoaded', () => {
       targetHash = '#whatsapp';
     } else if (activeTab === 'videos') {
       targetHash = '#videos';
+    } else if (activeTab === 'section-images') {
+      targetHash = '#imagenes';
     } else if (activeTab === 'category') {
       targetHash = activeCategoryId ? `#cat-${activeCategoryId}` : '#menu';
     }
@@ -283,6 +292,8 @@ document.addEventListener('DOMContentLoaded', () => {
       targetTab = 'whatsapp';
     } else if (hash === '#videos') {
       targetTab = 'videos';
+    } else if (hash === '#imagenes' || hash === '#imágenes') {
+      targetTab = 'section-images';
     } else if (hash.startsWith('#cat-') || hash === '#menu' || hash === '#carta') {
       targetTab = 'category';
       if (hash.startsWith('#cat-')) {
@@ -296,7 +307,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const savedRaw = localStorage.getItem(STORAGE_KEY_ADMIN_TAB);
         if (savedRaw) {
           const saved = JSON.parse(savedRaw);
-          if (saved && ['category', 'reservations', 'roulette', 'whatsapp', 'videos'].includes(saved.tab)) {
+          if (saved && ['category', 'reservations', 'roulette', 'whatsapp', 'videos', 'section-images'].includes(saved.tab)) {
             targetTab = saved.tab;
             if (saved.categoryId) targetCategory = saved.categoryId;
           }
@@ -348,6 +359,7 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (activeTab === 'roulette') renderRouletteWorkspace();
         else if (activeTab === 'whatsapp') renderWhatsappWorkspace();
         else if (activeTab === 'videos') renderVideosWorkspace();
+        else if (activeTab === 'section-images') renderSectionImagesWorkspace();
         else renderActiveCategoryWorkspace();
       }
     }
@@ -411,7 +423,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (igActiveModeLabel) {
       igActiveModeLabel.textContent = isThumb
         ? 'Miniatura de la carta (115 × 86)'
-        : 'Ventana de detalle del plato (580 × 250)';
+        : 'Ventana de detalle del plato (600 × 315)';
     }
 
     const activeCrop = currentCrops[activeCropMode] || { x: 50, y: 50, zoom: 1 };
@@ -445,7 +457,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     };
 
-    currentCropperImageUrl = imageUrl || 'assets/img/ice-cube-previa.jpg';
+    currentCropperImageUrl = imageUrl || 'assets/img/ice-cube-previa.webp';
     if (igCropImage) igCropImage.src = currentCropperImageUrl;
     if (igLivePreviewThumb) igLivePreviewThumb.src = currentCropperImageUrl;
     if (igLivePreviewModal) igLivePreviewModal.src = currentCropperImageUrl;
@@ -644,7 +656,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // If clicked without dragging, open cropper modal
       if (dx < 6 && dy < 6 && !e.target.closest('button') && !e.target.closest('label')) {
         openPhotoCropper({
-          imageUrl: itemFormImageUrl?.value || 'assets/img/ice-cube-previa.jpg',
+          imageUrl: itemFormImageUrl?.value || 'assets/img/ice-cube-previa.webp',
           thumbPos: itemFormImagePos?.value || '50% 50%',
           thumbZoom: parseFloat(itemFormImageZoom?.value) || 1,
           modalPos: itemFormModalImagePos?.value || '50% 50%',
@@ -660,7 +672,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   btnOpenPhotoCropper?.addEventListener('click', () => {
     openPhotoCropper({
-      imageUrl: itemFormImageUrl?.value || 'assets/img/ice-cube-previa.jpg',
+      imageUrl: itemFormImageUrl?.value || 'assets/img/ice-cube-previa.webp',
       thumbPos: itemFormImagePos?.value || '50% 50%',
       thumbZoom: parseFloat(itemFormImageZoom?.value) || 1,
       modalPos: itemFormModalImagePos?.value || '50% 50%',
@@ -841,6 +853,8 @@ document.addEventListener('DOMContentLoaded', () => {
         renderWhatsappWorkspace();
       } else if (activeTab === 'videos') {
         renderVideosWorkspace();
+      } else if (activeTab === 'section-images') {
+        renderSectionImagesWorkspace();
       } else {
         renderActiveCategoryWorkspace();
       }
@@ -861,6 +875,17 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
       }).catch(() => {});
+
+      if (typeof window.MeryStore.fetchSiteSettingsFromSupabase === 'function') {
+        window.MeryStore.fetchSiteSettingsFromSupabase().then(() => {
+          if (activeTab === 'videos') renderVideosWorkspace();
+          else if (activeTab === 'section-images') renderSectionImagesWorkspace();
+          else if (activeTab === 'category') renderActiveCategoryWorkspace();
+          if (itemModal && !itemModal.hidden) {
+            populateDistinctionSelect(itemFormBadge ? itemFormBadge.value : '');
+          }
+        }).catch(() => {});
+      }
     } catch (err) {
       console.error('Error entering dashboard:', err);
     }
@@ -932,6 +957,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  if (typeof window.MeryStore.subscribeToSiteSettingsChanges === 'function') {
+    window.MeryStore.subscribeToSiteSettingsChanges((evt) => {
+      if (!evt) return;
+      if (evt.type === 'VIDEOS_UPDATED' || evt.type === 'SITE_SETTINGS_REMOTE_UPDATED') {
+        if (activeTab === 'videos') renderVideosWorkspace();
+      }
+      if (evt.type === 'SECTION_IMAGES_UPDATED' || evt.type === 'SITE_SETTINGS_REMOTE_UPDATED') {
+        if (activeTab === 'section-images') renderSectionImagesWorkspace();
+      }
+      if (evt.type === 'DISTINCTIONS_UPDATED' || evt.type === 'SITE_SETTINGS_REMOTE_UPDATED') {
+        if (activeTab === 'category') renderActiveCategoryWorkspace();
+        if (itemModal && !itemModal.hidden) {
+          populateDistinctionSelect(itemFormBadge ? itemFormBadge.value : '');
+          if (adminDistinctionManager && !adminDistinctionManager.hidden) renderDistinctionChips();
+        }
+      }
+    });
+  }
+
   // 4. LEFT SIDEBAR & COMPACT NAVIGATION
   function updateMenuTotalBadge() {
     if (!adminMenuTotalBadge) return;
@@ -955,6 +999,7 @@ document.addEventListener('DOMContentLoaded', () => {
     btnNavRoulette?.classList.toggle('active', activeTab === 'roulette');
     btnNavWhatsapp?.classList.toggle('active', activeTab === 'whatsapp');
     btnNavVideos?.classList.toggle('active', activeTab === 'videos');
+    btnNavSectionImages?.classList.toggle('active', activeTab === 'section-images');
     updateMenuTotalBadge();
     updateRouletteBadge();
   }
@@ -1009,6 +1054,17 @@ document.addEventListener('DOMContentLoaded', () => {
       activeTab = 'videos';
       renderAdminSidebar();
       renderVideosWorkspace();
+      persistActiveTabState();
+      closeAdminMobileMenu();
+    });
+  }
+
+  if (btnNavSectionImages) {
+    btnNavSectionImages.addEventListener('click', () => {
+      stopWaPolling();
+      activeTab = 'section-images';
+      renderAdminSidebar();
+      renderSectionImagesWorkspace();
       persistActiveTabState();
       closeAdminMobileMenu();
     });
@@ -1123,7 +1179,14 @@ document.addEventListener('DOMContentLoaded', () => {
     sectionsContainer.innerHTML = `
       ${categoryPillsBarHtml}
       <div class="admin-items-grid">
-        ${filteredItems.map((item) => `
+        ${filteredItems.map((item) => {
+          const dist = window.MeryStore && typeof window.MeryStore.resolveDishDistinction === 'function'
+            ? window.MeryStore.resolveDishDistinction(item.badge)
+            : null;
+          const badgeHtml = dist
+            ? `<span class="admin-item-badge" title="${escapeHtml(dist.label)}">${escapeHtml(dist.symbol || dist.label)}</span>`
+            : '';
+          return `
           <article class="admin-item-card ${item.available === false ? 'unavailable' : ''}" data-item-id="${escapeHtml(item.id)}">
             <div class="admin-item-top">
               <div
@@ -1134,7 +1197,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 title="Ajustar encuadre de la foto"
               >
                 <img
-                  src="${escapeHtml(item.image)}"
+                  src="${escapeHtml(item.image || 'assets/img/ice-cube-previa.webp')}"
                   alt="${escapeHtml(item.name)}"
                   class="admin-item-thumb"
                   style="object-position: ${item.imagePosition || '50% 50%'}; transform-origin: ${item.imagePosition || '50% 50%'}; transform: scale(${item.imageZoom || 1});"
@@ -1145,7 +1208,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <div class="admin-item-info">
                 <h3 class="admin-item-title">
                   ${escapeHtml(item.name)}
-                  <span class="admin-item-badge">${escapeHtml(item.badge || '★')}</span>
+                  ${badgeHtml}
                 </h3>
                 <p class="admin-item-desc">${escapeHtml(item.desc)}</p>
               </div>
@@ -1205,7 +1268,8 @@ document.addEventListener('DOMContentLoaded', () => {
               </div>
             </div>
           </article>
-        `).join('')}
+        `;
+        }).join('')}
       </div>
     `;
     attachCategoryBarListeners();
@@ -1902,25 +1966,32 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 4c. SECTION VIDEOS MANAGEMENT WORKSPACE (Intro Neon, Bottle 360°, Previa 13/11)
+  // 4c. SECTION VIDEOS MANAGEMENT WORKSPACE (Intro Neon, Hero Wide/Portrait, Bottle 360°)
   const SECTION_VIDEO_CONFIGS = [
     {
       key: 'intro',
       title: 'Video de inicio (Cartel Neón)',
-      desc: 'Se reproduce en el telón de apertura inicial con sonido al hacer clic en INGRESAR.',
+      desc: 'Se reproduce en la portada de apertura inicial antes de entrar a la web.',
       defaultUrl: 'assets/video/neon-intro-mery.mp4'
+    },
+    {
+      key: 'hero_wide',
+      title: 'Portada principal PC / Horizontal (16:9)',
+      desc: 'Video principal de la barra en Inicio, Tragos & Bebidas y Nosotros para computadoras y pantallas anchas.',
+      defaultUrl: 'assets/video/variaciones-flow/v5-hero-wide.mp4'
+    },
+    {
+      key: 'hero_portrait',
+      title: 'Portada principal Celular / Vertical (9:16)',
+      desc: 'Video vertical de la barra optimizado para celulares en Inicio, Tragos & Bebidas y Nosotros.',
+      defaultUrl: 'assets/video/variaciones-flow/v5-hero-portrait.mp4',
+      isPortrait: true
     },
     {
       key: 'main',
       title: 'Video de La Carta & Reservas (Botella 360°)',
-      desc: 'Video en bucle para las vistas La Carta y Reservas. La portada de inicio y Tragos & Bebidas usan el video del hielo 13/11.',
+      desc: 'Video en bucle que acompaña las vistas de La Carta y Reservas.',
       defaultUrl: 'assets/video/bottle-360-loop.mp4'
-    },
-    {
-      key: 'previa',
-      title: 'Video sección La Previa 13/11',
-      desc: 'Video ambientado con sonido que se activa en la sección "Tenemos Previa 13/11".',
-      defaultUrl: 'assets/video/ice-cube-1311.mp4'
     }
   ];
 
@@ -1931,7 +2002,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (activeCategoryTitle) activeCategoryTitle.textContent = 'Videos de secciones';
     if (activeCategoryCount) {
-      activeCategoryCount.textContent = '3 videos configurables para la experiencia inmersiva';
+      activeCategoryCount.textContent = '4 videos configurables para la experiencia inmersiva (PC, celular y secciones)';
     }
     if (btnRenameActiveCat) btnRenameActiveCat.hidden = true;
     if (btnDeleteActiveCat) btnDeleteActiveCat.hidden = true;
@@ -1940,8 +2011,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let currentVideos = {
       intro: 'assets/video/neon-intro-mery.mp4',
-      main: 'assets/video/bottle-360-loop.mp4',
-      previa: 'assets/video/ice-cube-1311.mp4'
+      hero_wide: 'assets/video/variaciones-flow/v5-hero-wide.mp4',
+      hero_portrait: 'assets/video/variaciones-flow/v5-hero-portrait.mp4',
+      main: 'assets/video/bottle-360-loop.mp4'
     };
 
     if (window.MeryStore && typeof window.MeryStore.getSiteVideos === 'function') {
@@ -1958,7 +2030,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <article class="admin-video-card" data-slot="${escapeHtml(slot.key)}">
               <div class="admin-video-preview-wrap">
                 <video
-                  class="admin-video-player"
+                  class="admin-video-player ${slot.isPortrait ? 'is-portrait' : ''}"
                   src="${escapeHtml(videoSrc)}"
                   muted
                   loop
@@ -2063,7 +2135,283 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 5. ITEM MODAL (Create / Edit Dish + Clean Photo Upload)
+  // 4d. SECTION IMAGES MANAGEMENT WORKSPACE (Auto-WebP optimization)
+  const SECTION_IMAGE_CONFIGS = [
+    {
+      key: 'drinks',
+      title: 'Inicio — Tarjeta Tragos & Bebidas',
+      desc: 'Imagen destacada de la tarjeta "Tragos & Bebidas" en la grilla principal.',
+      defaultUrl: 'assets/img/cocktails-neon.webp'
+    },
+    {
+      key: 'menu',
+      title: 'Inicio — Tarjeta La Carta',
+      desc: 'Imagen destacada de la tarjeta "La Carta" en la grilla principal.',
+      defaultUrl: 'assets/img/steak-flash.webp'
+    },
+    {
+      key: 'roulette',
+      title: 'Inicio — Tarjeta Ruleta & Promos',
+      desc: 'Imagen de la tarjeta promocional de la Ruleta en la grilla principal.',
+      defaultUrl: 'assets/img/ruleta-previa-card.webp'
+    },
+    {
+      key: 'reservation',
+      title: 'Inicio — Tarjeta Reservas',
+      desc: 'Imagen de la tarjeta de Reservas en la grilla principal.',
+      defaultUrl: 'assets/img/neon-wall-mery.webp'
+    },
+    {
+      key: 'about',
+      title: 'Inicio — Tarjeta Nosotros',
+      desc: 'Imagen de la tarjeta "Nosotros" en la grilla principal.',
+      defaultUrl: 'assets/img/dj-previa.webp'
+    },
+    {
+      key: 'about_reserve',
+      title: 'Sección Nosotros — Tarjeta "Reserva acá"',
+      desc: 'Primera tarjeta visual dentro de la vista Nosotros.',
+      defaultUrl: 'assets/img/brand-previa-zine.webp'
+    },
+    {
+      key: 'about_bar',
+      title: 'Sección Nosotros — Tarjeta "Ver Barra"',
+      desc: 'Segunda tarjeta visual dentro de la vista Nosotros.',
+      defaultUrl: 'assets/img/cocktails-neon.webp'
+    }
+  ];
+
+  function renderSectionImagesWorkspace() {
+    if (!sectionsContainer) return;
+    activeTab = 'section-images';
+    persistActiveTabState();
+
+    if (activeCategoryTitle) activeCategoryTitle.textContent = 'Imágenes de secciones';
+    if (activeCategoryCount) {
+      activeCategoryCount.textContent = '7 imágenes configurables • Todas las subidas se convierten automáticamente a WebP';
+    }
+    if (btnRenameActiveCat) btnRenameActiveCat.hidden = true;
+    if (btnDeleteActiveCat) btnDeleteActiveCat.hidden = true;
+    if (btnNewDish) btnNewDish.hidden = true;
+    if (adminSearchInput?.parentElement) adminSearchInput.parentElement.hidden = true;
+
+    const currentImages = window.MeryStore && typeof window.MeryStore.getSectionImages === 'function'
+      ? window.MeryStore.getSectionImages()
+      : {};
+
+    sectionsContainer.innerHTML = `
+      <div class="admin-section-images-grid">
+        ${SECTION_IMAGE_CONFIGS.map((slot) => {
+          const imgSrc = currentImages[slot.key] || slot.defaultUrl;
+          return `
+            <article class="admin-section-img-card" data-img-slot="${escapeHtml(slot.key)}">
+              <div class="admin-section-img-preview-wrap">
+                <img
+                  class="admin-section-img-preview"
+                  src="${escapeHtml(imgSrc)}"
+                  alt="${escapeHtml(slot.title)}"
+                  loading="lazy"
+                />
+                <span class="admin-webp-pill">WebP Auto</span>
+              </div>
+
+              <div class="admin-video-meta">
+                <h3 class="admin-video-title">${escapeHtml(slot.title)}</h3>
+                <p class="admin-video-desc">${escapeHtml(slot.desc)}</p>
+              </div>
+
+              <div class="admin-video-actions">
+                <label for="sectionImgFile_${escapeHtml(slot.key)}" class="admin-btn-gold admin-upload-label">
+                  Subir o cambiar imagen
+                </label>
+                <input
+                  type="file"
+                  id="sectionImgFile_${escapeHtml(slot.key)}"
+                  accept="image/*"
+                  data-img-slot="${escapeHtml(slot.key)}"
+                  hidden
+                />
+                <button
+                  type="button"
+                  class="admin-btn-outline"
+                  data-action="restore-section-img"
+                  data-img-slot="${escapeHtml(slot.key)}"
+                >
+                  Restaurar original
+                </button>
+              </div>
+            </article>
+          `;
+        }).join('')}
+      </div>
+    `;
+
+    sectionsContainer.querySelectorAll('input[type="file"][data-img-slot]').forEach((input) => {
+      input.addEventListener('change', async (e) => {
+        const file = e.target.files && e.target.files[0];
+        const slotKey = input.getAttribute('data-img-slot');
+        const slotConfig = SECTION_IMAGE_CONFIGS.find((s) => s.key === slotKey);
+        if (!file || !slotKey) return;
+
+        showToast('Optimizando a WebP y subiendo imagen...');
+        try {
+          const res = await window.MeryStore.uploadSectionImage(slotKey, file);
+          if (res && res.url) {
+            const card = input.closest('.admin-section-img-card');
+            const imgEl = card?.querySelector('.admin-section-img-preview');
+            if (imgEl) imgEl.src = res.url;
+            showToast(`Imagen de "${slotConfig?.title || slotKey}" optimizada a WebP y guardada`);
+          }
+        } catch (err) {
+          showToast('Error al procesar la imagen: ' + (err.message || 'formato no soportado'));
+        }
+      });
+    });
+
+    sectionsContainer.querySelectorAll('[data-action="restore-section-img"]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const slotKey = btn.getAttribute('data-img-slot');
+        const slotConfig = SECTION_IMAGE_CONFIGS.find((s) => s.key === slotKey);
+        if (!slotConfig) return;
+
+        openConfirmModal({
+          title: '¿Restaurar imagen original?',
+          message: `Vas a restablecer la imagen por defecto para "${slotConfig.title}". Esta acción impacta al instante en la web pública.`,
+          confirmLabel: 'Sí, restaurar',
+          onConfirm: async () => {
+            try {
+              if (window.MeryStore && typeof window.MeryStore.restoreSectionImage === 'function') {
+                const res = await window.MeryStore.restoreSectionImage(slotKey);
+                const card = btn.closest('.admin-section-img-card');
+                const imgEl = card?.querySelector('.admin-section-img-preview');
+                if (imgEl) imgEl.src = res.url || slotConfig.defaultUrl;
+                showToast(`Imagen de "${slotConfig.title}" restaurada`);
+              }
+            } catch (_) {
+              showToast('No se pudo restaurar la imagen');
+            }
+          }
+        });
+      });
+    });
+  }
+
+  // 5. ITEM MODAL (Create / Edit Dish + Clean Photo Upload + Dynamic Distinctions)
+  function getDistinctionsList() {
+    if (window.MeryStore && typeof window.MeryStore.getDishDistinctions === 'function') {
+      return window.MeryStore.getDishDistinctions();
+    }
+    return [
+      { id: '★', symbol: '★', label: 'Recomendado de la casa' },
+      { id: '◇', symbol: '◇', label: 'Especialidad 11:11' }
+    ];
+  }
+
+  function renderDistinctionChips() {
+    if (!adminDistinctionChips) return;
+    const list = getDistinctionsList();
+    if (list.length === 0) {
+      adminDistinctionChips.innerHTML = '<span style="font-size:0.74rem;color:var(--q-cream-muted);">No hay distinciones configuradas. Agregá una arriba.</span>';
+      return;
+    }
+    adminDistinctionChips.innerHTML = list.map((d) => `
+      <span class="admin-distinction-chip">
+        <span>${escapeHtml(d.symbol ? `${d.symbol} ${d.label}` : d.label)}</span>
+        <button
+          type="button"
+          class="admin-distinction-chip-del"
+          data-del-distinction="${escapeHtml(d.id)}"
+          title="Quitar distinción"
+          aria-label="Quitar ${escapeHtml(d.label)}"
+        >×</button>
+      </span>
+    `).join('');
+
+    adminDistinctionChips.querySelectorAll('[data-del-distinction]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const targetId = btn.getAttribute('data-del-distinction');
+        if (!targetId) return;
+        const currentSelected = itemFormBadge ? itemFormBadge.value : '';
+        if (window.MeryStore && typeof window.MeryStore.deleteDishDistinction === 'function') {
+          window.MeryStore.deleteDishDistinction(targetId);
+        }
+        const nextSelected = currentSelected === targetId ? '' : currentSelected;
+        populateDistinctionSelect(nextSelected);
+        renderDistinctionChips();
+        if (activeTab === 'category') renderActiveCategoryWorkspace();
+        showToast('Distinción eliminada');
+      });
+    });
+  }
+
+  function populateDistinctionSelect(selectedValue = '') {
+    if (!itemFormBadge) return;
+    const list = getDistinctionsList();
+    const cleanSelected = String(selectedValue || '').trim();
+    const normalizedSelected = cleanSelected === 'none' ? '' : cleanSelected;
+    const options = [
+      `<option value="">Sin distinción (ninguna)</option>`,
+      ...list.map((d) => {
+        const text = d.symbol ? `${d.symbol} ${d.label}` : d.label;
+        return `<option value="${escapeHtml(d.id)}">${escapeHtml(text)}</option>`;
+      })
+    ];
+
+    if (normalizedSelected && !list.some((d) => d.id === normalizedSelected)) {
+      const resolved = window.MeryStore && typeof window.MeryStore.resolveDishDistinction === 'function'
+        ? window.MeryStore.resolveDishDistinction(normalizedSelected)
+        : { id: normalizedSelected, symbol: '', label: normalizedSelected };
+      const label = resolved && resolved.symbol ? `${resolved.symbol} ${resolved.label}` : (resolved?.label || normalizedSelected);
+      options.push(`<option value="${escapeHtml(normalizedSelected)}">${escapeHtml(label)}</option>`);
+    }
+
+    itemFormBadge.innerHTML = options.join('');
+    itemFormBadge.value = normalizedSelected;
+  }
+
+  if (btnToggleDistinctionManager && adminDistinctionManager) {
+    btnToggleDistinctionManager.addEventListener('click', () => {
+      const willShow = adminDistinctionManager.hidden;
+      adminDistinctionManager.hidden = !willShow;
+      if (willShow) {
+        renderDistinctionChips();
+        newDistinctionLabel?.focus();
+      }
+    });
+  }
+
+  if (btnAddDistinction) {
+    btnAddDistinction.addEventListener('click', () => {
+      const symbol = newDistinctionSymbol ? newDistinctionSymbol.value.trim() : '✦';
+      const label = newDistinctionLabel ? newDistinctionLabel.value.trim() : '';
+      if (!label) {
+        showToast('Escribí un nombre para la distinción');
+        newDistinctionLabel?.focus();
+        return;
+      }
+      try {
+        if (window.MeryStore && typeof window.MeryStore.addDishDistinction === 'function') {
+          const { created } = window.MeryStore.addDishDistinction({ symbol: symbol || '✦', label });
+          populateDistinctionSelect(created.id);
+          renderDistinctionChips();
+          if (newDistinctionLabel) newDistinctionLabel.value = '';
+          showToast(`Distinción "${created.label}" agregada`);
+        }
+      } catch (err) {
+        showToast(err.message || 'No se pudo agregar la distinción');
+      }
+    });
+  }
+
+  if (newDistinctionLabel) {
+    newDistinctionLabel.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        btnAddDistinction?.click();
+      }
+    });
+  }
+
   function populateCategorySelect(selectedId) {
     if (!itemFormCategory) return;
     itemFormCategory.innerHTML = menuSections
@@ -2074,14 +2422,15 @@ document.addEventListener('DOMContentLoaded', () => {
   function openItemModal(defaultCatId, item) {
     const targetCat = defaultCatId || activeCategoryId || menuSections[0]?.id || 'cocktails';
     populateCategorySelect(targetCat);
+    if (adminDistinctionManager) adminDistinctionManager.hidden = true;
 
     if (item) {
       itemModalHeading.textContent = `Editar: ${item.name}`;
       itemFormId.value = item.id;
       itemFormPrice.value = item.price || '';
       itemFormName.value = item.name || '';
-      itemFormBadge.value = item.badge || '★';
-      itemFormImageUrl.value = item.image || 'assets/img/ice-cube-previa.jpg';
+      populateDistinctionSelect(typeof item.badge === 'string' ? item.badge : '');
+      itemFormImageUrl.value = item.image || 'assets/img/ice-cube-previa.webp';
       const pos = item.imagePosition || '50% 50%';
       const zoom = typeof item.imageZoom === 'number' ? item.imageZoom : 1;
       const modalPos = item.modalImagePosition || item.imagePosition || '50% 50%';
@@ -2093,11 +2442,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (itemFormModalImageZoom) itemFormModalImageZoom.value = modalZoom;
 
       if (itemFormPreview) {
-        itemFormPreview.src = item.image || 'assets/img/ice-cube-previa.jpg';
+        itemFormPreview.src = item.image || 'assets/img/ice-cube-previa.webp';
         applyCropToElement(itemFormPreview, { ...parseImagePosition(pos), zoom });
       }
       if (itemFormModalPreview) {
-        itemFormModalPreview.src = item.image || 'assets/img/ice-cube-previa.jpg';
+        itemFormModalPreview.src = item.image || 'assets/img/ice-cube-previa.webp';
         applyCropToElement(itemFormModalPreview, { ...parseImagePosition(modalPos), zoom: modalZoom });
       }
 
@@ -2110,8 +2459,8 @@ document.addEventListener('DOMContentLoaded', () => {
       itemFormId.value = '';
       itemFormPrice.value = '';
       itemFormName.value = '';
-      itemFormBadge.value = '★';
-      itemFormImageUrl.value = 'assets/img/ice-cube-previa.jpg';
+      populateDistinctionSelect('');
+      itemFormImageUrl.value = 'assets/img/ice-cube-previa.webp';
 
       if (itemFormImagePos) itemFormImagePos.value = '50% 50%';
       if (itemFormImageZoom) itemFormImageZoom.value = 1;
@@ -2119,11 +2468,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (itemFormModalImageZoom) itemFormModalImageZoom.value = 1;
 
       if (itemFormPreview) {
-        itemFormPreview.src = 'assets/img/ice-cube-previa.jpg';
+        itemFormPreview.src = 'assets/img/ice-cube-previa.webp';
         applyCropToElement(itemFormPreview, { x: 50, y: 50, zoom: 1 });
       }
       if (itemFormModalPreview) {
-        itemFormModalPreview.src = 'assets/img/ice-cube-previa.jpg';
+        itemFormModalPreview.src = 'assets/img/ice-cube-previa.webp';
         applyCropToElement(itemFormModalPreview, { x: 50, y: 50, zoom: 1 });
       }
 
@@ -2167,7 +2516,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (itemFormModalImagePos) itemFormModalImagePos.value = '50% 50%';
         if (itemFormModalImageZoom) itemFormModalImageZoom.value = 1;
 
-        showToast('Foto cargada. Ajustá los encuadres');
+        showToast('Foto optimizada a WebP y cargada. Ajustá los encuadres');
 
         // Immediately open the dedicated Instagram-style Cropper Modal
         openPhotoCropper({
@@ -2196,7 +2545,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const itemData = {
         id: existingId || `${slugify(name)}-${Date.now().toString(36).slice(-4)}`,
         name,
-        badge: itemFormBadge.value || '★',
+        badge: itemFormBadge ? itemFormBadge.value.trim() : '',
         price,
         desc: itemFormShortDesc.value.trim(),
         detailCopy: itemFormDetailCopy.value.trim() || itemFormShortDesc.value.trim(),
@@ -2205,7 +2554,7 @@ document.addEventListener('DOMContentLoaded', () => {
           .split(',')
           .map((t) => t.trim())
           .filter(Boolean),
-        image: itemFormImageUrl.value.trim() || 'assets/img/ice-cube-previa.jpg',
+        image: itemFormImageUrl.value.trim() || 'assets/img/ice-cube-previa.webp',
         imagePosition: itemFormImagePos ? itemFormImagePos.value.trim() || '50% 50%' : '50% 50%',
         imageZoom: itemFormImageZoom ? (parseFloat(itemFormImageZoom.value) || 1) : 1,
         modalImagePosition: itemFormModalImagePos ? itemFormModalImagePos.value.trim() || '50% 50%' : '50% 50%',

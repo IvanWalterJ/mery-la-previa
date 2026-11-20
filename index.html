@@ -21,7 +21,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,900&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;0,6..96,700;0,6..96,900;1,6..96,500;1,6..96,700;1,6..96,900&family=Forum&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=27" />
+  <link rel="stylesheet" href="styles.css?v=29" />
   <style>
     /* V2 Specific styles & Google Maps embed box */
     .qitchen-app[data-view]:not([data-view="home"]) .q-hero-subtag {
@@ -254,7 +254,7 @@
       <video
         id="bottleShowcaseLoopVideo"
         src="assets/video/variaciones-flow/v5-parte2-wide-loop.mp4"
-        poster="assets/img/portada-barra-wide-clean.jpg"
+        poster="assets/img/portada-barra-wide-clean.webp"
         width="1920"
         height="1080"
         loop
@@ -266,7 +266,7 @@
       <video
         id="bottleShowcaseVideo"
         src="assets/video/variaciones-flow/v5-hero-wide.mp4"
-        poster="assets/img/portada-barra-wide-empieza-aca.jpg"
+        poster="assets/img/portada-barra-wide-empieza-aca.webp"
         width="1920"
         height="1080"
         muted
@@ -346,7 +346,7 @@
         
         <!-- CARD 1: TRAGOS & BEBIDAS -->
         <button type="button" class="q-bento-card" data-goto="drinks">
-          <img src="assets/img/cocktails-neon.jpg" alt="Tragos &amp; Bebidas" />
+          <img src="assets/img/cocktails-neon.webp" data-section-img="drinks" alt="Tragos &amp; Bebidas" />
           <div class="q-card-corner-tab">
             <span class="q-corner-label">Tragos &amp; Bebidas</span>
             <span class="q-corner-circle">→</span>
@@ -355,7 +355,7 @@
 
         <!-- CARD 2: LA CARTA -->
         <button type="button" class="q-bento-card" data-goto="menu">
-          <img src="assets/img/steak-flash.jpg" alt="La Carta" />
+          <img src="assets/img/steak-flash.webp" data-section-img="menu" alt="La Carta" />
           <div class="q-card-corner-tab">
             <span class="q-corner-label">La Carta</span>
             <span class="q-corner-circle">→</span>
@@ -364,7 +364,7 @@
 
         <!-- CARD 3: PROMOS Y DESCUENTOS (RULETA) -->
         <button type="button" id="btnOpenRoulette" class="q-bento-card" data-goto="roulette" aria-label="Ver Promos y Descuentos">
-          <img src="assets/img/ruleta-previa-card.webp" alt="Promos y Descuentos — Beneficios Exclusivos" />
+          <img src="assets/img/ruleta-previa-card.webp" data-section-img="roulette" alt="Promos y Descuentos — Beneficios Exclusivos" />
           <div class="q-card-corner-tab">
             <span class="q-corner-label">Promos y Descuentos</span>
             <span class="q-corner-circle">
@@ -377,7 +377,7 @@
 
         <!-- CARD 4: RESERVAS -->
         <button type="button" class="q-bento-card" data-goto="reservation">
-          <img src="assets/img/neon-wall-mery.jpg" alt="Reservas" />
+          <img src="assets/img/neon-wall-mery.webp" data-section-img="reservation" alt="Reservas" />
           <div class="q-card-corner-tab">
             <span class="q-corner-label">Reservas</span>
             <span class="q-corner-circle">→</span>
@@ -386,7 +386,7 @@
 
         <!-- CARD 5: NOSOTROS -->
         <button type="button" class="q-bento-card" data-goto="about">
-          <img src="assets/img/dj-previa.jpg" alt="Nosotros" />
+          <img src="assets/img/dj-previa.webp" data-section-img="about" alt="Nosotros" />
           <div class="q-card-corner-tab">
             <span class="q-corner-label">Nosotros</span>
             <span class="q-corner-circle">→</span>
@@ -455,7 +455,7 @@
             </div>
 
             <div class="q-bento-card" style="min-height: 230px;" data-goto="reservation">
-              <img src="assets/img/brand-previa-zine.jpg" alt="Tenemos Previa" />
+              <img src="assets/img/brand-previa-zine.webp" data-section-img="about_reserve" alt="Tenemos Previa" />
               <div class="q-card-corner-tab">
                 <span class="q-corner-label">Reserva acá</span>
                 <span class="q-corner-circle">→</span>
@@ -485,7 +485,7 @@
           <!-- Bottom 2-Column Bento Row: Horarios -->
           <div class="q-about-grid">
             <div class="q-bento-card" style="min-height: 220px;" data-goto="menu">
-              <img src="assets/img/cocktails-neon.jpg" alt="Barra de Autor" />
+              <img src="assets/img/cocktails-neon.webp" data-section-img="about_bar" alt="Barra de Autor" />
               <div class="q-card-corner-tab">
                 <span class="q-corner-label">Ver Barra</span>
                 <span class="q-corner-circle">→</span>
@@ -755,10 +755,10 @@
       </button>
 
       <div class="q-dish-modal-media">
-        <img id="dishModalImage" src="assets/img/ice-cube-previa.jpg" alt="" />
+        <img id="dishModalImage" src="assets/img/ice-cube-previa.webp" alt="" />
         <div class="q-dish-modal-media-overlay">
           <span id="dishModalCategory" class="q-dish-modal-cat-pill">COCKTAILS 11:11</span>
-          <span id="dishModalBadge" class="q-dish-modal-badge-pill">★ RECOMENDADO DE LA CASA</span>
+          <span id="dishModalBadge" class="q-dish-modal-badge-pill" hidden></span>
         </div>
       </div>
 
@@ -985,7 +985,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js?v=22"></script>
-  <script src="app.js?v=27"></script>
+  <script src="supabase-config.js?v=23"></script>
+  <script src="app.js?v=28"></script>
 </body>
 </html>

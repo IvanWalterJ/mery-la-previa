@@ -15,25 +15,29 @@ const FALLBACK_SECTIONS = window.MeryStore
   ? window.MeryStore.DEFAULT_MENU_SECTIONS
   : [];
 
+const DEFAULT_SHOWCASE_WIDE_INTRO = 'assets/video/variaciones-flow/v5-hero-wide.mp4';
+const DEFAULT_SHOWCASE_WIDE_LOOP = 'assets/video/variaciones-flow/v5-parte2-wide-loop.mp4';
+const DEFAULT_SHOWCASE_PORTRAIT_INTRO = 'assets/video/variaciones-flow/v5-hero-portrait.mp4';
+const DEFAULT_SHOWCASE_PORTRAIT_LOOP = 'assets/video/variaciones-flow/v5-parte2-loop.mp4';
+
 const SHOWCASE_MEDIA = {
   wide: {
-    introVideo: 'assets/video/variaciones-flow/v5-hero-wide.mp4',
-    introPoster: 'assets/img/portada-barra-wide-empieza-aca.jpg',
-    loopVideo: 'assets/video/variaciones-flow/v5-parte2-wide-loop.mp4',
-    loopPoster: 'assets/img/portada-barra-wide-clean.jpg',
+    introVideo: DEFAULT_SHOWCASE_WIDE_INTRO,
+    introPoster: 'assets/img/portada-barra-wide-empieza-aca.webp',
+    loopVideo: DEFAULT_SHOWCASE_WIDE_LOOP,
+    loopPoster: 'assets/img/portada-barra-wide-clean.webp',
     width: 1920,
     height: 1080
   },
   portrait: {
-    introVideo: 'assets/video/variaciones-flow/v5-hero-portrait.mp4',
-    introPoster: 'assets/img/portada-barra-empieza-aca.jpg',
-    loopVideo: 'assets/video/variaciones-flow/v5-parte2-loop.mp4',
-    loopPoster: 'assets/img/portada-barra-clean-notext.jpg',
+    introVideo: DEFAULT_SHOWCASE_PORTRAIT_INTRO,
+    introPoster: 'assets/img/portada-barra-empieza-aca.webp',
+    loopVideo: DEFAULT_SHOWCASE_PORTRAIT_LOOP,
+    loopPoster: 'assets/img/portada-barra-clean-notext.webp',
     width: 1080,
     height: 1920
   }
 };
-const LEGACY_PREVIA_VIDEO = 'assets/video/ice-cube-1311.mp4';
 const HERO_TEXT_REVEAL_TIME = 6.6;
 
 const MOBILE_SHOWCASE_MQ =
@@ -48,7 +52,10 @@ function getActiveShowcaseVariant() {
 }
 
 function isHeroIntroVideo(src) {
-  return src === SHOWCASE_MEDIA.wide.introVideo || src === SHOWCASE_MEDIA.portrait.introVideo;
+  return (
+    src === DEFAULT_SHOWCASE_WIDE_INTRO ||
+    src === DEFAULT_SHOWCASE_PORTRAIT_INTRO
+  );
 }
 
 const INITIAL_SHOWCASE_VARIANT = getActiveShowcaseVariant();
@@ -69,7 +76,7 @@ const VIEW_CONFIG = {
   menu: {
     title: 'LA CARTA',
     video: 'assets/video/bottle-360-loop.mp4',
-    poster: 'assets/img/bottle-hero-isolated.jpg',
+    poster: 'assets/img/bottle-hero-isolated.webp',
     unmute: false
   },
   about: {
@@ -81,7 +88,7 @@ const VIEW_CONFIG = {
   reservation: {
     title: 'RESERVAS<br />MERY JANE',
     video: 'assets/video/bottle-360-loop.mp4',
-    poster: 'assets/img/bottle-hero-isolated.jpg',
+    poster: 'assets/img/bottle-hero-isolated.webp',
     unmute: false
   }
 };
@@ -240,6 +247,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function shouldUseLoopLayer(targetView) {
     if (!showcaseLoopVideo || !showcaseIntroCompleted) return false;
+    const variant = getActiveShowcaseVariant();
+    if (!variant || variant.introVideo === variant.loopVideo) return false;
     const viewKey = targetView || currentView;
     if (viewKey === 'about' && showcaseCustomPrevia) return false;
     return viewKey === 'home' || viewKey === 'drinks' || viewKey === 'about';
@@ -611,6 +620,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let activeModalDish = null;
 
+  function resolveDistinction(badge) {
+    const raw = String(badge || '').trim();
+    if (!raw || raw === 'none') return null;
+    if (window.MeryStore && typeof window.MeryStore.resolveDishDistinction === 'function') {
+      return window.MeryStore.resolveDishDistinction(raw);
+    }
+    if (raw === '★') return { id: '★', symbol: '★', label: 'Recomendado de la casa' };
+    if (raw === '◇') return { id: '◇', symbol: '◇', label: 'Especialidad 11:11' };
+    const parts = raw.split(/\s+/);
+    const first = parts[0] || '';
+    const hasSymbol = parts.length > 1 && first.length <= 2;
+    return {
+      id: raw,
+      symbol: hasSymbol ? first : '✦',
+      label: hasSymbol ? parts.slice(1).join(' ') : raw
+    };
+  }
+
   function openDishModal(item, categoryTitle) {
     if (!dishModal || !item) return;
     activeModalDish = { item, categoryTitle };
@@ -620,7 +647,7 @@ document.addEventListener('DOMContentLoaded', () => {
     dishModal.scrollTop = 0;
 
     if (dishModalImage) {
-      dishModalImage.src = item.image || 'assets/img/ice-cube-previa.jpg';
+      dishModalImage.src = item.image || 'assets/img/ice-cube-previa.webp';
       dishModalImage.alt = item.name || 'Detalle del plato';
       const modalPos = item.modalImagePosition || item.imagePosition || '50% 50%';
       const modalZoom = item.modalImageZoom || item.imageZoom || 1;
@@ -632,10 +659,17 @@ document.addEventListener('DOMContentLoaded', () => {
       dishModalCategory.textContent = categoryTitle || 'LA CARTA';
     }
     if (dishModalBadge) {
-      const badgeSymbol = item.badge || '★';
-      dishModalBadge.textContent = badgeSymbol === '★'
-        ? '★ RECOMENDADO DE LA CASA'
-        : `${badgeSymbol} ESPECIALIDAD 11:11`;
+      const distinction = resolveDistinction(item.badge);
+      if (distinction && distinction.label) {
+        const badgeText = distinction.symbol
+          ? `${distinction.symbol} ${distinction.label}`
+          : distinction.label;
+        dishModalBadge.textContent = badgeText.toUpperCase();
+        dishModalBadge.hidden = false;
+      } else {
+        dishModalBadge.textContent = '';
+        dishModalBadge.hidden = true;
+      }
     }
     if (dishModalTitle) dishModalTitle.textContent = item.name || '';
     if (dishModalPrice) dishModalPrice.textContent = item.price || '';
@@ -805,7 +839,12 @@ document.addEventListener('DOMContentLoaded', () => {
           <span class="q-diamond-symbol"></span>
           <span class="q-diamond-line"></span>
         </div>
-        ${visibleItems.map((item, idx) => `
+        ${visibleItems.map((item, idx) => {
+          const dist = resolveDistinction(item.badge);
+          const badgeHtml = dist
+            ? `<span class="q-leaf-badge" title="${escapeHtml(dist.label)}">${escapeHtml(dist.symbol || '✦')}</span>`
+            : '';
+          return `
           <article
             class="q-dish-row"
             role="button"
@@ -817,7 +856,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="q-dish-thumb-wrap">
               <img
                 class="q-dish-thumb"
-                src="${escapeHtml(item.image)}"
+                src="${escapeHtml(item.image || 'assets/img/ice-cube-previa.webp')}"
                 alt="${escapeHtml(item.name)}"
                 style="object-position: ${escapeHtml(item.imagePosition || '50% 50%')}; transform-origin: ${escapeHtml(item.imagePosition || '50% 50%')}; transform: scale(${Number(item.imageZoom) || 1});"
                 loading="lazy"
@@ -827,7 +866,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <div class="q-dish-header">
                 <div class="q-dish-title-wrap">
                   <h3 class="q-dish-name">${escapeHtml(item.name)}</h3>
-                  <span class="q-leaf-badge">${escapeHtml(item.badge || '★')}</span>
+                  ${badgeHtml}
                 </div>
                 <span class="q-dotted-leader"></span>
                 <span class="q-dish-price">${escapeHtml(item.price)}</span>
@@ -836,7 +875,8 @@ document.addEventListener('DOMContentLoaded', () => {
               <span class="q-dish-cta-hint">Ver detalle &amp; ritual →</span>
             </div>
           </article>
-        `).join('')}
+        `;
+        }).join('')}
       </div>
     `;
   }
@@ -914,10 +954,23 @@ document.addEventListener('DOMContentLoaded', () => {
       VIEW_CONFIG.menu.video = videos.main;
       VIEW_CONFIG.reservation.video = videos.main;
     }
-    if (videos.previa && videos.previa !== LEGACY_PREVIA_VIDEO) {
-      showcaseCustomPrevia = true;
-      VIEW_CONFIG.about.video = videos.previa;
-    }
+
+    const customWide = videos.hero_wide && videos.hero_wide !== DEFAULT_SHOWCASE_WIDE_INTRO
+      ? videos.hero_wide
+      : '';
+    SHOWCASE_MEDIA.wide.introVideo = customWide || DEFAULT_SHOWCASE_WIDE_INTRO;
+    SHOWCASE_MEDIA.wide.loopVideo = customWide || DEFAULT_SHOWCASE_WIDE_LOOP;
+
+    const customPortrait = videos.hero_portrait && videos.hero_portrait !== DEFAULT_SHOWCASE_PORTRAIT_INTRO
+      ? videos.hero_portrait
+      : '';
+    SHOWCASE_MEDIA.portrait.introVideo = customPortrait || DEFAULT_SHOWCASE_PORTRAIT_INTRO;
+    SHOWCASE_MEDIA.portrait.loopVideo = customPortrait || DEFAULT_SHOWCASE_PORTRAIT_LOOP;
+
+    const variant = syncShowcaseViewConfig();
+    warmShowcaseLoop(variant);
+    syncPreloadedLoopLayer(variant);
+
     if (showcaseVideo && currentView && VIEW_CONFIG[currentView]) {
       if (shouldUseLoopLayer(currentView)) {
         activateShowcaseLayer(true);
@@ -926,8 +979,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const activeCfg = VIEW_CONFIG[currentView];
       const currentLogical =
         showcaseVideo.dataset.logicalSrc || showcaseVideo.getAttribute('src');
+      activateShowcaseLayer(false);
       if (currentLogical !== activeCfg.video) {
-        activateShowcaseLayer(false);
         setShowcaseSource(
           activeCfg.video,
           activeCfg.poster,
@@ -952,6 +1005,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (window.MeryStore && typeof window.MeryStore.subscribeToVideoChanges === 'function') {
     window.MeryStore.subscribeToVideoChanges(applySiteVideos);
+  }
+
+  function applySectionImages(images) {
+    const map = images || (window.MeryStore && typeof window.MeryStore.getSectionImages === 'function'
+      ? window.MeryStore.getSectionImages()
+      : null);
+    if (!map || typeof map !== 'object') return;
+    document.querySelectorAll('[data-section-img]').forEach((imgEl) => {
+      const slot = imgEl.getAttribute('data-section-img');
+      if (slot && typeof map[slot] === 'string' && map[slot].trim()) {
+        const nextSrc = map[slot].trim();
+        if (imgEl.getAttribute('src') !== nextSrc) {
+          imgEl.setAttribute('src', nextSrc);
+        }
+      }
+    });
+  }
+
+  applySectionImages();
+
+  if (window.MeryStore && typeof window.MeryStore.subscribeToSectionImageChanges === 'function') {
+    window.MeryStore.subscribeToSectionImageChanges(applySectionImages);
   }
 
   // 4. Directional Slide View Transition + Left Video Swap (Always Silent)
@@ -1260,9 +1335,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Listen to live settings changes
   if (window.MeryStore && typeof window.MeryStore.fetchSiteSettingsFromSupabase === 'function') {
-    window.MeryStore.fetchSiteSettingsFromSupabase().then(() => {
+    window.MeryStore.fetchSiteSettingsFromSupabase().then((all) => {
       populateReservationOptions();
+      if (all && all.sectionImages) applySectionImages(all.sectionImages);
+      if (all && all.siteVideos) applySiteVideos(all.siteVideos);
+      renderQitchenMenu();
     }).catch(() => {});
+  }
+
+  if (window.MeryStore && typeof window.MeryStore.subscribeToSiteSettingsChanges === 'function') {
+    window.MeryStore.subscribeToSiteSettingsChanges((evt) => {
+      if (!evt) return;
+      if (evt.type === 'SETTINGS_UPDATED' || evt.type === 'SITE_SETTINGS_REMOTE_UPDATED') {
+        populateReservationOptions();
+      }
+      if (evt.type === 'SECTION_IMAGES_UPDATED' && evt.images) {
+        applySectionImages(evt.images);
+      } else if (evt.sectionImages) {
+        applySectionImages(evt.sectionImages);
+      }
+      if (evt.type === 'VIDEOS_UPDATED' && evt.videos) {
+        applySiteVideos(evt.videos);
+      } else if (evt.siteVideos) {
+        applySiteVideos(evt.siteVideos);
+      }
+      if (evt.type === 'DISTINCTIONS_UPDATED' || evt.type === 'SITE_SETTINGS_REMOTE_UPDATED') {
+        renderQitchenMenu();
+        if (activeModalDish && dishModal && dishModal.classList.contains('open')) {
+          openDishModal(activeModalDish.item, activeModalDish.categoryTitle);
+        }
+      }
+    });
   }
 
   // 6. Direct WhatsApp Reservation System with Live QR-Linked Phone
