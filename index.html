@@ -22,6 +22,166 @@
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,900&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;0,6..96,700;0,6..96,900;1,6..96,500;1,6..96,700;1,6..96,900&family=Forum&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css?v=27" />
+  <style>
+    /* V2 Specific styles & Google Maps embed box */
+    .qitchen-app[data-view]:not([data-view="home"]) .q-hero-subtag {
+      display: none !important;
+    }
+    .voucher-btn-download {
+      background: rgba(255, 255, 255, 0.08) !important;
+      border: 1px solid var(--q-border-strong) !important;
+      color: #fff !important;
+      margin-top: 8px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 8px !important;
+      transition: all 0.25s ease !important;
+    }
+    .voucher-btn-download:hover {
+      background: rgba(255, 255, 255, 0.16) !important;
+      border-color: var(--q-red) !important;
+      color: var(--q-red-bright) !important;
+    }
+    /* Custom select menus: max-height, sleek scrollbar, prevent cutting */
+    .q-select-menu {
+      max-height: 220px !important;
+      overflow-y: auto !important;
+      -webkit-overflow-scrolling: touch !important;
+      z-index: 100 !important;
+      scrollbar-width: thin !important;
+      scrollbar-color: var(--q-red) rgba(255, 255, 255, 0.08) !important;
+    }
+    .q-select-menu::-webkit-scrollbar {
+      width: 6px !important;
+      display: block !important;
+    }
+    .q-select-menu::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.4) !important;
+      border-radius: 999px !important;
+    }
+    .q-select-menu::-webkit-scrollbar-thumb {
+      background: var(--q-red) !important;
+      border-radius: 999px !important;
+    }
+    /* Generous bottom spacing for reservation form so dropdowns and button scroll cleanly */
+    #v2WhatsappResForm {
+      padding-bottom: 140px !important;
+    }
+    /* Dynamic z-index layering for custom select elements */
+    [data-select-id="v2ResType"] {
+      position: relative;
+      z-index: 30;
+    }
+    [data-select-id="v2ResDay"] {
+      position: relative;
+      z-index: 25;
+    }
+    [data-select-id="v2ResTime"] {
+      position: relative;
+      z-index: 20;
+    }
+    .q-custom-select.open {
+      z-index: 999 !important;
+    }
+    .q-custom-select.open .q-select-menu {
+      z-index: 1000 !important;
+    }
+    .q-about-map-box {
+      margin-top: 24px;
+      padding: 22px;
+      background: rgba(22, 14, 18, 0.72);
+      border: 1px solid var(--q-border-subtle);
+      border-radius: 16px;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+    .q-map-header {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+    .q-map-title-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .q-map-title-row h4 {
+      font-family: var(--font-serif);
+      font-size: 1.25rem;
+      letter-spacing: 0.04em;
+      color: var(--q-cream);
+      margin: 0;
+    }
+    .q-map-address {
+      font-size: 0.85rem;
+      color: var(--q-cream-muted);
+      margin: 0;
+      letter-spacing: 0.03em;
+    }
+    .q-map-frame-wrapper {
+      position: relative;
+      width: 100%;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--q-border-strong);
+      background: #0d0a0b;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+    }
+    .q-map-frame-wrapper iframe {
+      display: block;
+      width: 100%;
+      height: 290px;
+      border: 0;
+      filter: invert(90%) hue-rotate(180deg) contrast(105%) brightness(95%);
+    }
+    .q-map-actions {
+      margin-top: 14px;
+      display: flex;
+      justify-content: flex-end;
+    }
+    .q-map-link-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(224, 36, 52, 0.12);
+      color: var(--q-red-bright);
+      border: 1px solid rgba(224, 36, 52, 0.35);
+      border-radius: 999px;
+      padding: 9px 18px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-decoration: none;
+      transition: all 0.25s ease;
+    }
+    .q-map-link-btn:hover {
+      background: var(--q-red);
+      color: #fff;
+      border-color: var(--q-red);
+      transform: translateY(-1px);
+    }
+    .q-btn-whatsapp-res {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      background: linear-gradient(135deg, #25D366 0%, #128C7E 100%) !important;
+      color: #fff !important;
+      border: none !important;
+      font-weight: 700 !important;
+      letter-spacing: 0.1em !important;
+      box-shadow: 0 8px 25px rgba(37, 211, 102, 0.28) !important;
+      transition: all 0.3s ease !important;
+    }
+    .q-btn-whatsapp-res:hover {
+      transform: translateY(-2px) !important;
+      box-shadow: 0 12px 30px rgba(37, 211, 102, 0.42) !important;
+      filter: brightness(1.08);
+    }
+  </style>
 </head>
 <body>
 
@@ -36,18 +196,6 @@
     ></video>
     <div class="neon-vignette-blend" aria-hidden="true"></div>
 
-    <!-- Floating Sound Pill (Appears only if mobile browser blocks unmuted autoplay) -->
-    <button type="button" id="btnIntroUnmute" class="intro-sound-pill" aria-label="Activar sonido">
-      <span class="pill-dot"></span>
-      <span>TOCÁ PARA ACTIVAR SONIDO</span>
-      <span class="pill-speaker">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle;">
-          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-        </svg>
-      </span>
-    </button>
-
     <div class="intro-enter-wrap">
       <button type="button" id="btnDismissIntro" class="intro-enter-btn">
         <span class="intro-diamond"></span>
@@ -57,7 +205,7 @@
     </div>
   </div>
 
-  <!-- 2. FULLSCREEN QITCHEN HAMBURGER MENU OVERLAY (Screenshot 1 Exact Match) -->
+  <!-- FULLSCREEN QITCHEN HAMBURGER MENU OVERLAY -->
   <div id="qitchenMenuOverlay" class="qitchen-menu-overlay" aria-hidden="true" role="dialog" aria-label="Menú Principal">
     <button type="button" id="btnCloseOverlay" class="q-overlay-close-btn" aria-label="Cerrar menú">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
@@ -80,14 +228,14 @@
       <button type="button" class="q-overlay-link" data-overlay-goto="home">Inicio</button>
       <button type="button" class="q-overlay-link" data-overlay-goto="drinks">Tragos &amp; Bebidas</button>
       <button type="button" class="q-overlay-link" data-overlay-goto="menu">La Carta</button>
-      <button type="button" class="q-overlay-link" data-overlay-goto="reservation">Cumples &amp; VIP</button>
-      <button type="button" class="q-overlay-link" data-overlay-goto="about">La Previa &amp; 11:11</button>
       <button type="button" class="q-overlay-link roulette-overlay-link" id="btnOverlayRoulette" data-overlay-goto="roulette">
-        <span>Ruleta de Promos</span>
+        <span>Promos y Descuentos</span>
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align: middle; margin-left: 6px;">
           <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
         </svg>
       </button>
+      <button type="button" class="q-overlay-link" data-overlay-goto="reservation">Reserva acá</button>
+      <button type="button" class="q-overlay-link" data-overlay-goto="about">Nosotros</button>
       <a class="q-overlay-link" href="https://www.instagram.com/meryjane.laprevia/" target="_blank" rel="noopener" style="text-decoration: none;">Instagram ↗</a>
 
       <div class="q-overlay-ornament" aria-hidden="true">
@@ -98,12 +246,10 @@
     </nav>
   </div>
 
-  <!-- 3. QITCHEN FRAMER SPLIT-SCREEN BENTO SHELL -->
+  <!-- QITCHEN FRAMER SPLIT-SCREEN BENTO SHELL -->
   <div id="qitchenApp" class="qitchen-app" data-view="home">
 
-    <!-- ======================================================================
-         LEFT BENTO SHOWCASE (Joined Intro+Part2 Hero Video -> Seamless Preloaded Loop, or 360° Bottle)
-         ====================================================================== -->
+    <!-- LEFT BENTO SHOWCASE (Joined Intro+Part2 Hero Video -> Seamless Preloaded Loop, or 360° Bottle) -->
     <aside class="qitchen-left-showcase">
       <video
         id="bottleShowcaseLoopVideo"
@@ -137,8 +283,8 @@
         </button>
         <button type="button" class="q-nav-link" data-goto="drinks">Tragos &amp; Bebidas</button>
         <button type="button" class="q-nav-link" data-goto="menu">La Carta</button>
-        <button type="button" class="q-nav-link" data-goto="about">La Previa &amp; 11:11</button>
-        <button type="button" class="q-nav-link q-nav-book" data-goto="reservation">Cumples &amp; Reservas</button>
+        <button type="button" class="q-nav-link" data-goto="about">Nosotros</button>
+        <button type="button" class="q-nav-link q-nav-book" data-goto="reservation">RESERVA ACÁ</button>
         <button type="button" id="btnOpenOverlay" class="q-Menu-icon-btn" title="Abrir Menú" aria-label="Abrir o cerrar menú" aria-expanded="false">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
             <line x1="4" y1="8" x2="20" y2="8" />
@@ -173,7 +319,7 @@
         <span class="q-showcase-sound-label">Sonido</span>
       </button>
 
-      <!-- Bottom-Left Giant Title with Lighter Clean Typography & Pro SVGs without covering the bottle -->
+      <!-- Bottom-Left Giant Title -->
       <div class="qitchen-hero-bottom">
         <h1 id="leftHeroTitle" class="qitchen-giant-title">
           MERY JANE<br />LA PREVIA
@@ -192,18 +338,35 @@
       </div>
     </aside>
 
-    <!-- ======================================================================
-         RIGHT BENTO COLUMN (Switchable Qitchen Views with Slide Transition)
-         ====================================================================== -->
+    <!-- RIGHT BENTO COLUMN -->
     <main id="qitchenRightCol" class="qitchen-right-column">
 
-      <!-- VIEW 00: HOME CARD STACK (Scrollable Bento Column) -->
+      <!-- VIEW 00: HOME CARD STACK (Orden: Tragos primero, luego La Carta, luego Promos, luego Reservas, luego Nosotros) -->
       <section id="view-home" class="q-view active q-home-stack" aria-label="Secciones Principales">
-        <!-- Interactive Ruleta Bento Card with Optimized WebP -->
-        <button type="button" id="btnOpenRoulette" class="q-bento-card" data-goto="roulette" aria-label="Girar Ruleta de La Previa">
-          <img src="assets/img/ruleta-previa-card.webp" alt="Ruleta de La Previa — Premios y Promos de Hoy" />
+        
+        <!-- CARD 1: TRAGOS & BEBIDAS -->
+        <button type="button" class="q-bento-card" data-goto="drinks">
+          <img src="assets/img/cocktails-neon.jpg" alt="Tragos &amp; Bebidas" />
           <div class="q-card-corner-tab">
-            <span class="q-corner-label">Ruleta de Promos</span>
+            <span class="q-corner-label">Tragos &amp; Bebidas</span>
+            <span class="q-corner-circle">→</span>
+          </div>
+        </button>
+
+        <!-- CARD 2: LA CARTA -->
+        <button type="button" class="q-bento-card" data-goto="menu">
+          <img src="assets/img/steak-flash.jpg" alt="La Carta" />
+          <div class="q-card-corner-tab">
+            <span class="q-corner-label">La Carta</span>
+            <span class="q-corner-circle">→</span>
+          </div>
+        </button>
+
+        <!-- CARD 3: PROMOS Y DESCUENTOS (RULETA) -->
+        <button type="button" id="btnOpenRoulette" class="q-bento-card" data-goto="roulette" aria-label="Ver Promos y Descuentos">
+          <img src="assets/img/ruleta-previa-card.webp" alt="Promos y Descuentos — Beneficios Exclusivos" />
+          <div class="q-card-corner-tab">
+            <span class="q-corner-label">Promos y Descuentos</span>
             <span class="q-corner-circle">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                 <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
@@ -212,34 +375,20 @@
           </div>
         </button>
 
-        <button type="button" class="q-bento-card" data-goto="drinks">
-          <img src="assets/img/cocktails-neon.jpg" alt="Tragos y Bebidas de autor" />
-          <div class="q-card-corner-tab">
-            <span class="q-corner-label">Tragos &amp; Bebidas</span>
-            <span class="q-corner-circle">→</span>
-          </div>
-        </button>
-
-        <button type="button" class="q-bento-card" data-goto="menu">
-          <img src="assets/img/steak-flash.jpg" alt="La Carta — Cocina y Tapeo" />
-          <div class="q-card-corner-tab">
-            <span class="q-corner-label">La Carta</span>
-            <span class="q-corner-circle">→</span>
-          </div>
-        </button>
-
+        <!-- CARD 4: RESERVAS -->
         <button type="button" class="q-bento-card" data-goto="reservation">
-          <img src="assets/img/neon-wall-mery.jpg" alt="Cumpleaños y Reservas VIP" />
+          <img src="assets/img/neon-wall-mery.jpg" alt="Reservas" />
           <div class="q-card-corner-tab">
-            <span class="q-corner-label">Cumples &amp; VIP</span>
+            <span class="q-corner-label">Reservas</span>
             <span class="q-corner-circle">→</span>
           </div>
         </button>
 
+        <!-- CARD 5: NOSOTROS -->
         <button type="button" class="q-bento-card" data-goto="about">
-          <img src="assets/img/dj-previa.jpg" alt="La Previa &amp; 11:11" />
+          <img src="assets/img/dj-previa.jpg" alt="Nosotros" />
           <div class="q-card-corner-tab">
-            <span class="q-corner-label">La Previa &amp; 11:11</span>
+            <span class="q-corner-label">Nosotros</span>
             <span class="q-corner-circle">→</span>
           </div>
         </button>
@@ -263,7 +412,7 @@
         </div>
       </section>
 
-      <!-- VIEW 01: /MENU (Exact Qitchen Menu Template with Diamond Headers & Dotted Leaders) -->
+      <!-- VIEW 01: /MENU (La Carta) -->
       <section id="view-menu" class="q-view" aria-label="La Carta">
         <div class="q-panel-bordered">
           <div class="q-filter-pills" role="tablist">
@@ -280,13 +429,13 @@
         </div>
       </section>
 
-      <!-- VIEW 02: /ABOUT — LA PREVIA DE MERY & 11:11 -->
-      <section id="view-about" class="q-view" aria-label="Eventos, DJs y Horarios">
+      <!-- VIEW 02: /ABOUT — NOSOTROS -->
+      <section id="view-about" class="q-view" aria-label="Nosotros — La Previa de Mery">
         <div class="q-panel-bordered">
           <div class="q-diamond-heading">
             <span class="q-diamond-line"></span>
             <span class="q-diamond-symbol"></span>
-            <h2>La Previa de Mery</h2>
+            <h2>Nosotros</h2>
             <span class="q-diamond-symbol"></span>
             <span class="q-diamond-line"></span>
           </div>
@@ -308,7 +457,7 @@
             <div class="q-bento-card" style="min-height: 230px;" data-goto="reservation">
               <img src="assets/img/brand-previa-zine.jpg" alt="Tenemos Previa" />
               <div class="q-card-corner-tab">
-                <span class="q-corner-label">Reservar Previa</span>
+                <span class="q-corner-label">Reserva acá</span>
                 <span class="q-corner-circle">→</span>
               </div>
             </div>
@@ -333,7 +482,7 @@
             </div>
           </div>
 
-          <!-- Bottom 2-Column Bento Row: Horarios Mié-Dom -->
+          <!-- Bottom 2-Column Bento Row: Horarios -->
           <div class="q-about-grid">
             <div class="q-bento-card" style="min-height: 220px;" data-goto="menu">
               <img src="assets/img/cocktails-neon.jpg" alt="Barra de Autor" />
@@ -354,31 +503,72 @@
                 </p>
               </div>
               <button type="button" class="q-btn-submit" data-goto="reservation">
-                Reservar Mesa o Cumple →
+                Reserva acá →
               </button>
             </div>
           </div>
 
-          <footer class="q-panel-footer">
+          <!-- Google Maps Location Section -->
+          <div class="q-about-map-box">
+            <div class="q-map-header">
+              <div class="q-map-title-row">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--q-red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                <h4>Nuestra Ubicación</h4>
+              </div>
+              <p class="q-map-address">Calle 101 Nº 85 • Guernica, Provincia de Buenos Aires</p>
+            </div>
+            <div class="q-map-frame-wrapper">
+              <iframe
+                src="https://maps.google.com/maps?q=Calle%20101%20N%C2%BA%2085%2C%20Guernica%2C%20Provincia%20de%20Buenos%20Aires&t=&z=16&ie=UTF8&iwloc=&output=embed"
+                width="100%"
+                height="290"
+                style="border:0; border-radius: 12px; display: block;"
+                allowfullscreen=""
+                loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade"
+                title="Ubicación Mery Jane La Previa en Google Maps"
+              ></iframe>
+            </div>
+            <div class="q-map-actions">
+              <a
+                href="https://maps.google.com/?q=Calle+101+N%C2%BA+85,+Guernica,+Provincia+de+Buenos+Aires"
+                target="_blank"
+                rel="noopener"
+                class="q-map-link-btn"
+              >
+                <span>Abrir en Google Maps</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                  <polyline points="15 3 21 3 21 9"></polyline>
+                  <line x1="10" y1="14" x2="21" y2="3"></line>
+                </svg>
+              </a>
+            </div>
+          </div>
+
+          <footer class="q-panel-footer" style="margin-top: 24px;">
             <span>“Tu noche empieza acá” • Mery Jane</span>
             <span>Ambiente Calefaccionado • Mantitas VIP</span>
           </footer>
         </div>
       </section>
 
-      <!-- VIEW 03: /RESERVATION — CUMPLEAÑOS & RESERVA DE MESAS -->
-      <section id="view-reservation" class="q-view" aria-label="Cumpleaños y Reservas">
+      <!-- VIEW 03: /RESERVATION — RESERVAS (WHATSAPP DIRECTO) -->
+      <section id="view-reservation" class="q-view" aria-label="Reservas">
         <div class="q-panel-bordered">
           <div class="q-diamond-heading">
             <span class="q-diamond-line"></span>
             <span class="q-diamond-symbol"></span>
-            <h2>Cumples &amp; Mesas</h2>
+            <h2>Reservas</h2>
             <span class="q-diamond-symbol"></span>
             <span class="q-diamond-line"></span>
           </div>
 
           <p style="text-align: center; color: var(--q-cream-muted); font-size: 0.92rem; max-width: 520px; margin: -12px auto 0; line-height: 1.55;">
-            Asegurá tu mesa imperial, sector barra o festejo de cumpleaños con cajas Mery Jane, brindis de regalo para el anfitrión y acceso QR sin fila al set de DJ.
+            Asegurá tu mesa o festejo en Mery Jane. Completá los datos a continuación y coordinamos directamente por WhatsApp al instante.
           </p>
 
           <div class="q-award-row">
@@ -399,13 +589,22 @@
             </div>
           </div>
 
-          <form id="qitchenResForm" class="q-res-form">
-            <input type="text" id="resName" class="q-input" placeholder="Tu Nombre y Apellido" required />
-            <input type="email" id="resEmail" class="q-input" placeholder="Tu Email para enviarte el Pase QR y link de seña" required />
-            <input type="tel" id="resPhone" class="q-input" placeholder="Tu WhatsApp (ej. 11 5555-5555)" required />
+          <!-- FORMULARIO DIRECTO WHATSAPP (SOLO: Nombre y Apellido, Motivo, Cantidad de personas, Día, Horario) -->
+          <form id="v2WhatsappResForm" class="q-res-form" novalidate>
+            <!-- 1. Nombre y Apellido -->
+            <div class="q-form-field">
+              <input
+                type="text"
+                id="v2ResName"
+                class="q-input"
+                placeholder="Nombre y Apellido"
+                required
+                autocomplete="name"
+              />
+            </div>
 
-            <!-- Custom Branded Select: Motivo de Reserva -->
-            <div class="q-custom-select" data-select-id="resType">
+            <!-- 2. Motivo -->
+            <div class="q-custom-select" data-select-id="v2ResType">
               <button type="button" class="q-select-trigger" aria-haspopup="listbox" aria-expanded="false">
                 <span class="q-select-value">Motivo: Mesa Cena + Quedarse a la Previa</span>
                 <span class="q-select-arrow" aria-hidden="true">
@@ -415,37 +614,45 @@
                 </span>
               </button>
               <ul class="q-select-menu" role="listbox">
-                <li class="q-select-option selected" data-value="Mesa Cena + Previa" role="option" aria-selected="true">
+                <li class="q-select-option selected" data-value="Mesa Cena + Quedarse a la Previa" role="option" aria-selected="true">
                   <span>Mesa Cena + Quedarse a la Previa</span>
                   <span class="q-option-diamond">◇</span>
                 </li>
-                <li class="q-select-option" data-value="Cumpleaños VIP" role="option" aria-selected="false">
-                  <span>Festejo de Cumpleaños (con beneficios)</span>
+                <li class="q-select-option" data-value="Festejo de Cumpleaños" role="option" aria-selected="false">
+                  <span>Festejo de Cumpleaños</span>
                   <span class="q-option-diamond">◇</span>
                 </li>
-                <li class="q-select-option" data-value="Living VIP Cabina Previa" role="option" aria-selected="false">
+                <li class="q-select-option" data-value="Living VIP / Cabina DJ Previa" role="option" aria-selected="false">
                   <span>Living VIP / Cabina DJ Previa</span>
                   <span class="q-option-diamond">◇</span>
                 </li>
+                <li class="q-select-option" data-value="Tapeo &amp; Tragos con Amigos" role="option" aria-selected="false">
+                  <span>Tapeo &amp; Tragos con Amigos</span>
+                  <span class="q-option-diamond">◇</span>
+                </li>
               </ul>
-              <select id="resType" class="q-select-native" tabindex="-1" aria-hidden="true" required>
-                <option value="Mesa Cena + Previa" selected>Motivo: Mesa Cena + Quedarse a la Previa</option>
-                <option value="Cumpleaños VIP">Motivo: Festejo de Cumpleaños (con beneficios)</option>
-                <option value="Living VIP Cabina Previa">Motivo: Living VIP / Cabina DJ Previa</option>
+              <select id="v2ResType" class="q-select-native" tabindex="-1" aria-hidden="true" required>
+                <option value="Mesa Cena + Quedarse a la Previa" selected>Mesa Cena + Quedarse a la Previa</option>
+                <option value="Festejo de Cumpleaños">Festejo de Cumpleaños</option>
+                <option value="Living VIP / Cabina DJ Previa">Living VIP / Cabina DJ Previa</option>
+                <option value="Tapeo &amp; Tragos con Amigos">Tapeo &amp; Tragos con Amigos</option>
               </select>
             </div>
 
-            <!-- Conditional Birthday Fields (shown ONLY for Cumpleaños VIP) -->
-            <div id="resBirthdayFields" class="q-form-row-2" hidden style="display: none;">
-              <input type="text" id="resDni" class="q-input" placeholder="DNI del cumpleañero/a" />
-              <input type="date" id="resBirthDate" class="q-input" placeholder="Fecha de cumpleaños" />
-            </div>
-
+            <!-- 3. Cantidad de personas, Día y Horario -->
             <div class="q-form-row-3">
-              <input type="number" id="resGuests" class="q-input" min="2" max="40" placeholder="Personas (ej. 10)" required />
+              <input
+                type="number"
+                id="v2ResGuests"
+                class="q-input"
+                min="1"
+                max="60"
+                placeholder="Personas (ej. 8)"
+                required
+              />
 
-              <!-- Custom Branded Select: Día -->
-              <div class="q-custom-select" data-select-id="resDay">
+              <!-- Día -->
+              <div class="q-custom-select" data-select-id="v2ResDay">
                 <button type="button" class="q-select-trigger" aria-haspopup="listbox" aria-expanded="false">
                   <span class="q-select-value">Viernes (Cena &amp; Previa)</span>
                   <span class="q-select-arrow" aria-hidden="true">
@@ -455,33 +662,33 @@
                   </span>
                 </button>
                 <ul class="q-select-menu" role="listbox">
-                  <li class="q-select-option selected" data-value="Viernes" role="option" aria-selected="true">
+                  <li class="q-select-option selected" data-value="Viernes (Cena &amp; Previa)" role="option" aria-selected="true">
                     <span>Viernes (Cena &amp; Previa)</span>
                     <span class="q-option-diamond">◇</span>
                   </li>
-                  <li class="q-select-option" data-value="Sábado" role="option" aria-selected="false">
+                  <li class="q-select-option" data-value="Sábado (Previa &amp; DJ)" role="option" aria-selected="false">
                     <span>Sábado (Previa &amp; DJ)</span>
                     <span class="q-option-diamond">◇</span>
                   </li>
-                  <li class="q-select-option" data-value="Domingo" role="option" aria-selected="false">
+                  <li class="q-select-option" data-value="Domingo (Wine &amp; Tapeo)" role="option" aria-selected="false">
                     <span>Domingo (Wine &amp; Tapeo)</span>
                     <span class="q-option-diamond">◇</span>
                   </li>
-                  <li class="q-select-option" data-value="Miércoles / Jueves" role="option" aria-selected="false">
+                  <li class="q-select-option" data-value="Miércoles / Jueves (After &amp; Cocktails)" role="option" aria-selected="false">
                     <span>Mié / Jue (After &amp; Cocktails)</span>
                     <span class="q-option-diamond">◇</span>
                   </li>
                 </ul>
-                <select id="resDay" class="q-select-native" tabindex="-1" aria-hidden="true" required>
-                  <option value="Viernes" selected>Viernes (Cena &amp; Previa)</option>
-                  <option value="Sábado">Sábado (Previa &amp; DJ)</option>
-                  <option value="Domingo">Domingo (Wine &amp; Tapeo)</option>
-                  <option value="Miércoles / Jueves">Mié / Jue (After &amp; Cocktails)</option>
+                <select id="v2ResDay" class="q-select-native" tabindex="-1" aria-hidden="true" required>
+                  <option value="Viernes (Cena &amp; Previa)" selected>Viernes (Cena &amp; Previa)</option>
+                  <option value="Sábado (Previa &amp; DJ)">Sábado (Previa &amp; DJ)</option>
+                  <option value="Domingo (Wine &amp; Tapeo)">Domingo (Wine &amp; Tapeo)</option>
+                  <option value="Miércoles / Jueves (After &amp; Cocktails)">Miércoles / Jueves (After &amp; Cocktails)</option>
                 </select>
               </div>
 
-              <!-- Custom Branded Select: Horario -->
-              <div class="q-custom-select" data-select-id="resTime">
+              <!-- Horario -->
+              <div class="q-custom-select" data-select-id="v2ResTime">
                 <button type="button" class="q-select-trigger" aria-haspopup="listbox" aria-expanded="false">
                   <span class="q-select-value">20:30 hs (Cena)</span>
                   <span class="q-select-arrow" aria-hidden="true">
@@ -496,51 +703,34 @@
                     <span class="q-option-diamond">◇</span>
                   </li>
                   <li class="q-select-option" data-value="22:00 hs (Cena Tardía)" role="option" aria-selected="false">
-                    <span>22:00 hs</span>
+                    <span>22:00 hs (Cena Tardía)</span>
                     <span class="q-option-diamond">◇</span>
                   </li>
                   <li class="q-select-option" data-value="23:30 hs (Previa &amp; Club)" role="option" aria-selected="false">
-                    <span>23:30 hs (Previa)</span>
+                    <span>23:30 hs (Previa &amp; Club)</span>
+                    <span class="q-option-diamond">◇</span>
+                  </li>
+                  <li class="q-select-option" data-value="01:00 hs (DJ Set &amp; Fiesta)" role="option" aria-selected="false">
+                    <span>01:00 hs (DJ Set &amp; Fiesta)</span>
                     <span class="q-option-diamond">◇</span>
                   </li>
                 </ul>
-                <select id="resTime" class="q-select-native" tabindex="-1" aria-hidden="true" required>
+                <select id="v2ResTime" class="q-select-native" tabindex="-1" aria-hidden="true" required>
                   <option value="20:30 hs (Cena)" selected>20:30 hs (Cena)</option>
-                  <option value="22:00 hs (Cena Tardía)">22:00 hs</option>
-                  <option value="23:30 hs (Previa &amp; Club)">23:30 hs (Previa)</option>
+                  <option value="22:00 hs (Cena Tardía)">22:00 hs (Cena Tardía)</option>
+                  <option value="23:30 hs (Previa &amp; Club)">23:30 hs (Previa &amp; Club)</option>
+                  <option value="01:00 hs (DJ Set &amp; Fiesta)">01:00 hs (DJ Set &amp; Fiesta)</option>
                 </select>
               </div>
             </div>
 
-            <!-- Real-time availability indicator notice -->
-            <div id="resDayAvailNotice" class="q-res-avail-notice" hidden></div>
+            <div id="v2FormErrorNotice" style="color: #ff5566; font-size: 0.86rem; text-align: center; margin-top: 4px;" hidden></div>
 
-            <!-- Deposit Mode Selector -->
-            <div class="q-deposit-mode-container">
-              <label class="q-form-label">Tipo de reserva &amp; Garantía de mesa</label>
-              <div id="resDepositModeWrap" class="q-deposit-cards-grid">
-                <div class="q-deposit-card active" data-deposit-mode="con_sena">
-                  <div class="q-deposit-card-header">
-                    <span class="q-deposit-card-badge">RECOMENDADO</span>
-                    <span class="q-deposit-card-check">●</span>
-                  </div>
-                  <strong class="q-deposit-card-title">Con seña — Lugar asegurado</strong>
-                  <p class="q-deposit-card-desc">Se guarda y asegura tu mesa toda la noche. Transferencia por Alias o Link de pago.</p>
-                </div>
-                <div class="q-deposit-card" data-deposit-mode="sin_sena">
-                  <div class="q-deposit-card-header">
-                    <span class="q-deposit-card-badge q-badge-simple">SIMPLE</span>
-                    <span class="q-deposit-card-check">○</span>
-                  </div>
-                  <strong class="q-deposit-card-title">Sin seña — Reserva simple</strong>
-                  <p class="q-deposit-card-desc">Sujeta a disponibilidad y 15 min de tolerancia en puerta.</p>
-                </div>
-              </div>
-              <input type="hidden" id="resDepositMode" value="con_sena" />
-            </div>
-
-            <button type="submit" id="btnSubmitReservation" class="q-btn-submit">
-              Generar Pase VIP QR &amp; Confirmar Reserva
+            <button type="submit" id="btnSubmitV2Reservation" class="q-btn-submit q-btn-whatsapp-res">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+              </svg>
+              <span>RESERVA TU MESA</span>
             </button>
           </form>
 
@@ -554,7 +744,7 @@
     </main>
   </div>
 
-  <!-- 4. QITCHEN DISH DETAIL MODAL (Opens on clicking any menu item) -->
+  <!-- QITCHEN DISH DETAIL MODAL (Opens on clicking any menu item) -->
   <div id="qitchenDishModal" class="q-dish-modal-backdrop" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="dishModalTitle">
     <div class="q-dish-modal-card">
       <button type="button" id="btnCloseDishModal" class="q-dish-modal-close" aria-label="Cerrar detalle del plato">
@@ -603,7 +793,7 @@
 
         <div class="q-dish-modal-actions">
           <button type="button" id="btnDishModalReserve" class="q-btn-submit">
-            Reservar Mesa con este Plato →
+            Reserva acá con este Plato →
           </button>
           <button type="button" id="btnDishModalBack" class="q-btn-secondary">
             Seguir viendo la carta
@@ -613,262 +803,7 @@
     </div>
   </div>
 
-  <!-- 5. RESERVATION RECHECK CONFIRMATION MODAL (S10) -->
-  <div id="qitchenResConfirmModal" class="q-dish-modal-backdrop res-modal-backdrop" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="confirmResModalTitle">
-    <div class="q-dish-modal-card res-modal-card">
-      <button type="button" id="btnCloseConfirmModal" class="q-dish-modal-close" aria-label="Cerrar ventana de confirmación">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <line x1="6" y1="6" x2="18" y2="18" />
-          <line x1="18" y1="6" x2="6" y2="18" />
-        </svg>
-      </button>
-
-      <div class="res-confirm-content">
-        <div class="res-confirm-header">
-          <span class="res-badge-pill">REVISIÓN DE DATOS</span>
-          <h3 id="confirmResModalTitle" class="res-confirm-title">Revisá los datos de tu reserva</h3>
-          <p class="res-confirm-subtitle">Verificá que todo esté correcto antes de confirmar tu lugar.</p>
-        </div>
-
-        <div class="res-confirm-grid">
-          <div class="res-confirm-row">
-            <span class="res-confirm-label">Titular</span>
-            <strong id="confirmResName" class="res-confirm-val">-</strong>
-          </div>
-          <div class="res-confirm-row">
-            <span class="res-confirm-label">Teléfono</span>
-            <strong id="confirmResPhone" class="res-confirm-val">-</strong>
-          </div>
-          <div class="res-confirm-row">
-            <span class="res-confirm-label">Correo</span>
-            <strong id="confirmResEmail" class="res-confirm-val">-</strong>
-          </div>
-          <div class="res-confirm-row">
-            <span class="res-confirm-label">Fecha y Horario</span>
-            <strong id="confirmResDateTime" class="res-confirm-val">-</strong>
-          </div>
-          <div class="res-confirm-row">
-            <span class="res-confirm-label">Personas</span>
-            <strong id="confirmResGuests" class="res-confirm-val">-</strong>
-          </div>
-          <div class="res-confirm-row">
-            <span class="res-confirm-label">Sector / Motivo</span>
-            <strong id="confirmResType" class="res-confirm-val">-</strong>
-          </div>
-          <div id="confirmResBirthdayRow" class="res-confirm-row res-confirm-row-full" hidden>
-            <span class="res-confirm-label">Cumpleaños VIP</span>
-            <div class="res-confirm-val">
-              DNI: <strong id="confirmResDni">-</strong> • Fecha: <strong id="confirmResBirthDate">-</strong>
-            </div>
-          </div>
-          <div class="res-confirm-row res-confirm-row-full res-confirm-deposit-box">
-            <span class="res-confirm-label">Modalidad seleccionada</span>
-            <strong id="confirmResDeposit" class="res-confirm-val res-confirm-deposit-val">-</strong>
-          </div>
-        </div>
-
-        <div class="res-confirm-actions">
-          <button type="button" id="btnConfirmResFinal" class="q-btn-submit res-btn-confirm">
-            Confirmar reserva definitiva →
-          </button>
-          <button type="button" id="btnEditResData" class="q-btn-secondary res-btn-edit">
-            Modificar datos
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 6. RESERVATION SUCCESS MODAL (S10) -->
-  <div id="qitchenResSuccessModal" class="q-dish-modal-backdrop res-modal-backdrop" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="successResTitle">
-    <div class="q-dish-modal-card res-modal-card res-success-card">
-      <button type="button" id="btnCloseSuccessModalCross" class="q-dish-modal-close" aria-label="Cerrar">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <line x1="6" y1="6" x2="18" y2="18" />
-          <line x1="18" y1="6" x2="6" y2="18" />
-        </svg>
-      </button>
-
-      <div class="res-success-content">
-        <div class="res-success-icon-wrap">
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#d4af37" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>
-        </div>
-
-        <h3 id="successResTitle" class="res-success-title">¡Tu reserva fue recibida con éxito!</h3>
-
-        <div class="res-success-code-box">
-          <span class="res-success-code-label">CÓDIGO DE RESERVA</span>
-          <span id="successResCode" class="res-success-code">MLP-8492</span>
-        </div>
-
-        <p class="res-success-desc">
-          Te enviamos la confirmación con tu Pase de Acceso VIP a tu <strong>WhatsApp</strong> y correo electrónico.
-        </p>
-
-        <div class="res-success-actions">
-          <a id="btnOpenDigitalPass" href="pase.html" target="_blank" rel="noopener" class="q-btn-submit res-btn-open-pass">
-            Abrir mi Pase de Acceso Digital ↗
-          </a>
-          <button type="button" id="btnCloseSuccessModal" class="q-btn-secondary">
-            Cerrar
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 7. AIRPORT BOARDING PASS & CUSTOMER DEPOSIT PORTAL MODAL (S9) -->
-  <div id="qitchenBoardingPassModal" class="q-dish-modal-backdrop bp-modal-backdrop" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="bpModalTitle">
-    <div class="q-dish-modal-card bp-modal-card">
-      <button type="button" id="btnCloseBoardingPass" class="q-dish-modal-close" aria-label="Cerrar Pase de Abordaje">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <line x1="6" y1="6" x2="18" y2="18" />
-          <line x1="18" y1="6" x2="6" y2="18" />
-        </svg>
-      </button>
-
-      <!-- Airport Boarding Pass Card Container -->
-      <div id="bpCardContainer" class="bp-ticket">
-        <!-- Top Boarding Pass Header -->
-        <div class="bp-header">
-          <div class="bp-brand">
-            <span class="bp-tagline">MERY LA PREVIA • VIP NIGHTS</span>
-            <h3 id="bpModalTitle" class="bp-title">BOARDING PASS</h3>
-          </div>
-          <div class="bp-code-wrap">
-            <span class="bp-label">CÓDIGO DE RESERVA</span>
-            <span id="bpCode" class="bp-code">MLP-8492</span>
-          </div>
-        </div>
-
-        <!-- Status Pill Banner -->
-        <div class="bp-status-bar">
-          <span id="bpStatusBadge" class="bp-status-badge bp-status-pending">PENDIENTE DE COMPROBANTE DE SEÑA</span>
-        </div>
-
-        <!-- Passenger / Reservation Details Grid -->
-        <div class="bp-grid">
-          <div class="bp-cell">
-            <span class="bp-label">PASAJERO / TITULAR</span>
-            <strong id="bpName" class="bp-val">Agustina Di Marco</strong>
-          </div>
-          <div class="bp-cell">
-            <span class="bp-label">FECHA Y HORARIO</span>
-            <strong id="bpDateTime" class="bp-val">Viernes 13/11 • 22:00 hs</strong>
-          </div>
-          <div class="bp-cell">
-            <span class="bp-label">SECTOR / MOTIVO</span>
-            <strong id="bpType" class="bp-val">Cumpleaños VIP</strong>
-          </div>
-          <div class="bp-cell">
-            <span class="bp-label">CANTIDAD DE PERSONAS</span>
-            <strong id="bpGuests" class="bp-val">10 personas</strong>
-          </div>
-          <div id="bpBirthdayInfoRow" class="bp-cell bp-cell-full" hidden>
-            <span class="bp-label">DATOS DE CUMPLEAÑERO/A</span>
-            <span class="bp-val">DNI: <strong id="bpDni">-</strong> • Fecha: <strong id="bpBirthDate">-</strong> (Brindis y Beneficios)</span>
-          </div>
-        </div>
-
-        <!-- Perforated tear line style separator -->
-        <div class="bp-tear-line">
-          <span class="bp-notch bp-notch-left"></span>
-          <span class="bp-dashed"></span>
-          <span class="bp-notch bp-notch-right"></span>
-        </div>
-
-        <!-- Scannable QR Code Section -->
-        <div class="bp-qr-section">
-          <div class="bp-qr-box">
-            <canvas id="bpQrCanvas" width="220" height="220" class="bp-qr-canvas"></canvas>
-          </div>
-          <div class="bp-qr-info">
-            <span class="bp-qr-title">Check-in de Puerta Escaneable</span>
-            <p class="bp-qr-desc">Presentá este código QR en la entrada para registrar tu ingreso y acceder sin fila.</p>
-            <div class="bp-door-badge">
-              <span>ACCESO NOCTURNO • CABINA 13:11</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Customer Deposit Proof & Transfer Section -->
-        <div id="bpDepositSection" class="bp-deposit-section">
-          <div class="bp-deposit-header">
-            <div class="bp-deposit-title-wrap">
-              <span class="bp-deposit-icon">◇</span>
-              <h4>Asegurar mesa con seña</h4>
-            </div>
-            <span id="bpDepositAmount" class="bp-deposit-amount">$15.000</span>
-          </div>
-
-          <p class="bp-deposit-intro">
-            Para garantizar tu mesa durante toda la noche, realizá la transferencia y adjuntá el comprobante:
-          </p>
-
-          <div class="bp-bank-details">
-            <div class="bp-bank-row">
-              <span class="bp-bank-label">Alias:</span>
-              <strong id="bpDepositAlias" class="bp-bank-val">MERY.LAPREVIA.MP</strong>
-              <button type="button" class="bp-btn-copy" data-copy-target="bpDepositAlias">Copiar</button>
-            </div>
-            <div class="bp-bank-row">
-              <span class="bp-bank-label">CBU:</span>
-              <strong id="bpDepositCbu" class="bp-bank-val">0000003100098765432100</strong>
-              <button type="button" class="bp-btn-copy" data-copy-target="bpDepositCbu">Copiar</button>
-            </div>
-          </div>
-
-          <div class="bp-paylink-wrap">
-            <a id="bpPaymentLink" href="https://mpago.la/mery-la-previa" target="_blank" rel="noopener" class="bp-btn-mp">
-              Pagar con Mercado Pago →
-            </a>
-          </div>
-
-          <!-- Customer Portal Link Strip -->
-          <div class="bp-portal-link-box">
-            <span class="bp-label">ENLACE DIRECTO DE TU PORTAL</span>
-            <div class="bp-portal-link-row">
-              <input type="text" id="bpCustomerPortalUrl" class="bp-portal-input" readonly />
-              <button type="button" id="btnCopyPortalUrl" class="bp-btn-copy">Copiar enlace</button>
-            </div>
-            <p class="bp-portal-note">
-              También te enviamos este enlace a tu correo y WhatsApp para que puedas subir el comprobante cuando quieras.
-            </p>
-          </div>
-
-          <!-- Direct Proof Upload Zone -->
-          <div class="bp-proof-zone">
-            <span class="bp-label">SUBIR COMPROBANTE DE TRANSFERENCIA</span>
-            <div class="bp-proof-upload-box">
-              <input type="file" id="bpProofFileInput" accept="image/*" hidden />
-              <button type="button" id="btnUploadProofNow" class="q-btn-submit bp-btn-proof">
-                Adjuntar comprobante de pago
-              </button>
-              <div id="bpProofPreviewWrap" class="bp-proof-preview-wrap" hidden>
-                <img id="bpProofPreviewImg" src="" alt="Comprobante subido" class="bp-proof-img" />
-                <span id="bpProofStatusMsg" class="bp-proof-status-msg">✓ Comprobante recibido — Ya notificamos al equipo</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- Footer Action Buttons -->
-      <div class="bp-footer-actions">
-        <button type="button" id="btnDownloadBoardingPass" class="q-btn-submit">
-          Descargar Pase QR (PNG)
-        </button>
-        <button type="button" id="btnShareBoardingPassWhatsapp" class="q-btn-secondary">
-          Compartir por WhatsApp
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 8. INTERACTIVE PROMOTIONS RULETA MODAL (S4) -->
+  <!-- PROMOS Y DESCUENTOS (RULETA) MODAL -->
   <div id="qitchenRouletteModal" class="q-dish-modal-backdrop roulette-modal-backdrop" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="rouletteModalTitle">
     <div class="q-dish-modal-card roulette-modal-card">
       <button type="button" id="btnCloseRouletteModal" class="q-dish-modal-close" aria-label="Cerrar Ruleta de La Previa">
@@ -924,7 +859,7 @@
         </div>
       </div>
 
-      <!-- Stage 2: Result & Claim Form -->
+      <!-- Stage 2: Prize Result & Claim Form -->
       <div id="rouletteResultCard" class="roulette-result-card" hidden>
         <div class="roulette-congrats-banner">
           <span class="congrats-kicker">★ ¡FELICITACIONES! GANASTE ★</span>
@@ -933,7 +868,7 @@
         </div>
 
         <form id="rouletteClaimForm" class="roulette-claim-form" novalidate>
-          <p class="claim-form-prompt">Ingresá tu nombre y WhatsApp para generar tu cupón digital intransferible:</p>
+          <p class="claim-form-prompt">Ingresá tus datos para emitir tu cupón oficial intransferible:</p>
           <div class="roulette-form-field">
             <label for="rouletteClaimName">Nombre y Apellido</label>
             <input type="text" id="rouletteClaimName" name="name" placeholder="Ej: Valentina López" required autocomplete="name" />
@@ -943,7 +878,7 @@
             <input type="tel" id="rouletteClaimPhone" name="phone" placeholder="Ej: 11 5566-7788" required autocomplete="tel" />
           </div>
           <button type="submit" id="btnSubmitClaim" class="q-btn-submit roulette-submit-btn">
-            Obtener mi Cupón Digital →
+            Emitir Mi Cupón Digital →
           </button>
         </form>
 
@@ -1007,13 +942,21 @@
               <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
             </svg>
           </button>
-          <button type="button" id="btnSaveVoucher" class="q-btn-secondary voucher-btn-save">
+          <button type="button" id="btnDownloadVoucher" class="q-btn-submit voucher-btn-download">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 6px;">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span>Descargar Cupón</span>
+          </button>
+          <button type="button" id="btnDismissVoucher" class="q-btn-secondary voucher-btn-save">
             Volver a la Ruleta / Menú
           </button>
         </div>
       </div>
 
-      <!-- Stage 4: Friendly Cooldown / Daily Limit State -->
+      <!-- Cooldown Card -->
       <div id="rouletteCooldownCard" class="roulette-cooldown-card" hidden>
         <div class="cooldown-icon-wrap">
           <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#e02434" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -1023,7 +966,7 @@
         <h3 class="cooldown-title">Límite de Tiros por Hoy</h3>
         <p id="rouletteCooldownMsg" class="cooldown-message">
           Ya completaste los 3 tiros disponibles de hoy para tu dispositivo.
-          ¡Volvé mañana a partir de las 19:00 hs para seguir jugando por más premios o disfrutá tus cupones vigentes en la barra!
+          ¡Volvé mañana a partir de las 19:00 hs para seguir jugando por más beneficios o disfrutá tus cupones vigentes en la barra!
         </p>
 
         <div id="cooldownVouchersList" class="cooldown-vouchers-list" hidden>
@@ -1043,6 +986,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js?v=22"></script>
-  <script src="app.js?v=26"></script>
+  <script src="app.js?v=27"></script>
 </body>
 </html>

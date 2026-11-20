@@ -1,9 +1,12 @@
 {
   "cleanUrls": true,
   "trailingSlash": false,
+  "redirects": [
+    { "source": "/version2", "destination": "/", "permanent": false },
+    { "source": "/version2.html", "destination": "/", "permanent": false }
+  ],
   "rewrites": [
     { "source": "/admin", "destination": "/admin.html" },
-    { "source": "/pase", "destination": "/pase.html" },
-    { "source": "/version2", "destination": "/version2.html" }
+    { "source": "/pase", "destination": "/pase.html" }
   ]
 }
