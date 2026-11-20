@@ -889,8 +889,8 @@ document.addEventListener('DOMContentLoaded', () => {
   renderFilterPills();
   renderQitchenMenu();
 
-  if (window.MeryStore && typeof window.MeryStore.fetchSectionsFromSupabase === 'function') {
-    window.MeryStore.fetchSectionsFromSupabase().then((sections) => {
+  if (window.MeryStore && typeof window.MeryStore.fetchMenuSections === 'function') {
+    window.MeryStore.fetchMenuSections().then((sections) => {
       if (Array.isArray(sections) && sections.length > 0) {
         menuSections = sections;
         renderFilterPills();

@@ -568,13 +568,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
           const client = window.MeryStore.getClient();
           if (client) {
-            client.from('menu_items').update({
-              image_position: item.imagePosition,
-              image_zoom: item.imageZoom,
-              modal_image_position: item.modalImagePosition,
-              modal_image_zoom: item.modalImageZoom,
-              updated_at: new Date().toISOString()
-            }).eq('id', item.id).then(() => {}).catch(() => {});
+            handleSupabaseWrite(
+              client.from('menu_items').update({
+                image_position: item.imagePosition,
+                image_zoom: item.imageZoom,
+                modal_image_position: item.modalImagePosition,
+                modal_image_zoom: item.modalImageZoom,
+                updated_at: new Date().toISOString()
+              }).eq('id', item.id),
+              'encuadre'
+            );
           }
         }
         closePhotoCropper();
@@ -686,6 +689,19 @@ document.addEventListener('DOMContentLoaded', () => {
     toastTimer = setTimeout(() => {
       toastEl.hidden = true;
     }, 2600);
+  }
+
+  function handleSupabaseWrite(promise, label) {
+    if (!promise || typeof promise.then !== 'function') return;
+    promise.then((res) => {
+      if (res && res.error) {
+        console.error(`Error Supabase (${label}):`, res.error);
+        showToast(`⚠️ No se pudo guardar ${label} en la nube`);
+      }
+    }).catch((err) => {
+      console.error(`Error Supabase (${label}):`, err);
+      showToast(`⚠️ No se pudo guardar ${label} en la nube`);
+    });
   }
 
   // 1. UNIFIED VISUAL CONFIRMATION POPUP (Custom modal with animated green check on success)
@@ -1246,7 +1262,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const client = window.MeryStore.getClient();
         if (client) {
-          client.from('menu_items').update({ price: rawPrice, updated_at: new Date().toISOString() }).eq('id', itemId).then(() => {}).catch(() => {});
+          handleSupabaseWrite(
+            client.from('menu_items').update({ price: rawPrice, updated_at: new Date().toISOString() }).eq('id', itemId),
+            'precio'
+          );
         }
       });
     });
@@ -1270,7 +1289,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const client = window.MeryStore.getClient();
         if (client) {
-          client.from('menu_items').update({ available: item.available, updated_at: new Date().toISOString() }).eq('id', itemId).then(() => {}).catch(() => {});
+          handleSupabaseWrite(
+            client.from('menu_items').update({ available: item.available, updated_at: new Date().toISOString() }).eq('id', itemId),
+            'disponibilidad'
+          );
         }
       });
     });
@@ -1302,7 +1324,10 @@ document.addEventListener('DOMContentLoaded', () => {
             commitChangesInstant(`"${item.name}" fue eliminado`);
             const client = window.MeryStore.getClient();
             if (client) {
-              client.from('menu_items').delete().eq('id', itemId).then(() => {}).catch(() => {});
+              handleSupabaseWrite(
+                client.from('menu_items').delete().eq('id', itemId),
+                'eliminación de ítem'
+              );
             }
           }
         });
@@ -1333,7 +1358,10 @@ document.addEventListener('DOMContentLoaded', () => {
           commitChangesInstant(`Categoría "${sec.title}" eliminada`);
           const client = window.MeryStore.getClient();
           if (client) {
-            client.from('menu_categories').delete().eq('slug', sec.id).then(() => {}).catch(() => {});
+            handleSupabaseWrite(
+              client.from('menu_categories').delete().eq('slug', sec.id),
+              'eliminación de categoría'
+            );
           }
         }
       });
@@ -2186,13 +2214,18 @@ document.addEventListener('DOMContentLoaded', () => {
       };
 
       const targetSec = menuSections.find((s) => s.id === targetCatId);
+      let existingSortOrder = null;
       if (existingId) {
         let updatedInPlace = false;
         menuSections.forEach((sec) => {
           const idx = (sec.items || []).findIndex((i) => i.id === existingId);
           if (idx !== -1) {
+            existingSortOrder = typeof sec.items[idx].sort_order === 'number'
+              ? sec.items[idx].sort_order
+              : (idx + 1);
             if (sec.id === targetCatId) {
               itemData.available = sec.items[idx].available !== false;
+              itemData.sort_order = existingSortOrder;
               sec.items[idx] = itemData;
               updatedInPlace = true;
             } else {
@@ -2201,9 +2234,11 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         });
         if (!updatedInPlace && targetSec) {
+          itemData.sort_order = existingSortOrder ?? (targetSec.items.length + 1);
           targetSec.items.push(itemData);
         }
       } else if (targetSec) {
+        itemData.sort_order = targetSec.items.length + 1;
         targetSec.items.push(itemData);
       }
 
@@ -2213,23 +2248,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const client = window.MeryStore.getClient();
       if (client) {
-        client.from('menu_items').upsert({
-          id: itemData.id,
-          category_id: targetCatId,
-          name: itemData.name,
-          badge: itemData.badge,
-          price: itemData.price,
-          short_desc: itemData.desc,
-          detail_copy: itemData.detailCopy,
-          pairing_note: itemData.pairing,
-          tags: itemData.tags,
-          image_url: itemData.image,
-          image_position: itemData.imagePosition,
-          image_zoom: itemData.imageZoom,
-          modal_image_position: itemData.modalImagePosition,
-          modal_image_zoom: itemData.modalImageZoom,
-          available: itemData.available
-        }, { onConflict: 'id' }).then(() => {}).catch(() => {});
+        handleSupabaseWrite(
+          client.from('menu_items').upsert({
+            id: itemData.id,
+            category_id: targetCatId,
+            name: itemData.name,
+            badge: itemData.badge,
+            price: itemData.price,
+            short_desc: itemData.desc,
+            detail_copy: itemData.detailCopy,
+            pairing_note: itemData.pairing,
+            tags: itemData.tags,
+            image_url: itemData.image,
+            image_position: itemData.imagePosition,
+            image_zoom: itemData.imageZoom,
+            modal_image_position: itemData.modalImagePosition,
+            modal_image_zoom: itemData.modalImageZoom,
+            available: itemData.available,
+            sort_order: itemData.sort_order ?? 1,
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'id' }),
+          'ítem'
+        );
       }
     });
   }
@@ -2270,18 +2310,28 @@ document.addEventListener('DOMContentLoaded', () => {
       const sectionGroup = catFormGroup && catFormGroup.value === 'food' ? 'food' : 'drinks';
 
       let targetSlug = existingSlug;
+      let targetSortOrder = menuSections.length + 1;
       if (existingSlug) {
-        const sec = menuSections.find((s) => s.id === existingSlug);
+        const secIndex = menuSections.findIndex((s) => s.id === existingSlug);
+        const sec = secIndex !== -1 ? menuSections[secIndex] : null;
         if (sec) {
           sec.title = title;
           sec.group = sectionGroup;
+          targetSortOrder = typeof sec.sort_order === 'number' ? sec.sort_order : (secIndex + 1);
+          sec.sort_order = targetSortOrder;
         }
       } else {
-        targetSlug = slugify(title);
+        const baseSlug = slugify(title);
+        targetSlug = baseSlug;
+        let suffix = 2;
+        while (menuSections.some((s) => s.id === targetSlug)) {
+          targetSlug = `${baseSlug}-${suffix++}`;
+        }
+        targetSortOrder = menuSections.length + 1;
         menuSections.push({
           id: targetSlug,
           title,
-          sort_order: menuSections.length + 1,
+          sort_order: targetSortOrder,
           group: sectionGroup,
           items: []
         });
@@ -2293,12 +2343,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const client = window.MeryStore.getClient();
       if (client && targetSlug) {
-        client.from('menu_categories').upsert({
-          slug: targetSlug,
-          title,
-          sort_order: menuSections.length,
-          section_type: sectionGroup
-        }, { onConflict: 'slug' }).then(() => {}).catch(() => {});
+        handleSupabaseWrite(
+          client.from('menu_categories').upsert({
+            slug: targetSlug,
+            title,
+            sort_order: targetSortOrder,
+            section_type: sectionGroup,
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'slug' }),
+          'categoría'
+        );
       }
     });
   }
