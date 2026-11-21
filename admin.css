@@ -3140,6 +3140,96 @@ body:has(.admin-modal-backdrop:not([hidden])) {
   width: 100%;
 }
 
+.admin-roulette-code-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 18px;
+  background: linear-gradient(135deg, rgba(224, 36, 52, 0.14) 0%, rgba(20, 12, 16, 0.96) 100%);
+  border: 1px solid var(--q-border-strong);
+  border-radius: 14px;
+  padding: 20px 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45), 0 0 24px rgba(224, 36, 52, 0.14);
+}
+
+.admin-roulette-code-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 520px;
+}
+
+.admin-roulette-code-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #4ade80;
+}
+
+.admin-roulette-code-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--q-cream);
+}
+
+.admin-roulette-code-desc {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--q-cream-muted);
+  line-height: 1.45;
+}
+
+.admin-roulette-code-display-wrap {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.admin-roulette-code-value {
+  min-width: 140px;
+  padding: 12px 22px;
+  border-radius: 12px;
+  background: rgba(8, 7, 8, 0.9);
+  border: 1px dashed rgba(224, 36, 52, 0.65);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: 0.24em;
+  text-align: center;
+  color: #ffffff;
+  text-shadow: 0 0 18px rgba(224, 36, 52, 0.55);
+  user-select: all;
+}
+
+.admin-roulette-code-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 720px) {
+  .admin-roulette-code-card {
+    padding: 18px 18px;
+  }
+
+  .admin-roulette-code-display-wrap {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .admin-roulette-code-value {
+    flex: 1;
+    font-size: 1.65rem;
+  }
+}
+
 .admin-roulette-banner {
   display: flex;
   align-items: center;
@@ -3199,7 +3289,7 @@ body:has(.admin-modal-backdrop:not([hidden])) {
 
 .admin-roulette-settings-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 18px 24px;
   background: var(--q-surface);
   border: 1px solid var(--q-border);
@@ -3457,4 +3547,232 @@ body:has(.admin-modal-backdrop:not([hidden])) {
 .admin-voucher-meta strong {
   color: var(--q-cream);
 }
+
+/* Normalized Probability Summary & Protected Slot */
+.admin-prob-summary-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--q-border);
+  border-radius: 12px;
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-prob-summary-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-prob-summary-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--q-cream);
+}
+
+.admin-prob-summary-total {
+  font-size: 0.78rem;
+  color: var(--q-cream-muted);
+}
+
+.admin-prob-summary-total strong {
+  color: var(--q-cream);
+}
+
+.admin-prob-chips-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-prob-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: rgba(8, 7, 8, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.78rem;
+  color: var(--q-cream-muted);
+}
+
+.admin-prob-chip strong {
+  color: var(--q-cream);
+}
+
+.admin-prob-chip.is-inactive {
+  opacity: 0.55;
+}
+
+.admin-prob-chip-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.admin-prize-prob-badge.is-zero {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--q-cream-muted);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.admin-prize-card.is-protected-slot {
+  border-color: rgba(239, 231, 210, 0.25);
+}
+
+.admin-prize-fixed-pill {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(239, 231, 210, 0.2);
+  background: rgba(239, 231, 210, 0.06);
+  color: var(--q-cream-muted);
+}
+
+/* Used Roulette Codes History & Metrics */
+.admin-used-metric-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--q-border);
+  font-size: 0.78rem;
+  color: var(--q-cream-muted);
+}
+
+.admin-used-metric-pill strong {
+  color: #ffffff;
+}
+
+.admin-used-codes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.admin-used-code-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 11px 14px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--q-border);
+}
+
+.admin-used-code-pill {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.96rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: var(--q-cream);
+}
+
+.admin-used-code-time {
+  font-size: 0.76rem;
+  color: var(--q-cream-muted);
+  flex: 1;
+  text-align: center;
+}
+
+.admin-used-code-status {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--q-cream-muted);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  white-space: nowrap;
+}
+
+/* Reusable Admin Pagination Bar */
+.admin-pagination-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--q-border);
+}
+
+.admin-pagination-summary {
+  font-size: 0.8rem;
+  color: var(--q-cream-muted);
+}
+
+.admin-pagination-summary strong {
+  color: var(--q-cream);
+}
+
+.admin-pagination-size {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: var(--q-cream-muted);
+}
+
+.admin-pagination-select {
+  appearance: auto;
+  background: #0d0a0b;
+  color: var(--q-cream);
+  border: 1px solid var(--q-border);
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.admin-pagination-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-page-btn {
+  padding: 6px 12px !important;
+  font-size: 0.78rem !important;
+}
+
+.admin-page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.admin-pagination-page-label {
+  font-size: 0.8rem;
+  color: var(--q-cream);
+  font-weight: 600;
+}
+
+@media (max-width: 720px) {
+  .admin-pagination-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-pagination-nav {
+    justify-content: space-between;
+  }
+}
+
 

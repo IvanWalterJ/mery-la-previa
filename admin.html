@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="admin.css?v=18" />
+  <link rel="stylesheet" href="admin.css?v=20" />
   <style>
     /* Menu section (Tragos & Bebidas vs La Carta) badges in the admin panel */
     .admin-cat-pill-group {
@@ -969,8 +969,9 @@
 
         <div class="admin-form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div class="admin-form-group">
-            <label for="prizeProbInput">Probabilidad / Peso (%)</label>
+            <label for="prizeProbInput">Peso / Probabilidad relativa (1 a 100)</label>
             <input type="number" id="prizeProbInput" class="admin-input" min="1" max="100" value="20" required />
+            <small style="color: var(--q-cream-muted); font-size: 0.72rem;">La ruleta calcula el % real según la suma total</small>
           </div>
           <div class="admin-form-group">
             <label for="prizeColorInput">Color del Gajo</label>
@@ -994,7 +995,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/js/qrcode.min.js"></script>
   <script src="assets/js/jsqr.min.js"></script>
-  <script src="supabase-config.js?v=23"></script>
-  <script src="admin.js?v=20"></script>
+  <script src="supabase-config.js?v=25"></script>
+  <script src="admin.js?v=23"></script>
 </body>
 </html>

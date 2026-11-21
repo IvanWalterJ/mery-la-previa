@@ -4,6 +4,13 @@
     { "source": "/version2", "destination": "/index.html" },
     { "source": "/version2.html", "destination": "/index.html" },
     { "source": "/admin", "destination": "/admin.html" },
-    { "source": "/pase", "destination": "/pase.html" }
+    { "source": "/pase", "destination": "/pase.html" },
+    { "source": "/inicio", "destination": "/index.html" },
+    { "source": "/tragos", "destination": "/index.html" },
+    { "source": "/carta", "destination": "/index.html" },
+    { "source": "/ruleta", "destination": "/index.html" },
+    { "source": "/promos", "destination": "/index.html" },
+    { "source": "/reservas", "destination": "/index.html" },
+    { "source": "/nosotros", "destination": "/index.html" }
   ]
 }

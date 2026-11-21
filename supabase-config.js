@@ -50,7 +50,7 @@ const DEFAULT_ROULETTE_SETTINGS = {
     { id: 'off-mesa', name: '10% OFF en tu Mesa', stock: 5, totalStock: 5, color: '#880b15', probability: 15, condition: 'Mostralo al pedir la cuenta' },
     { id: 'tapeo-gratis', name: 'Tapeo de Cortesía', stock: 8, totalStock: 8, color: '#1c1014', probability: 15, condition: 'Con la compra de cualquier botella' },
     { id: 'trago-autor', name: 'Trago de Autor Regalo', stock: 5, totalStock: 5, color: '#b81424', probability: 10, condition: '1 trago de autor a elección del bartender' },
-    { id: 'segui-participando', name: 'Seguí Participando', stock: 999, totalStock: 999, color: '#261418', probability: 15, condition: '¡Volvé a girar si todavía tenés tiros!' }
+    { id: 'segui-participando', name: 'Seguí Participando', stock: 999, totalStock: 999, color: '#261418', probability: 15, condition: '¡Volvé a girar si todavía tenés tiros!', isNoPrize: true }
   ]
 };
 
@@ -1615,7 +1615,13 @@ const DEFAULT_MENU_SECTIONS = [
         const rouletteRow = data.find((r) => r.key === 'roulette_settings');
         if (rouletteRow && rouletteRow.value && typeof rouletteRow.value === 'object') {
           const currentR = getRouletteSettings();
-          const mergedR = { ...currentR, ...rouletteRow.value };
+          const mergedR = {
+            ...currentR,
+            ...rouletteRow.value,
+            prizes: ensureProtectedNoPrizeSlot(
+              Array.isArray(rouletteRow.value.prizes) ? rouletteRow.value.prizes : currentR.prizes
+            )
+          };
           try {
             localStorage.setItem(STORAGE_KEY_ROULETTE_SETTINGS, JSON.stringify(mergedR));
           } catch (_) {}
@@ -1699,6 +1705,45 @@ const DEFAULT_MENU_SECTIONS = [
   // ===========================================================================
   // S3 / S4: ROULETTE & PROMOTIONS DATA LAYER
   // ===========================================================================
+  function isNoPrizeSlot(prize) {
+    if (!prize || typeof prize !== 'object') return false;
+    return (
+      prize.id === 'segui-participando' ||
+      prize.isNoPrize === true ||
+      /segu[ií]\s+participando/i.test(String(prize.name || ''))
+    );
+  }
+
+  function ensureProtectedNoPrizeSlot(prizesList) {
+    const base = Array.isArray(prizesList) ? prizesList.map((p) => ({ ...p })) : [];
+    let hasNoPrize = false;
+    const normalized = base.map((p) => {
+      if (isNoPrizeSlot(p)) {
+        hasNoPrize = true;
+        return {
+          ...p,
+          isNoPrize: true,
+          stock: 999,
+          totalStock: 999
+        };
+      }
+      return p;
+    });
+    if (!hasNoPrize) {
+      normalized.push({
+        id: 'segui-participando',
+        name: 'Seguí Participando',
+        stock: 999,
+        totalStock: 999,
+        color: '#261418',
+        probability: 15,
+        condition: '¡Volvé a girar si todavía tenés tiros!',
+        isNoPrize: true
+      });
+    }
+    return normalized;
+  }
+
   function getRouletteSettings() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY_ROULETTE_SETTINGS);
@@ -1711,16 +1756,25 @@ const DEFAULT_MENU_SECTIONS = [
           ...DEFAULT_ROULETTE_SETTINGS,
           ...parsed,
           title: parsed.title === 'La Previa Paga la Vuelta' ? 'Mery Invita la Previa' : (parsed.title || DEFAULT_ROULETTE_SETTINGS.title),
-          prizes: Array.isArray(parsed.prizes) ? parsed.prizes : DEFAULT_ROULETTE_SETTINGS.prizes
+          prizes: ensureProtectedNoPrizeSlot(Array.isArray(parsed.prizes) ? parsed.prizes : DEFAULT_ROULETTE_SETTINGS.prizes)
         };
       }
     } catch (_) {}
-    return { ...DEFAULT_ROULETTE_SETTINGS };
+    return {
+      ...DEFAULT_ROULETTE_SETTINGS,
+      prizes: ensureProtectedNoPrizeSlot(DEFAULT_ROULETTE_SETTINGS.prizes)
+    };
   }
 
   function saveRouletteSettings(settings) {
     const current = getRouletteSettings();
-    const merged = { ...current, ...settings };
+    const merged = {
+      ...current,
+      ...settings,
+      prizes: ensureProtectedNoPrizeSlot(
+        settings && Array.isArray(settings.prizes) ? settings.prizes : current.prizes
+      )
+    };
     try {
       localStorage.setItem(STORAGE_KEY_ROULETTE_SETTINGS, JSON.stringify(merged));
     } catch (_) {}
@@ -1755,6 +1809,146 @@ const DEFAULT_MENU_SECTIONS = [
       prizes: updatedPrizes,
       activeDate: new Date().toISOString().slice(0, 10)
     });
+  }
+
+  function decrementRoulettePrizeStock(prizeId) {
+    const current = getRouletteSettings();
+    const prizeIndex = current.prizes.findIndex((p) => p.id === prizeId);
+    if (prizeIndex === -1) return null;
+
+    const prize = current.prizes[prizeIndex];
+    if (!isNoPrizeSlot(prize) && prize.stock !== 999) {
+      current.prizes[prizeIndex].stock = Math.max(0, (Number(prize.stock) || 0) - 1);
+      saveRouletteSettings({ prizes: current.prizes });
+    }
+
+    return {
+      success: true,
+      remainingStock: current.prizes[prizeIndex].stock
+    };
+  }
+
+  async function fetchUsedRouletteCodes() {
+    const client = getClient();
+    if (!client) return [];
+    try {
+      const { data, error } = await client
+        .from('roulette_access_codes')
+        .select('id, code, status, created_at, used_at')
+        .eq('status', 'used')
+        .order('used_at', { ascending: false })
+        .limit(500);
+      if (error) {
+        console.warn('fetchUsedRouletteCodes error:', error.message || error);
+        return [];
+      }
+      return Array.isArray(data) ? data : [];
+    } catch (err) {
+      console.warn('fetchUsedRouletteCodes exception:', (err && err.message) || err);
+      return [];
+    }
+  }
+
+  async function clearUsedRouletteCodes() {
+    const client = getClient();
+    if (!client) return { success: false, deleted: 0 };
+    try {
+      const { data, error } = await client.rpc('clear_used_roulette_codes');
+      if (error) {
+        console.warn('clearUsedRouletteCodes error:', error.message || error);
+        return { success: false, deleted: 0, error: error.message };
+      }
+      return { success: true, deleted: Number(data) || 0 };
+    } catch (err) {
+      return { success: false, deleted: 0, error: (err && err.message) || 'Error' };
+    }
+  }
+
+  async function redeemRouletteAccessCode(code) {
+    const clean = String(code || '').trim().toUpperCase();
+    if (!clean) {
+      return { valid: false, error: 'Ingresá el código que te dio la camarera' };
+    }
+    const client = getClient();
+    if (!client) {
+      return { valid: false, error: 'No hay conexión con el servidor' };
+    }
+    try {
+      const { data, error } = await client.rpc('redeem_roulette_access_code', { p_code: clean });
+      if (error) {
+        return { valid: false, error: error.message || 'No se pudo validar el código' };
+      }
+      if (data && typeof data === 'object') {
+        return data;
+      }
+      return { valid: false, error: 'Código inválido o ya utilizado' };
+    } catch (err) {
+      return { valid: false, error: (err && err.message) || 'Error de red al validar el código' };
+    }
+  }
+
+  async function fetchActiveRouletteCode() {
+    const client = getClient();
+    if (!client) return null;
+    try {
+      const { data, error } = await client
+        .from('roulette_access_codes')
+        .select('id, code, status, created_at')
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) {
+        console.warn('fetchActiveRouletteCode error:', error.message || error);
+        return null;
+      }
+      return data || null;
+    } catch (err) {
+      console.warn('fetchActiveRouletteCode exception:', (err && err.message) || err);
+      return null;
+    }
+  }
+
+  async function rotateRouletteAccessCode() {
+    const client = getClient();
+    if (!client) return null;
+    try {
+      const { data, error } = await client.rpc('rotate_roulette_access_code');
+      if (error) {
+        console.warn('rotateRouletteAccessCode error:', error.message || error);
+        return null;
+      }
+      return typeof data === 'string' ? data : null;
+    } catch (err) {
+      console.warn('rotateRouletteAccessCode exception:', (err && err.message) || err);
+      return null;
+    }
+  }
+
+  function subscribeToRouletteCodeChanges(onChange) {
+    if (typeof onChange !== 'function') return () => {};
+    const client = getClient();
+    let channel = null;
+    if (client && typeof client.channel === 'function') {
+      try {
+        channel = client
+          .channel('mery-roulette-codes-sync-' + Math.random().toString(36).slice(2, 7))
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'roulette_access_codes' },
+            async () => {
+              const activeRow = await fetchActiveRouletteCode();
+              onChange(activeRow);
+            }
+          )
+          .subscribe();
+      } catch (_) {}
+    }
+    return () => {
+      if (client && channel && typeof client.removeChannel === 'function') {
+        try { client.removeChannel(channel); } catch (_) {}
+      }
+    };
   }
 
   function claimRoulettePrize(prizeId, clientInfo = {}) {
@@ -2531,9 +2725,17 @@ const DEFAULT_MENU_SECTIONS = [
     renderQrCode,
     // S3/S4: Roulette & Promos
     DEFAULT_ROULETTE_SETTINGS,
+    isNoPrizeSlot,
     getRouletteSettings,
     saveRouletteSettings,
     resetRouletteDailyStock,
+    decrementRoulettePrizeStock,
+    redeemRouletteAccessCode,
+    fetchActiveRouletteCode,
+    rotateRouletteAccessCode,
+    fetchUsedRouletteCodes,
+    clearUsedRouletteCodes,
+    subscribeToRouletteCodeChanges,
     claimRoulettePrize,
     sendRouletteVoucherNotification,
     fetchRouletteVouchers,

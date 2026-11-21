@@ -229,6 +229,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // Global operational & reservation state declarations (avoids TDZ on early render)
   let activeResFilter = 'Todas';
   let resSearchQuery = '';
+  let menuItemsPage = 1;
+  let menuItemsPageSize = 10;
+  let resPage = 1;
+  let resPageSize = 10;
+  let rouletteCodesPage = 1;
+  let rouletteCodesPageSize = 10;
   let activeProofRes = null;
   let activeScannedRes = null;
   let qrCameraStream = null;
@@ -242,6 +248,115 @@ document.addEventListener('DOMContentLoaded', () => {
   let qrVideoPreviewEl = null;
   let waPollTimer = null;
   let activeManualCreatedRes = null;
+
+  function isNoPrizeSlot(prize) {
+    if (window.MeryStore && typeof window.MeryStore.isNoPrizeSlot === 'function') {
+      return window.MeryStore.isNoPrizeSlot(prize);
+    }
+    if (!prize || typeof prize !== 'object') return false;
+    return (
+      prize.id === 'segui-participando' ||
+      prize.isNoPrize === true ||
+      /segu[ií]\s+participando/i.test(String(prize.name || ''))
+    );
+  }
+
+  function computePrizeProbabilities(prizes) {
+    const list = Array.isArray(prizes) ? prizes : [];
+    const activeFlags = list.map((p) => isNoPrizeSlot(p) || (Number(p.stock) || 0) > 0);
+    const weights = list.map((p, idx) => {
+      if (!activeFlags[idx]) return 0;
+      const w = Number(p.probability);
+      return Number.isFinite(w) && w > 0 ? w : 0;
+    });
+    const totalWeight = weights.reduce((sum, w) => sum + w, 0);
+    const activeCount = activeFlags.filter(Boolean).length;
+
+    const items = list.map((p, idx) => {
+      const isActive = activeFlags[idx];
+      const weight = Number(p.probability) || 0;
+      let realPct = 0;
+      if (isActive) {
+        if (totalWeight > 0) {
+          realPct = (weights[idx] / totalWeight) * 100;
+        } else if (activeCount > 0) {
+          realPct = 100 / activeCount;
+        }
+      }
+      const realPctLabel = `${realPct.toFixed(1).replace(/\.0$/, '')}%`;
+      return {
+        prize: p,
+        isActive,
+        weight,
+        realPct,
+        realPctLabel
+      };
+    });
+
+    return { totalWeight, activeCount, items };
+  }
+
+  function renderPaginationControls({ container, idPrefix, totalItems, page, pageSize, onPageChange, onPageSizeChange }) {
+    if (!container) return;
+    if (!totalItems || totalItems <= 0) {
+      container.innerHTML = '';
+      return;
+    }
+
+    const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+    const safePage = Math.min(Math.max(1, page), totalPages);
+    const startNum = (safePage - 1) * pageSize + 1;
+    const endNum = Math.min(totalItems, safePage * pageSize);
+
+    container.innerHTML = `
+      <div class="admin-pagination-bar">
+        <div class="admin-pagination-summary">
+          Mostrando <strong>${startNum}–${endNum}</strong> de <strong>${totalItems}</strong>
+        </div>
+
+        <div class="admin-pagination-size">
+          <label for="${escapeHtml(idPrefix)}PageSize">Mostrar</label>
+          <select id="${escapeHtml(idPrefix)}PageSize" class="admin-pagination-select">
+            <option value="10" ${pageSize === 10 ? 'selected' : ''}>10</option>
+            <option value="20" ${pageSize === 20 ? 'selected' : ''}>20</option>
+            <option value="50" ${pageSize === 50 ? 'selected' : ''}>50</option>
+          </select>
+        </div>
+
+        <div class="admin-pagination-nav">
+          <button type="button" id="${escapeHtml(idPrefix)}Prev" class="admin-btn-outline admin-page-btn" ${safePage <= 1 ? 'disabled' : ''}>
+            ← Anterior
+          </button>
+          <span class="admin-pagination-page-label">Página ${safePage} de ${totalPages}</span>
+          <button type="button" id="${escapeHtml(idPrefix)}Next" class="admin-btn-outline admin-page-btn" ${safePage >= totalPages ? 'disabled' : ''}>
+            Siguiente →
+          </button>
+        </div>
+      </div>
+    `;
+
+    const sizeEl = container.querySelector(`#${idPrefix}PageSize`);
+    if (sizeEl) {
+      sizeEl.addEventListener('change', () => {
+        const nextSize = parseInt(sizeEl.value, 10) || 10;
+        if (typeof onPageSizeChange === 'function') onPageSizeChange(nextSize);
+      });
+    }
+
+    const prevEl = container.querySelector(`#${idPrefix}Prev`);
+    if (prevEl) {
+      prevEl.addEventListener('click', () => {
+        if (safePage > 1 && typeof onPageChange === 'function') onPageChange(safePage - 1);
+      });
+    }
+
+    const nextEl = container.querySelector(`#${idPrefix}Next`);
+    if (nextEl) {
+      nextEl.addEventListener('click', () => {
+        if (safePage < totalPages && typeof onPageChange === 'function') onPageChange(safePage + 1);
+      });
+    }
+  }
 
   // --- Tab & Workspace State Persistence ---
   const STORAGE_KEY_ADMIN_TAB = 'mery_admin_active_tab_v2';
@@ -976,6 +1091,18 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  if (typeof window.MeryStore.subscribeToRouletteCodeChanges === 'function') {
+    window.MeryStore.subscribeToRouletteCodeChanges((activeRow) => {
+      const codeEl = document.getElementById('adminActiveRouletteCode');
+      if (codeEl) {
+        codeEl.textContent = (activeRow && activeRow.code) ? activeRow.code : '----';
+      }
+      if (activeTab === 'roulette' && typeof window.__refreshAdminUsedRouletteCodes === 'function') {
+        window.__refreshAdminUsedRouletteCodes();
+      }
+    });
+  }
+
   // 4. LEFT SIDEBAR & COMPACT NAVIGATION
   function updateMenuTotalBadge() {
     if (!adminMenuTotalBadge) return;
@@ -1073,6 +1200,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (adminSearchInput) {
     adminSearchInput.addEventListener('input', () => {
       searchQuery = adminSearchInput.value.trim().toLowerCase();
+      menuItemsPage = 1;
       renderActiveCategoryWorkspace();
     });
   }
@@ -1122,6 +1250,7 @@ document.addEventListener('DOMContentLoaded', () => {
       sectionsContainer.querySelectorAll('.admin-cat-pills-row [data-cat]').forEach((btn) => {
         btn.addEventListener('click', () => {
           activeCategoryId = btn.getAttribute('data-cat') || menuSections[0]?.id;
+          menuItemsPage = 1;
           renderActiveCategoryWorkspace();
         });
       });
@@ -1176,10 +1305,16 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    const totalFilteredItems = filteredItems.length;
+    const totalMenuPages = Math.max(1, Math.ceil(totalFilteredItems / menuItemsPageSize));
+    if (menuItemsPage > totalMenuPages) menuItemsPage = totalMenuPages;
+    const menuStartIdx = (menuItemsPage - 1) * menuItemsPageSize;
+    const pagedMenuItems = filteredItems.slice(menuStartIdx, menuStartIdx + menuItemsPageSize);
+
     sectionsContainer.innerHTML = `
       ${categoryPillsBarHtml}
       <div class="admin-items-grid">
-        ${filteredItems.map((item) => {
+        ${pagedMenuItems.map((item) => {
           const dist = window.MeryStore && typeof window.MeryStore.resolveDishDistinction === 'function'
             ? window.MeryStore.resolveDishDistinction(item.badge)
             : null;
@@ -1271,8 +1406,26 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
         }).join('')}
       </div>
+      <div id="menuItemsPagination"></div>
     `;
     attachCategoryBarListeners();
+
+    renderPaginationControls({
+      container: sectionsContainer.querySelector('#menuItemsPagination'),
+      idPrefix: 'menuItems',
+      totalItems: totalFilteredItems,
+      page: menuItemsPage,
+      pageSize: menuItemsPageSize,
+      onPageChange: (nextPage) => {
+        menuItemsPage = nextPage;
+        renderActiveCategoryWorkspace();
+      },
+      onPageSizeChange: (nextSize) => {
+        menuItemsPageSize = nextSize;
+        menuItemsPage = 1;
+        renderActiveCategoryWorkspace();
+      }
+    });
 
     // Instant Quick Price Save (also supports Enter key inside the price input)
     sectionsContainer.querySelectorAll('.admin-quick-price-input').forEach((input) => {
@@ -1462,10 +1615,60 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const isEnabled = settings.enabled !== false;
     const prizes = Array.isArray(settings.prizes) ? settings.prizes : [];
+    const probStats = computePrizeProbabilities(prizes);
+    const realPrizes = prizes.filter((p) => !isNoPrizeSlot(p));
+    const totalAvailableStock = realPrizes.reduce((sum, p) => sum + Math.max(0, Number(p.stock) || 0), 0);
+    const activeRealPrizesCount = realPrizes.filter((p) => (Number(p.stock) || 0) > 0).length;
     updateRouletteBadge();
 
     sectionsContainer.innerHTML = `
       <div class="admin-roulette-container">
+        <!-- Top Roulette KPI Metrics Row -->
+        <div class="admin-kpi-row">
+          <div class="admin-kpi-card">
+            <span id="kpiRouletteUsedToday" class="admin-kpi-num">0</span>
+            <span class="admin-kpi-label">Códigos usados hoy</span>
+          </div>
+          <div class="admin-kpi-card">
+            <span id="kpiRouletteUsedTotal" class="admin-kpi-num">0</span>
+            <span class="admin-kpi-label">Total códigos usados</span>
+          </div>
+          <div class="admin-kpi-card">
+            <span class="admin-kpi-num">${totalAvailableStock}</span>
+            <span class="admin-kpi-label">Stock disponible</span>
+          </div>
+          <div class="admin-kpi-card ${activeRealPrizesCount === 0 && realPrizes.length > 0 ? 'kpi-highlight' : ''}">
+            <span class="admin-kpi-num">${activeRealPrizesCount} / ${realPrizes.length}</span>
+            <span class="admin-kpi-label">Premios activos</span>
+          </div>
+        </div>
+
+        <!-- Active Waitress Access Code Card -->
+        <div class="admin-roulette-code-card">
+          <div class="admin-roulette-code-info">
+            <span class="admin-roulette-code-kicker">
+              <span class="live-dot"></span>
+              <span>Sincronizado en vivo</span>
+            </span>
+            <h3 class="admin-roulette-code-title">Código Activo para Camareras</h3>
+            <p class="admin-roulette-code-desc">
+              Código de un solo uso. Apenas una mesa lo ingresa, se invalida y se genera uno nuevo automáticamente.
+            </p>
+          </div>
+
+          <div class="admin-roulette-code-display-wrap">
+            <div id="adminActiveRouletteCode" class="admin-roulette-code-value" aria-live="polite">----</div>
+            <div class="admin-roulette-code-actions">
+              <button type="button" id="btnCopyRouletteCode" class="admin-btn-outline">
+                Copiar código
+              </button>
+              <button type="button" id="btnRotateRouletteCode" class="admin-btn-gold">
+                Generar nuevo
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- Master Banner -->
         <div class="admin-roulette-banner">
           <div class="admin-roulette-banner-left">
@@ -1526,21 +1729,6 @@ document.addEventListener('DOMContentLoaded', () => {
               <option value="999" ${settings.maxSpinsPerDevice === 999 ? 'selected' : ''}>Sin límite (tiros ilimitados)</option>
             </select>
           </div>
-
-          <div class="admin-form-group" style="display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 8px;">
-            <label style="font-size: 0.8rem; font-weight: 600; color: var(--q-cream); margin-bottom: 6px; display: block;">
-              Datos de Contacto
-            </label>
-            <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 0.84rem; color: var(--q-cream-muted); cursor: pointer; user-select: none;">
-              <input
-                type="checkbox"
-                id="rouletteRequireContactCheck"
-                ${settings.requireContact !== false ? 'checked' : ''}
-                style="accent-color: var(--q-red); width: 16px; height: 16px;"
-              />
-              Pedir Nombre y WhatsApp para adjudicar y canjear cupón
-            </label>
-          </div>
         </div>
 
         <!-- Action Bar -->
@@ -1559,6 +1747,29 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
         </div>
 
+        <!-- Normalized Probability Distribution Bar -->
+        <div class="admin-prob-summary-card">
+          <div class="admin-prob-summary-head">
+            <span class="admin-prob-summary-title">Distribución real de probabilidades</span>
+            <span class="admin-prob-summary-total">
+              Peso activo total: <strong>${probStats.totalWeight}</strong>
+              ${probStats.totalWeight !== 100 ? ' • Se normaliza automáticamente al 100%' : ' • Suma exacta 100%'}
+            </span>
+          </div>
+          <div class="admin-prob-chips-row">
+            ${probStats.items.map((item) => {
+              const p = item.prize;
+              return `
+                <span class="admin-prob-chip ${!item.isActive ? 'is-inactive' : ''}">
+                  <span class="admin-prob-chip-dot" style="background: ${escapeHtml(p.color || '#e02434')};"></span>
+                  <span>${escapeHtml(p.name)}</span>
+                  <strong>${item.isActive ? item.realPctLabel : '0% (sin stock)'}</strong>
+                </span>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
         <!-- Prize Cards Grid -->
         <div class="admin-prizes-list">
           ${prizes.length === 0 ? `
@@ -1566,17 +1777,22 @@ document.addEventListener('DOMContentLoaded', () => {
               <p style="font-size: 1.05rem; margin-bottom: 12px; color: var(--q-cream);">No hay premios configurados en la ruleta aún.</p>
               <button type="button" id="btnAddPrizeEmpty" class="admin-btn-gold">+ Agregar Primer Premio</button>
             </div>
-          ` : prizes.map((prize) => {
+          ` : probStats.items.map((item) => {
+            const prize = item.prize;
+            const isProtected = isNoPrizeSlot(prize);
             const stockDisplay = prize.stock === 999 ? '∞' : prize.stock;
             const totalStockDisplay = prize.totalStock === 999 ? '∞' : (prize.totalStock !== undefined ? prize.totalStock : prize.stock);
+            const probBadgeLabel = item.isActive
+              ? `Peso ${item.weight} • ${item.realPctLabel} real`
+              : `Sin stock • 0% real`;
             return `
-              <article class="admin-prize-card" data-prize-id="${escapeHtml(prize.id)}">
+              <article class="admin-prize-card ${isProtected ? 'is-protected-slot' : ''}" data-prize-id="${escapeHtml(prize.id)}">
                 <div class="admin-prize-top">
                   <div class="admin-prize-title-wrap">
                     <span class="admin-prize-dot" style="background: ${escapeHtml(prize.color || '#e02434')};"></span>
                     <h4 class="admin-prize-name">${escapeHtml(prize.name)}</h4>
                   </div>
-                  <span class="admin-prize-prob-badge">${prize.probability || 0}% prob</span>
+                  <span class="admin-prize-prob-badge ${!item.isActive ? 'is-zero' : ''}">${probBadgeLabel}</span>
                 </div>
 
                 <div class="admin-prize-condition">
@@ -1584,17 +1800,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
 
                 <div class="admin-prize-bottom">
-                  <div class="admin-prize-stock-box">
-                    <span class="admin-prize-stock-label">Stock:</span>
-                    <button type="button" class="admin-prize-stock-btn btn-stock-dec" data-prize-id="${escapeHtml(prize.id)}" title="Restar 1" aria-label="Restar 1">-</button>
-                    <span class="admin-prize-stock-num">${stockDisplay}</span>
-                    <button type="button" class="admin-prize-stock-btn btn-stock-inc" data-prize-id="${escapeHtml(prize.id)}" title="Sumar 1" aria-label="Sumar 1">+</button>
-                    <span style="font-size: 0.74rem; color: var(--q-cream-muted);">/ ${totalStockDisplay}</span>
-                  </div>
+                  ${isProtected ? `
+                    <div class="admin-prize-stock-box">
+                      <span class="admin-prize-stock-label">Stock:</span>
+                      <span class="admin-prize-stock-num">∞</span>
+                      <span style="font-size: 0.74rem; color: var(--q-cream-muted);">(Ilimitado)</span>
+                    </div>
+                  ` : `
+                    <div class="admin-prize-stock-box">
+                      <span class="admin-prize-stock-label">Stock:</span>
+                      <button type="button" class="admin-prize-stock-btn btn-stock-dec" data-prize-id="${escapeHtml(prize.id)}" title="Restar 1" aria-label="Restar 1">-</button>
+                      <span class="admin-prize-stock-num">${stockDisplay}</span>
+                      <button type="button" class="admin-prize-stock-btn btn-stock-inc" data-prize-id="${escapeHtml(prize.id)}" title="Sumar 1" aria-label="Sumar 1">+</button>
+                      <span style="font-size: 0.74rem; color: var(--q-cream-muted);">/ ${totalStockDisplay}</span>
+                    </div>
+                  `}
 
                   <div class="admin-prize-actions">
                     <button type="button" class="admin-prize-btn-sm btn-edit-prize" data-prize-id="${escapeHtml(prize.id)}">Editar</button>
-                    <button type="button" class="admin-prize-btn-sm admin-prize-btn-danger btn-delete-prize" data-prize-id="${escapeHtml(prize.id)}">Eliminar</button>
+                    ${isProtected ? `
+                      <span class="admin-prize-fixed-pill" title="Este slot es obligatorio como opción sin premio">Slot fijo</span>
+                    ` : `
+                      <button type="button" class="admin-prize-btn-sm admin-prize-btn-danger btn-delete-prize" data-prize-id="${escapeHtml(prize.id)}">Eliminar</button>
+                    `}
                   </div>
                 </div>
               </article>
@@ -1602,26 +1830,79 @@ document.addEventListener('DOMContentLoaded', () => {
           }).join('')}
         </div>
 
-        <!-- Issued Vouchers Anti-Fraud Table -->
+        <!-- Used Access Codes History & Metrics -->
         <div class="admin-roulette-vouchers-section">
-          <div class="admin-roulette-actions-bar" style="margin-bottom: 10px;">
+          <div class="admin-roulette-actions-bar" style="margin-bottom: 12px;">
             <div>
-              <h3 class="admin-roulette-actions-title">Cupones Emitidos en Vivo (Anti-fraude)</h3>
+              <h3 class="admin-roulette-actions-title">Historial de Códigos Utilizados</h3>
               <p style="font-size: 0.8rem; color: var(--q-cream-muted); margin-top: 2px;">
-                Validá y cancelá códigos de cupón al momento del canje en barra o mesa para evitar réplicas.
+                Medí cuántos códigos se canjearon en mesa durante la noche y mantené el listado limpio.
               </p>
             </div>
-            <button type="button" id="btnRefreshVouchers" class="admin-btn-outline" style="font-size: 0.78rem;">
-              🔄 Actualizar Cupones
-            </button>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+              <button type="button" id="btnRefreshUsedCodes" class="admin-btn-outline" style="font-size: 0.78rem;">
+                🔄 Actualizar
+              </button>
+              <button type="button" id="btnClearUsedCodes" class="admin-btn-outline admin-btn-danger" style="font-size: 0.78rem;">
+                🗑 Limpiar historial
+              </button>
+            </div>
           </div>
 
-          <div id="adminVouchersGrid" class="admin-vouchers-grid">
-            <p style="font-size: 0.85rem; color: var(--q-cream-muted);">Cargando cupones emitidos...</p>
+          <div id="adminUsedCodesList" class="admin-used-codes-grid">
+            <p style="font-size: 0.85rem; color: var(--q-cream-muted);">Cargando historial de códigos...</p>
           </div>
+          <div id="rouletteCodesPagination"></div>
         </div>
       </div>
     `;
+
+    // 0. Load & manage active single-use roulette access code
+    const activeCodeEl = sectionsContainer.querySelector('#adminActiveRouletteCode');
+    const btnCopyCode = sectionsContainer.querySelector('#btnCopyRouletteCode');
+    const btnRotateCode = sectionsContainer.querySelector('#btnRotateRouletteCode');
+
+    async function loadActiveRouletteCode() {
+      if (!activeCodeEl) return;
+      if (window.MeryStore && typeof window.MeryStore.fetchActiveRouletteCode === 'function') {
+        const row = await window.MeryStore.fetchActiveRouletteCode();
+        activeCodeEl.textContent = (row && row.code) ? row.code : '----';
+      }
+    }
+    loadActiveRouletteCode();
+
+    if (btnCopyCode) {
+      btnCopyCode.addEventListener('click', async () => {
+        const currentCode = (activeCodeEl?.textContent || '').trim();
+        if (!currentCode || currentCode === '----') {
+          showToast('Todavía no hay un código activo para copiar');
+          return;
+        }
+        try {
+          await navigator.clipboard.writeText(currentCode);
+          showToast(`✓ Código ${currentCode} copiado`);
+        } catch (_) {
+          showToast(`Código activo: ${currentCode}`);
+        }
+      });
+    }
+
+    if (btnRotateCode) {
+      btnRotateCode.addEventListener('click', async () => {
+        if (!window.MeryStore || typeof window.MeryStore.rotateRouletteAccessCode !== 'function') return;
+        btnRotateCode.disabled = true;
+        btnRotateCode.textContent = 'Generando...';
+        const nextCode = await window.MeryStore.rotateRouletteAccessCode();
+        btnRotateCode.disabled = false;
+        btnRotateCode.textContent = 'Generar nuevo';
+        if (nextCode) {
+          if (activeCodeEl) activeCodeEl.textContent = nextCode;
+          showToast(`✓ Nuevo código generado: ${nextCode}`);
+        } else {
+          showToast('No se pudo generar un nuevo código');
+        }
+      });
+    }
 
     // 1. Toggle activation on / off
     const toggleBtn = sectionsContainer.querySelector('#adminRouletteToggleBtn');
@@ -1646,12 +1927,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const titleInput = sectionsContainer.querySelector('#rouletteTitleInput');
         const subtitleInput = sectionsContainer.querySelector('#rouletteSubtitleInput');
         const maxSpinsSelect = sectionsContainer.querySelector('#rouletteMaxSpinsSelect');
-        const requireContactCheck = sectionsContainer.querySelector('#rouletteRequireContactCheck');
 
         const title = (titleInput?.value || '').trim();
         const subtitle = (subtitleInput?.value || '').trim();
         const maxSpins = parseInt(maxSpinsSelect?.value, 10) || 3;
-        const requireContact = requireContactCheck ? requireContactCheck.checked : true;
 
         if (!title) {
           showToast('El título de la ruleta no puede estar vacío');
@@ -1664,7 +1943,7 @@ document.addEventListener('DOMContentLoaded', () => {
             title,
             subtitle,
             maxSpinsPerDevice: maxSpins,
-            requireContact
+            requireContact: false
           });
           showToast('✓ Configuración de la ruleta guardada');
           renderRouletteWorkspace();
@@ -1721,7 +2000,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const current = window.MeryStore ? window.MeryStore.getRouletteSettings() : null;
         if (!current || !Array.isArray(current.prizes)) return;
         const prize = current.prizes.find((p) => p.id === prizeId);
-        if (!prize) return;
+        if (!prize || isNoPrizeSlot(prize)) return;
 
         openConfirmModal({
           title: '¿Eliminar premio?',
@@ -1747,7 +2026,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const current = window.MeryStore ? window.MeryStore.getRouletteSettings() : null;
         if (!current || !Array.isArray(current.prizes)) return;
         const prize = current.prizes.find((p) => p.id === prizeId);
-        if (!prize) return;
+        if (!prize || isNoPrizeSlot(prize)) return;
         if (prize.stock > 0) {
           prize.stock -= 1;
           if (window.MeryStore && typeof window.MeryStore.saveRouletteSettings === 'function') {
@@ -1764,7 +2043,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const current = window.MeryStore ? window.MeryStore.getRouletteSettings() : null;
         if (!current || !Array.isArray(current.prizes)) return;
         const prize = current.prizes.find((p) => p.id === prizeId);
-        if (!prize) return;
+        if (!prize || isNoPrizeSlot(prize)) return;
         prize.stock += 1;
         if (window.MeryStore && typeof window.MeryStore.saveRouletteSettings === 'function') {
           window.MeryStore.saveRouletteSettings({ prizes: current.prizes });
@@ -1773,65 +2052,119 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
-    // 8. Load & Manage Issued Vouchers
-    async function loadAdminVouchers() {
-      const grid = sectionsContainer.querySelector('#adminVouchersGrid');
-      if (!grid) return;
-      let vouchers = [];
-      if (window.MeryStore && typeof window.MeryStore.fetchRouletteVouchers === 'function') {
-        try {
-          vouchers = await window.MeryStore.fetchRouletteVouchers();
-        } catch (_) {}
-      }
-      if (!Array.isArray(vouchers) || vouchers.length === 0) {
-        grid.innerHTML = `<p style="grid-column: 1 / -1; font-size: 0.85rem; color: var(--q-cream-muted); text-align: center; padding: 20px 0;">No se han emitido cupones hoy todavía.</p>`;
+    // 8. Load & Paginate Used Access Codes History
+    let cachedUsedCodes = [];
+
+    function renderUsedCodesPage() {
+      const listEl = sectionsContainer.querySelector('#adminUsedCodesList');
+      const pagEl = sectionsContainer.querySelector('#rouletteCodesPagination');
+      if (!listEl) return;
+
+      const total = cachedUsedCodes.length;
+      if (total === 0) {
+        listEl.innerHTML = `<p style="grid-column: 1 / -1; font-size: 0.85rem; color: var(--q-cream-muted); text-align: center; padding: 20px 0;">Todavía no hay códigos utilizados en el historial.</p>`;
+        if (pagEl) pagEl.innerHTML = '';
         return;
       }
-      grid.innerHTML = vouchers.slice(0, 16).map((v) => {
-        const isRedeemed = (v.status === 'canjeado');
-        const claimedDate = new Date(v.claimedAt || Date.now()).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+
+      const totalPages = Math.max(1, Math.ceil(total / rouletteCodesPageSize));
+      if (rouletteCodesPage > totalPages) rouletteCodesPage = totalPages;
+      const startIdx = (rouletteCodesPage - 1) * rouletteCodesPageSize;
+      const pagedCodes = cachedUsedCodes.slice(startIdx, startIdx + rouletteCodesPageSize);
+
+      listEl.innerHTML = pagedCodes.map((row) => {
+        const usedAt = row.used_at ? new Date(row.used_at) : null;
+        const dateLabel = usedAt && !isNaN(usedAt.getTime())
+          ? usedAt.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' }) + ' • ' +
+            usedAt.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) + ' hs'
+          : 'Sin fecha';
         return `
-          <div class="admin-voucher-card ${isRedeemed ? 'is-redeemed' : ''}">
-            <div class="admin-voucher-header">
-              <span class="admin-voucher-code-badge">${escapeHtml(v.code)}</span>
-              <span class="admin-voucher-status-badge ${isRedeemed ? 'is-redeemed' : ''}">
-                ${isRedeemed ? '● Canjeado' : '● Válido'}
-              </span>
-            </div>
-            <div class="admin-voucher-meta">
-              <strong>${escapeHtml(v.prizeName)}</strong><br />
-              Titular: ${escapeHtml(v.clientName)} ${v.clientPhone ? `(${escapeHtml(v.clientPhone)})` : ''}<br />
-              <span style="opacity: 0.7;">Emitido: ${claimedDate} hs</span>
-            </div>
-            ${!isRedeemed ? `
-              <button type="button" class="admin-prize-btn-sm btn-redeem-voucher" data-code="${escapeHtml(v.code)}" style="align-self: flex-start; margin-top: 4px; background: rgba(74, 222, 128, 0.1); border-color: rgba(74, 222, 128, 0.4); color: #4ade80;">
-                ✓ Validar y Marcar Canjeado
-              </button>
-            ` : `
-              <span style="font-size: 0.72rem; color: var(--q-cream-muted);">Canjeado por ${escapeHtml(v.redeemedBy || 'Staff')}</span>
-            `}
+          <div class="admin-used-code-card">
+            <span class="admin-used-code-pill">${escapeHtml(row.code)}</span>
+            <span class="admin-used-code-time">${escapeHtml(dateLabel)}</span>
+            <span class="admin-used-code-status">Usado ✓</span>
           </div>
         `;
       }).join('');
 
-      grid.querySelectorAll('.btn-redeem-voucher').forEach((btn) => {
-        btn.addEventListener('click', async () => {
-          const code = btn.getAttribute('data-code');
-          if (!code) return;
-          if (window.MeryStore && typeof window.MeryStore.redeemRouletteVoucher === 'function') {
-            await window.MeryStore.redeemRouletteVoucher(code, 'Staff Mery');
-            showToast(`✓ Cupón ${code} validado y marcado como canjeado`);
-            loadAdminVouchers();
-          }
-        });
+      renderPaginationControls({
+        container: pagEl,
+        idPrefix: 'rouletteCodes',
+        totalItems: total,
+        page: rouletteCodesPage,
+        pageSize: rouletteCodesPageSize,
+        onPageChange: (nextPage) => {
+          rouletteCodesPage = nextPage;
+          renderUsedCodesPage();
+        },
+        onPageSizeChange: (nextSize) => {
+          rouletteCodesPageSize = nextSize;
+          rouletteCodesPage = 1;
+          renderUsedCodesPage();
+        }
       });
     }
 
-    loadAdminVouchers();
+    async function loadUsedRouletteCodes() {
+      const listEl = sectionsContainer.querySelector('#adminUsedCodesList');
+      const kpiTodayEl = sectionsContainer.querySelector('#kpiRouletteUsedToday');
+      const kpiTotalEl = sectionsContainer.querySelector('#kpiRouletteUsedTotal');
+      if (!listEl) return;
 
-    const btnRefreshVouchers = sectionsContainer.querySelector('#btnRefreshVouchers');
-    if (btnRefreshVouchers) {
-      btnRefreshVouchers.addEventListener('click', loadAdminVouchers);
+      let rows = [];
+      if (window.MeryStore && typeof window.MeryStore.fetchUsedRouletteCodes === 'function') {
+        try {
+          rows = await window.MeryStore.fetchUsedRouletteCodes();
+        } catch (_) {}
+      }
+      cachedUsedCodes = Array.isArray(rows) ? rows : [];
+
+      const now = new Date();
+      const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      const usedToday = cachedUsedCodes.filter((r) => {
+        if (!r.used_at) return false;
+        const d = new Date(r.used_at);
+        if (isNaN(d.getTime())) return false;
+        const dStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        return dStr === todayStr;
+      }).length;
+
+      if (kpiTodayEl) kpiTodayEl.textContent = String(usedToday);
+      if (kpiTotalEl) kpiTotalEl.textContent = String(cachedUsedCodes.length);
+
+      renderUsedCodesPage();
+    }
+
+    window.__refreshAdminUsedRouletteCodes = loadUsedRouletteCodes;
+    loadUsedRouletteCodes();
+
+    const btnRefreshUsedCodes = sectionsContainer.querySelector('#btnRefreshUsedCodes');
+    if (btnRefreshUsedCodes) {
+      btnRefreshUsedCodes.addEventListener('click', loadUsedRouletteCodes);
+    }
+
+    const btnClearUsedCodes = sectionsContainer.querySelector('#btnClearUsedCodes');
+    if (btnClearUsedCodes) {
+      btnClearUsedCodes.addEventListener('click', () => {
+        openConfirmModal({
+          title: '¿Limpiar historial de códigos usados?',
+          message: 'Se eliminarán todos los registros de códigos ya utilizados del historial (el código activo actual para camareras no se borra).',
+          confirmLabel: 'Sí, limpiar historial',
+          successText: 'Historial limpiado',
+          onConfirm: async () => {
+            if (window.MeryStore && typeof window.MeryStore.clearUsedRouletteCodes === 'function') {
+              const res = await window.MeryStore.clearUsedRouletteCodes();
+              if (res && res.success) {
+                rouletteCodesPage = 1;
+                await loadUsedRouletteCodes();
+                showToast(`✓ Historial limpio (${res.deleted} registros eliminados)`);
+              } else {
+                showToast('No se pudo limpiar el historial');
+              }
+            }
+          }
+        });
+      });
     }
   }
 
@@ -1843,11 +2176,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const prize = prizeId ? prizes.find((p) => p.id === prizeId) : null;
 
     if (prize) {
+      const protectedSlot = isNoPrizeSlot(prize);
       if (prizeModalHeading) prizeModalHeading.textContent = `Editar: ${prize.name}`;
       if (prizeEditId) prizeEditId.value = prize.id;
       if (prizeNameInput) prizeNameInput.value = prize.name || '';
-      if (prizeStockInput) prizeStockInput.value = prize.stock !== undefined ? prize.stock : 10;
-      if (prizeTotalStockInput) prizeTotalStockInput.value = prize.totalStock !== undefined ? prize.totalStock : (prize.stock !== undefined ? prize.stock : 10);
+      if (prizeStockInput) {
+        prizeStockInput.value = protectedSlot ? '999' : (prize.stock !== undefined ? prize.stock : 10);
+        prizeStockInput.disabled = protectedSlot;
+      }
+      if (prizeTotalStockInput) {
+        prizeTotalStockInput.value = protectedSlot ? '999' : (prize.totalStock !== undefined ? prize.totalStock : (prize.stock !== undefined ? prize.stock : 10));
+        prizeTotalStockInput.disabled = protectedSlot;
+      }
       if (prizeProbInput) prizeProbInput.value = prize.probability !== undefined ? prize.probability : 20;
       if (prizeColorInput) prizeColorInput.value = prize.color || '#e02434';
       if (prizeConditionInput) prizeConditionInput.value = prize.condition || '';
@@ -1855,8 +2195,14 @@ document.addEventListener('DOMContentLoaded', () => {
       if (prizeModalHeading) prizeModalHeading.textContent = 'Configurar Premio de la Ruleta';
       if (prizeEditId) prizeEditId.value = '';
       if (prizeNameInput) prizeNameInput.value = '';
-      if (prizeStockInput) prizeStockInput.value = '10';
-      if (prizeTotalStockInput) prizeTotalStockInput.value = '10';
+      if (prizeStockInput) {
+        prizeStockInput.value = '10';
+        prizeStockInput.disabled = false;
+      }
+      if (prizeTotalStockInput) {
+        prizeTotalStockInput.value = '10';
+        prizeTotalStockInput.disabled = false;
+      }
       if (prizeProbInput) prizeProbInput.value = '20';
       if (prizeColorInput) prizeColorInput.value = '#e02434';
       if (prizeConditionInput) prizeConditionInput.value = 'Válido hoy a las 11:11 PM en barra';
@@ -1934,26 +2280,30 @@ document.addEventListener('DOMContentLoaded', () => {
       if (editId) {
         const idx = prizes.findIndex((p) => p.id === editId);
         if (idx !== -1) {
+          const keepNoPrize = isNoPrizeSlot(prizes[idx]) || /segu[ií]\s+participando/i.test(name);
           prizes[idx] = {
             ...prizes[idx],
             name,
-            stock,
-            totalStock,
+            stock: keepNoPrize ? 999 : stock,
+            totalStock: keepNoPrize ? 999 : totalStock,
             probability: prob,
             color,
-            condition
+            condition,
+            ...(keepNoPrize ? { isNoPrize: true } : {})
           };
         }
       } else {
+        const isNewNoPrize = /segu[ií]\s+participando/i.test(name);
         const newId = 'prize-' + Date.now().toString(36) + '-' + Math.random().toString(36).substring(2, 6);
         prizes.push({
           id: newId,
           name,
-          stock,
-          totalStock,
+          stock: isNewNoPrize ? 999 : stock,
+          totalStock: isNewNoPrize ? 999 : totalStock,
           probability: prob,
           color,
-          condition
+          condition,
+          ...(isNewNoPrize ? { isNoPrize: true } : {})
         });
       }
 
@@ -2773,6 +3123,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const filterOptions = ['Todas', 'Con seña', 'Comprobantes subidos', 'Sin seña', 'Cumpleaños', 'Asistieron'];
+    const totalFilteredRes = filtered.length;
+    const totalResPages = Math.max(1, Math.ceil(totalFilteredRes / resPageSize));
+    if (resPage > totalResPages) resPage = totalResPages;
+    const resStartIdx = (resPage - 1) * resPageSize;
+    const pagedReservations = filtered.slice(resStartIdx, resStartIdx + resPageSize);
 
     sectionsContainer.innerHTML = `
       <!-- Summary KPI Row -->
@@ -2865,7 +3220,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div style="padding:40px; text-align:center; color:var(--q-cream-muted); background:var(--q-surface); border-radius:12px; border:1px solid var(--q-border);">
             No hay reservas que coincidan con el filtro seleccionado.
           </div>
-        ` : filtered.map((r) => {
+        ` : pagedReservations.map((r) => {
           const hasProofAlert = (r.deposit_status === 'comprobante_subido');
           return `
             <article class="admin-res-card ${hasProofAlert ? 'has-proof-alert' : ''} ${r.attended ? 'is-attended' : ''}" data-res-id="${escapeHtml(r.id)}">
@@ -2975,6 +3330,7 @@ document.addEventListener('DOMContentLoaded', () => {
           `;
         }).join('')}
       </div>
+      <div id="resPagination"></div>
 
       <!-- Card: Configuración de Opciones de Reserva (Motivos, Días y Horarios) -->
       <article id="adminResOptionsCard" class="admin-settings-card" style="margin-top:36px;">
@@ -3031,10 +3387,28 @@ document.addEventListener('DOMContentLoaded', () => {
       </article>
     `;
 
+    renderPaginationControls({
+      container: sectionsContainer.querySelector('#resPagination'),
+      idPrefix: 'res',
+      totalItems: totalFilteredRes,
+      page: resPage,
+      pageSize: resPageSize,
+      onPageChange: (nextPage) => {
+        resPage = nextPage;
+        renderReservationsWorkspace();
+      },
+      onPageSizeChange: (nextSize) => {
+        resPageSize = nextSize;
+        resPage = 1;
+        renderReservationsWorkspace();
+      }
+    });
+
     // Filter pill events
     sectionsContainer.querySelectorAll('.admin-filter-pill').forEach((pill) => {
       pill.addEventListener('click', () => {
         activeResFilter = pill.getAttribute('data-filter') || 'Todas';
+        resPage = 1;
         renderReservationsWorkspace();
       });
     });
@@ -3043,8 +3417,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchEl = sectionsContainer.querySelector('#resWorkspaceSearch');
     if (searchEl) {
       searchEl.addEventListener('input', () => {
+        const cursorPos = searchEl.selectionStart;
         resSearchQuery = searchEl.value.trim();
+        resPage = 1;
         renderReservationsWorkspace();
+        const nextSearchEl = sectionsContainer.querySelector('#resWorkspaceSearch');
+        if (nextSearchEl) {
+          nextSearchEl.focus();
+          if (typeof cursorPos === 'number') {
+            try { nextSearchEl.setSelectionRange(cursorPos, cursorPos); } catch (_) {}
+          }
+        }
       });
     }
 

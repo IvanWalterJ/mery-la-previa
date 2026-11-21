@@ -118,7 +118,58 @@ document.addEventListener('DOMContentLoaded', () => {
   const heroSubtag = document.querySelector('.q-hero-subtag');
 
   // 1b. Hero showcase sequence: desktop 16:9 wide vs portrait 9:16, Part 1 intro -> Part 2 loop
-  let currentView = 'home';
+  const SLUG_TO_ROUTE = {
+    '': { view: 'home', openRoulette: false, hasSlug: false },
+    'inicio': { view: 'home', openRoulette: false, hasSlug: true },
+    'home': { view: 'home', openRoulette: false, hasSlug: true },
+    'tragos': { view: 'drinks', openRoulette: false, hasSlug: true },
+    'bebidas': { view: 'drinks', openRoulette: false, hasSlug: true },
+    'drinks': { view: 'drinks', openRoulette: false, hasSlug: true },
+    'carta': { view: 'menu', openRoulette: false, hasSlug: true },
+    'menu': { view: 'menu', openRoulette: false, hasSlug: true },
+    'nosotros': { view: 'about', openRoulette: false, hasSlug: true },
+    'about': { view: 'about', openRoulette: false, hasSlug: true },
+    'reservas': { view: 'reservation', openRoulette: false, hasSlug: true },
+    'reserva': { view: 'reservation', openRoulette: false, hasSlug: true },
+    'reservation': { view: 'reservation', openRoulette: false, hasSlug: true },
+    'ruleta': { view: 'home', openRoulette: true, hasSlug: true },
+    'promos': { view: 'home', openRoulette: true, hasSlug: true },
+    'roulette': { view: 'home', openRoulette: true, hasSlug: true }
+  };
+
+  const VIEW_TO_PATH = {
+    home: '/',
+    drinks: '/tragos',
+    menu: '/carta',
+    about: '/nosotros',
+    reservation: '/reservas'
+  };
+
+  function resolveRouteFromLocation() {
+    const cleanPath = (window.location.pathname || '/')
+      .replace(/^\/+|\/+$/g, '')
+      .toLowerCase();
+    const cleanHash = (window.location.hash || '')
+      .replace(/^#\/?|\/+$/g, '')
+      .toLowerCase();
+    const searchSlug = (new URLSearchParams(window.location.search).get('seccion') || '')
+      .trim()
+      .toLowerCase();
+
+    if (cleanPath && cleanPath !== 'index.html' && SLUG_TO_ROUTE[cleanPath]) {
+      return SLUG_TO_ROUTE[cleanPath];
+    }
+    if (cleanHash && SLUG_TO_ROUTE[cleanHash]) {
+      return SLUG_TO_ROUTE[cleanHash];
+    }
+    if (searchSlug && SLUG_TO_ROUTE[searchSlug]) {
+      return SLUG_TO_ROUTE[searchSlug];
+    }
+    return SLUG_TO_ROUTE[''];
+  }
+
+  const initialRoute = resolveRouteFromLocation();
+  let currentView = initialRoute.hasSlug ? initialRoute.view : 'home';
   let showcaseIntroCompleted = false;
   let showcaseCustomPrevia = false;
   let heroTextSafetyTimer = null;
@@ -454,7 +505,17 @@ document.addEventListener('DOMContentLoaded', () => {
     introWrap.classList.add('visible');
   }
 
-  let enterSafetyTimer = setTimeout(revealEnterButton, 3400);
+  let enterSafetyTimer = initialRoute.hasSlug ? null : setTimeout(revealEnterButton, 3400);
+
+  if (initialRoute.hasSlug) {
+    document.documentElement.classList.add('skip-intro');
+    audioUnlocked = true;
+    if (introCurtain) introCurtain.classList.add('dismissed');
+    if (neonIntroVideo) {
+      neonIntroVideo.pause();
+      neonIntroVideo.muted = true;
+    }
+  }
 
   function unlockIntroAudio() {
     if (!neonIntroVideo || audioUnlocked) return;
@@ -478,7 +539,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  if (neonIntroVideo) {
+  if (neonIntroVideo && !initialRoute.hasSlug) {
     neonIntroVideo.addEventListener('timeupdate', () => {
       if (neonIntroVideo.currentTime >= 3.0) {
         revealEnterButton();
@@ -548,7 +609,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (showcaseVideo) {
     showcaseVideo.muted = true;
     showcaseVideo.volume = 0;
-    if (!introCurtain || introCurtain.classList.contains('dismissed')) {
+    if (!initialRoute.hasSlug && (!introCurtain || introCurtain.classList.contains('dismissed'))) {
       enableShowcaseSound();
     }
   }
@@ -1110,7 +1171,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function navigateView(targetView) {
+  function navigateView(targetView, options = {}) {
+    if (!options.skipHistory && window.history && typeof window.history.pushState === 'function') {
+      const targetPath = VIEW_TO_PATH[targetView] || '/';
+      if (window.location.pathname !== targetPath) {
+        try {
+          window.history.pushState({ view: targetView, openRoulette: false }, '', targetPath);
+        } catch (_) {}
+      }
+    }
+
     if (targetView === currentView) {
       scrollToActiveSection(targetView);
       return;
@@ -1340,6 +1410,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (all && all.sectionImages) applySectionImages(all.sectionImages);
       if (all && all.siteVideos) applySiteVideos(all.siteVideos);
       renderQitchenMenu();
+      updateRouletteBadges();
     }).catch(() => {});
   }
 
@@ -1348,6 +1419,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!evt) return;
       if (evt.type === 'SETTINGS_UPDATED' || evt.type === 'SITE_SETTINGS_REMOTE_UPDATED') {
         populateReservationOptions();
+      }
+      if (evt.type === 'ROULETTE_SETTINGS_UPDATED' || evt.type === 'SITE_SETTINGS_REMOTE_UPDATED') {
+        updateRouletteBadges();
       }
       if (evt.type === 'SECTION_IMAGES_UPDATED' && evt.images) {
         applySectionImages(evt.images);
@@ -1455,13 +1529,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 7. Original Interactive Roulette Engine (Mery Invita la Previa) + Download Voucher
+  // 7. Interactive In-Venue Roulette Engine (Mery Invita la Previa) with Single-Use Access Code
   const STORAGE_KEY_ROULETTE_DEVICE = 'mery_roulette_device_v1';
 
   let currentWheelAngle = 0;
   let isRouletteSpinning = false;
-  let currentPrizeWon = null;
-  let currentIssuedVoucher = null;
+  let isRouletteUnlocked = false;
 
   function getTodayString() {
     const d = new Date();
@@ -1481,21 +1554,19 @@ document.addEventListener('DOMContentLoaded', () => {
           if (parsed.date !== today) {
             const resetState = {
               date: today,
-              spinsUsed: 0,
-              claimedVouchers: Array.isArray(parsed.claimedVouchers) ? parsed.claimedVouchers : []
+              spinsUsed: 0
             };
             saveRouletteDeviceState(resetState);
             return resetState;
           }
           return {
             date: today,
-            spinsUsed: Number(parsed.spinsUsed) || 0,
-            claimedVouchers: Array.isArray(parsed.claimedVouchers) ? parsed.claimedVouchers : []
+            spinsUsed: Number(parsed.spinsUsed) || 0
           };
         }
       }
     } catch (_) {}
-    const newState = { date: today, spinsUsed: 0, claimedVouchers: [] };
+    const newState = { date: today, spinsUsed: 0 };
     saveRouletteDeviceState(newState);
     return newState;
   }
@@ -1504,6 +1575,35 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       localStorage.setItem(STORAGE_KEY_ROULETTE_DEVICE, JSON.stringify(state));
     } catch (_) {}
+  }
+
+  function isNoPrizeSlot(prize) {
+    if (window.MeryStore && typeof window.MeryStore.isNoPrizeSlot === 'function') {
+      return window.MeryStore.isNoPrizeSlot(prize);
+    }
+    if (!prize || typeof prize !== 'object') return false;
+    return (
+      prize.id === 'segui-participando' ||
+      prize.isNoPrize === true ||
+      /segu[ií]\s+participando/i.test(String(prize.name || ''))
+    );
+  }
+
+  function getSafeRoulettePrizes(settings) {
+    const raw = (settings && Array.isArray(settings.prizes)) ? settings.prizes : [];
+    if (raw.length > 0) return raw;
+    return [
+      {
+        id: 'segui-participando',
+        name: 'Seguí Participando',
+        stock: 999,
+        totalStock: 999,
+        color: '#261418',
+        probability: 100,
+        condition: '¡Volvé a girar si todavía tenés tiros!',
+        isNoPrize: true
+      }
+    ];
   }
 
   function getLiveRouletteSettings() {
@@ -1521,7 +1621,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: 'off-mesa', name: '10% OFF en tu Mesa', stock: 5, color: '#880b15', probability: 15, condition: 'Mostralo al pedir la cuenta' },
         { id: 'tapeo-gratis', name: 'Tapeo de Cortesía', stock: 8, color: '#1c1014', probability: 15, condition: 'Con la compra de cualquier botella' },
         { id: 'trago-autor', name: 'Trago de Autor Regalo', stock: 5, color: '#b81424', probability: 10, condition: '1 trago de autor a elección del bartender' },
-        { id: 'segui-participando', name: 'Seguí Participando', stock: 999, color: '#261418', probability: 15, condition: '¡Volvé a girar si todavía tenés tiros!' }
+        { id: 'segui-participando', name: 'Seguí Participando', stock: 999, color: '#261418', probability: 15, condition: '¡Volvé a girar si todavía tenés tiros!', isNoPrize: true }
       ]
     };
   }
@@ -1534,7 +1634,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const stockEl = document.getElementById('rouletteStockCount');
     if (stockEl) {
-      const activePrizes = (settings.prizes || []).filter((p) => p.id !== 'segui-participando');
+      const activePrizes = getSafeRoulettePrizes(settings).filter((p) => !isNoPrizeSlot(p));
       const totalStock = activePrizes.reduce((sum, p) => sum + (Number(p.stock) || 0), 0);
       stockEl.textContent = `${totalStock} disponibles`;
     }
@@ -1544,15 +1644,64 @@ document.addEventListener('DOMContentLoaded', () => {
       spinsBadge.textContent = `Tiros: ${spinsLeft} de ${maxSpins}`;
     }
 
-    const countEl = document.getElementById('myVouchersCount');
-    if (countEl) {
-      countEl.textContent = String((devState.claimedVouchers || []).length);
+    const modalTitleEl = document.getElementById('rouletteModalTitle');
+    if (modalTitleEl && settings.title) {
+      modalTitleEl.textContent = settings.title;
     }
 
-    const linkWrap = document.getElementById('rouletteMyVouchersLinkWrap');
-    if (linkWrap) {
-      linkWrap.hidden = (devState.claimedVouchers || []).length === 0;
+    const modalSubtitleEl = document.getElementById('rouletteModalSubtitle');
+    if (modalSubtitleEl && settings.subtitle) {
+      modalSubtitleEl.textContent = settings.subtitle;
     }
+  }
+
+  function wrapRouletteLabel(ctx, text, maxWidth, maxLines) {
+    const clean = String(text || '').replace(/\s+/g, ' ').trim();
+    if (!clean) return [];
+
+    const fitWithEllipsis = (str) => {
+      if (ctx.measureText(str).width <= maxWidth) return str;
+      let out = str;
+      while (out.length > 1 && ctx.measureText(out + '…').width > maxWidth) {
+        out = out.slice(0, -1).trimEnd();
+      }
+      return out + '…';
+    };
+
+    const words = clean.split(' ');
+    const lines = [];
+    let currentLine = '';
+
+    for (let i = 0; i < words.length; i++) {
+      const word = words[i];
+      const candidate = currentLine ? `${currentLine} ${word}` : word;
+      if (ctx.measureText(candidate).width <= maxWidth) {
+        currentLine = candidate;
+      } else {
+        if (currentLine) {
+          if (lines.length + 1 >= maxLines) {
+            const remainder = [currentLine, ...words.slice(i)].join(' ');
+            lines.push(fitWithEllipsis(remainder));
+            return lines;
+          }
+          lines.push(currentLine);
+          currentLine = ctx.measureText(word).width <= maxWidth ? word : fitWithEllipsis(word);
+        } else {
+          if (lines.length + 1 >= maxLines) {
+            lines.push(fitWithEllipsis(words.slice(i).join(' ')));
+            return lines;
+          }
+          lines.push(fitWithEllipsis(word));
+          currentLine = '';
+        }
+      }
+    }
+
+    if (currentLine) {
+      lines.push(fitWithEllipsis(currentLine));
+    }
+
+    return lines.slice(0, maxLines);
   }
 
   function drawRouletteWheel(canvas, prizes, rotationAngle) {
@@ -1560,19 +1709,41 @@ document.addEventListener('DOMContentLoaded', () => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const width = canvas.width;
-    const height = canvas.height;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const cssSize = canvas.clientWidth > 0 ? canvas.clientWidth : 370;
+    const targetBackingSize = Math.round(cssSize * dpr);
+    if (canvas.width !== targetBackingSize || canvas.height !== targetBackingSize) {
+      canvas.width = targetBackingSize;
+      canvas.height = targetBackingSize;
+    }
+
+    ctx.save();
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    const width = cssSize;
+    const height = cssSize;
     const centerX = width / 2;
     const centerY = height / 2;
-    const radius = width / 2 - 12;
+    const radius = width / 2 - 10;
 
     ctx.clearRect(0, 0, width, height);
-    if (!Array.isArray(prizes) || prizes.length === 0) return;
+    if (!Array.isArray(prizes) || prizes.length === 0) {
+      ctx.restore();
+      return;
+    }
 
     const numSlices = prizes.length;
     const arcSize = (2 * Math.PI) / numSlices;
+    const hubRadius = Math.max(20, Math.round(radius * 0.13));
+    const fontSize = numSlices <= 4 ? 15 : numSlices <= 6 ? 13 : numSlices <= 8 ? 11.5 : 10;
+    const lineHeight = Math.round(fontSize * 1.24);
+    const maxLines = numSlices <= 5 ? 3 : 2;
+    const textRadialPos = hubRadius + (radius - hubRadius) * 0.52;
+    const maxTextWidth = Math.max(
+      48,
+      Math.min(radius * 0.62, (radius - textRadialPos - 10) * 2, (textRadialPos - hubRadius - 8) * 2)
+    );
 
-    ctx.save();
     ctx.translate(centerX, centerY);
     ctx.rotate(rotationAngle);
 
@@ -1580,6 +1751,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const prize = prizes[i];
       const startAngle = i * arcSize;
       const endAngle = startAngle + arcSize;
+      const midAngle = startAngle + arcSize / 2;
 
       ctx.beginPath();
       ctx.moveTo(0, 0);
@@ -1590,19 +1762,38 @@ document.addEventListener('DOMContentLoaded', () => {
       ctx.fill();
 
       ctx.lineWidth = 1.5;
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.14)';
       ctx.stroke();
 
-      // Text label on wheel slice
+      // Clipped, centered, right-side-up multi-line slice label
       ctx.save();
-      ctx.rotate(startAngle + arcSize / 2);
-      ctx.textAlign = 'right';
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.arc(0, 0, radius - 5, startAngle, endAngle);
+      ctx.closePath();
+      ctx.clip();
+
+      ctx.rotate(midAngle);
+      ctx.translate(textRadialPos, 0);
+
+      const worldMid = ((rotationAngle + midAngle) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+      if (worldMid > Math.PI / 2 && worldMid < (3 * Math.PI) / 2) {
+        ctx.rotate(Math.PI);
+      }
+
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 11px Satoshi, sans-serif';
-      ctx.shadowColor = 'rgba(0,0,0,0.8)';
-      ctx.shadowBlur = 4;
-      const label = prize.name || '';
-      ctx.fillText(label.length > 18 ? label.slice(0, 16) + '…' : label, radius - 20, 4);
+      ctx.font = `600 ${fontSize}px Satoshi, -apple-system, BlinkMacSystemFont, sans-serif`;
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.72)';
+      ctx.shadowBlur = 3;
+      ctx.shadowOffsetY = 1;
+
+      const lines = wrapRouletteLabel(ctx, prize.name || '', maxTextWidth, maxLines);
+      const startY = -((lines.length - 1) * lineHeight) / 2;
+      lines.forEach((line, lineIdx) => {
+        ctx.fillText(line, 0, startY + lineIdx * lineHeight);
+      });
       ctx.restore();
     }
 
@@ -1615,7 +1806,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Center hub
     ctx.beginPath();
-    ctx.arc(0, 0, 24, 0, 2 * Math.PI);
+    ctx.arc(0, 0, hubRadius, 0, 2 * Math.PI);
     ctx.fillStyle = '#e02434';
     ctx.fill();
     ctx.lineWidth = 3;
@@ -1625,9 +1816,114 @@ document.addEventListener('DOMContentLoaded', () => {
     ctx.restore();
   }
 
-  function openRouletteModal() {
+  let rouletteAudioCtx = null;
+
+  function ensureRouletteAudioContext() {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return null;
+    if (!rouletteAudioCtx) {
+      try {
+        rouletteAudioCtx = new AudioCtx();
+      } catch (_) {
+        return null;
+      }
+    }
+    if (rouletteAudioCtx.state === 'suspended') {
+      rouletteAudioCtx.resume().catch(() => {});
+    }
+    return rouletteAudioCtx;
+  }
+
+  function playRouletteTick() {
+    const pointerEl = document.getElementById('roulettePointer');
+    if (pointerEl) {
+      pointerEl.classList.remove('kicking');
+      void pointerEl.offsetWidth;
+      pointerEl.classList.add('kicking');
+    }
+
+    const ctx = ensureRouletteAudioContext();
+    if (!ctx) return;
+    try {
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(920, now);
+      osc.frequency.exponentialRampToValueAtTime(240, now + 0.032);
+
+      gain.gain.setValueAtTime(0.16, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.04);
+    } catch (_) {}
+  }
+
+  function playRouletteWinSound() {
+    const ctx = ensureRouletteAudioContext();
+    if (!ctx) return;
+    try {
+      const now = ctx.currentTime;
+      const notes = [523.25, 659.25, 783.99, 1046.5];
+      notes.forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const start = now + idx * 0.09;
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, start);
+
+        gain.gain.setValueAtTime(0.001, start);
+        gain.gain.linearRampToValueAtTime(0.16, start + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, start + 0.36);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(start);
+        osc.stop(start + 0.38);
+      });
+    } catch (_) {}
+  }
+
+  function playRouletteNoPrizeSound() {
+    const ctx = ensureRouletteAudioContext();
+    if (!ctx) return;
+    try {
+      const now = ctx.currentTime;
+      const notes = [392.0, 311.13];
+      notes.forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const start = now + idx * 0.14;
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, start);
+
+        gain.gain.setValueAtTime(0.001, start);
+        gain.gain.linearRampToValueAtTime(0.11, start + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, start + 0.25);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(start);
+        osc.stop(start + 0.28);
+      });
+    } catch (_) {}
+  }
+
+  function openRouletteModal(options = {}) {
     const modal = document.getElementById('qitchenRouletteModal');
     if (!modal) return;
+
+    if (!options.skipHistory && window.history && typeof window.history.pushState === 'function') {
+      const cleanPath = (window.location.pathname || '/').replace(/^\/+|\/+$/g, '').toLowerCase();
+      if (cleanPath !== 'ruleta' && cleanPath !== 'promos' && cleanPath !== 'roulette') {
+        try {
+          window.history.pushState({ view: currentView, openRoulette: true }, '', '/ruleta');
+        } catch (_) {}
+      }
+    }
 
     modal.classList.add('open');
     modal.setAttribute('aria-hidden', 'false');
@@ -1638,34 +1934,63 @@ document.addEventListener('DOMContentLoaded', () => {
 
     updateRouletteBadges();
 
+    const gateEl = document.getElementById('rouletteCodeGate');
     const stageEl = document.getElementById('rouletteWheelStage');
     const resultCard = document.getElementById('rouletteResultCard');
-    const voucherCard = document.getElementById('rouletteVoucherCard');
     const cooldownCard = document.getElementById('rouletteCooldownCard');
+    const cooldownMsg = document.getElementById('rouletteCooldownMsg');
+    const codeInput = document.getElementById('rouletteAccessCodeInput');
+    const codeError = document.getElementById('rouletteCodeError');
 
     if (devState.spinsUsed >= maxSpins) {
+      if (gateEl) gateEl.hidden = true;
       if (stageEl) stageEl.hidden = true;
       if (resultCard) resultCard.hidden = true;
-      if (voucherCard) voucherCard.hidden = true;
       if (cooldownCard) cooldownCard.hidden = false;
+      if (cooldownMsg) {
+        cooldownMsg.textContent =
+          `Ya completaste los ${maxSpins} tiros disponibles de hoy para tu dispositivo. ` +
+          '¡Volvé mañana a partir de las 19:00 hs para seguir jugando por más beneficios!';
+      }
+    } else if (!isRouletteUnlocked) {
+      if (gateEl) gateEl.hidden = false;
+      if (stageEl) stageEl.hidden = true;
+      if (resultCard) resultCard.hidden = true;
+      if (cooldownCard) cooldownCard.hidden = true;
+      if (codeError) {
+        codeError.hidden = true;
+        codeError.textContent = '';
+      }
+      if (codeInput) {
+        codeInput.value = '';
+        setTimeout(() => codeInput.focus(), 60);
+      }
     } else {
+      if (gateEl) gateEl.hidden = true;
       if (stageEl) stageEl.hidden = false;
       if (resultCard) resultCard.hidden = true;
-      if (voucherCard) voucherCard.hidden = true;
       if (cooldownCard) cooldownCard.hidden = true;
 
       const canvas = document.getElementById('rouletteCanvas');
       if (canvas) {
-        drawRouletteWheel(canvas, settings.prizes, currentWheelAngle);
+        drawRouletteWheel(canvas, getSafeRoulettePrizes(settings), currentWheelAngle);
       }
     }
   }
 
-  function closeRouletteModal() {
+  function closeRouletteModal(options = {}) {
     const modal = document.getElementById('qitchenRouletteModal');
     if (modal) {
       modal.classList.remove('open');
       modal.setAttribute('aria-hidden', 'true');
+    }
+    if (!options.skipHistory && window.history && typeof window.history.replaceState === 'function') {
+      const cleanPath = (window.location.pathname || '/').replace(/^\/+|\/+$/g, '').toLowerCase();
+      if (cleanPath === 'ruleta' || cleanPath === 'promos' || cleanPath === 'roulette') {
+        try {
+          window.history.replaceState({ view: currentView, openRoulette: false }, '', VIEW_TO_PATH[currentView] || '/');
+        } catch (_) {}
+      }
     }
   }
 
@@ -1686,11 +2011,84 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Stage 0: Access Code Gate Form
+  const rouletteCodeForm = document.getElementById('rouletteCodeForm');
+  if (rouletteCodeForm) {
+    const codeInput = document.getElementById('rouletteAccessCodeInput');
+    if (codeInput) {
+      codeInput.addEventListener('input', () => {
+        codeInput.value = codeInput.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+      });
+    }
+
+    rouletteCodeForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btnUnlock = document.getElementById('btnUnlockRoulette');
+      const codeError = document.getElementById('rouletteCodeError');
+      const rawCode = codeInput ? codeInput.value.trim().toUpperCase() : '';
+
+      if (!rawCode) {
+        if (codeError) {
+          codeError.textContent = 'Ingresá el código que te dio la camarera.';
+          codeError.hidden = false;
+        }
+        codeInput?.focus();
+        return;
+      }
+
+      if (codeError) {
+        codeError.hidden = true;
+        codeError.textContent = '';
+      }
+
+      if (btnUnlock) {
+        btnUnlock.disabled = true;
+        btnUnlock.textContent = 'Validando...';
+      }
+
+      let res = { valid: false, error: 'No se pudo validar el código' };
+      if (window.MeryStore && typeof window.MeryStore.redeemRouletteAccessCode === 'function') {
+        res = await window.MeryStore.redeemRouletteAccessCode(rawCode);
+      }
+
+      if (btnUnlock) {
+        btnUnlock.disabled = false;
+        btnUnlock.textContent = 'Desbloquear Ruleta →';
+      }
+
+      if (!res || !res.valid) {
+        if (codeError) {
+          codeError.textContent = (res && res.error) || 'Código inválido o ya utilizado';
+          codeError.hidden = false;
+        }
+        codeInput?.focus();
+        codeInput?.select();
+        return;
+      }
+
+      isRouletteUnlocked = true;
+      const gateEl = document.getElementById('rouletteCodeGate');
+      const stageEl = document.getElementById('rouletteWheelStage');
+      if (gateEl) gateEl.hidden = true;
+      if (stageEl) stageEl.hidden = false;
+
+      const settings = getLiveRouletteSettings();
+      const canvas = document.getElementById('rouletteCanvas');
+      if (canvas) {
+        drawRouletteWheel(canvas, getSafeRoulettePrizes(settings), currentWheelAngle);
+      }
+    });
+  }
+
   // Spin Roulette Logic
   const btnSpin = document.getElementById('btnSpinRoulette');
   if (btnSpin) {
     btnSpin.addEventListener('click', () => {
       if (isRouletteSpinning) return;
+      if (!isRouletteUnlocked) {
+        openRouletteModal();
+        return;
+      }
 
       const settings = getLiveRouletteSettings();
       const devState = getRouletteDeviceState();
@@ -1701,28 +2099,41 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
+      const prizes = getSafeRoulettePrizes(settings);
+      if (prizes.length === 0) return;
+
       isRouletteSpinning = true;
       btnSpin.disabled = true;
+      ensureRouletteAudioContext();
 
-      const prizes = settings.prizes || [];
       const numSlices = prizes.length;
       const arcSize = (2 * Math.PI) / numSlices;
 
-      // Select winning slice based on probabilities & stock
-      const availablePrizes = prizes.map((p, idx) => ({ ...p, originalIndex: idx }))
-        .filter((p) => p.id === 'segui-participando' || (Number(p.stock) || 0) > 0);
+      // Select winning slice based on normalized weights & stock
+      const indexedPrizes = prizes.map((p, idx) => ({ ...p, originalIndex: idx }));
+      let availablePrizes = indexedPrizes.filter((p) => isNoPrizeSlot(p) || (Number(p.stock) || 0) > 0);
+      if (availablePrizes.length === 0) {
+        availablePrizes = indexedPrizes;
+      }
 
-      const totalWeight = availablePrizes.reduce((sum, p) => sum + (Number(p.probability) || 10), 0);
-      let rand = Math.random() * totalWeight;
+      const getWeight = (p) => {
+        const val = Number(p.probability);
+        return Number.isFinite(val) && val > 0 ? val : 0;
+      };
+      const totalWeight = availablePrizes.reduce((sum, p) => sum + getWeight(p), 0);
       let wonPrize = availablePrizes[0];
-      for (const p of availablePrizes) {
-        rand -= (Number(p.probability) || 10);
-        if (rand <= 0) {
-          wonPrize = p;
-          break;
+      if (totalWeight <= 0) {
+        wonPrize = availablePrizes[Math.floor(Math.random() * availablePrizes.length)];
+      } else {
+        let rand = Math.random() * totalWeight;
+        for (const p of availablePrizes) {
+          rand -= getWeight(p);
+          if (rand <= 0) {
+            wonPrize = p;
+            break;
+          }
         }
       }
-      currentPrizeWon = wonPrize;
 
       // Calculate target rotation angle so pointer (at 12 o'clock, 3π/2) lands on winning slice
       const winningIndex = wonPrize.originalIndex;
@@ -1739,6 +2150,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const deltaAngle = totalRotation - (startAngle % (2 * Math.PI)) + 4 * Math.PI;
 
       const canvas = document.getElementById('rouletteCanvas');
+      let lastSliceIndex = Math.floor((((3 * Math.PI) / 2 - startAngle) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) / arcSize) % numSlices;
 
       function animate(time) {
         const elapsed = time - startTime;
@@ -1750,15 +2162,26 @@ document.addEventListener('DOMContentLoaded', () => {
           drawRouletteWheel(canvas, prizes, currentWheelAngle);
         }
 
+        const relAngle = (((3 * Math.PI) / 2 - currentWheelAngle) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+        const currentSliceIndex = Math.floor(relAngle / arcSize) % numSlices;
+        if (currentSliceIndex !== lastSliceIndex) {
+          lastSliceIndex = currentSliceIndex;
+          playRouletteTick();
+        }
+
         if (progress < 1) {
           requestAnimationFrame(animate);
         } else {
           isRouletteSpinning = false;
+          isRouletteUnlocked = false;
           btnSpin.disabled = false;
 
-          // Consume spin
+          // Consume spin and decrement prize stock
           devState.spinsUsed += 1;
           saveRouletteDeviceState(devState);
+          if (!isNoPrizeSlot(wonPrize) && window.MeryStore && typeof window.MeryStore.decrementRoulettePrizeStock === 'function') {
+            window.MeryStore.decrementRoulettePrizeStock(wonPrize.id);
+          }
           updateRouletteBadges();
 
           // Show Result
@@ -1771,20 +2194,22 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function handleSpinComplete(prize) {
+    const gateEl = document.getElementById('rouletteCodeGate');
     const stageEl = document.getElementById('rouletteWheelStage');
     const resultCard = document.getElementById('rouletteResultCard');
-    const noPrizeCard = document.getElementById('rouletteNoPrizeCard');
-    const claimForm = document.getElementById('rouletteClaimForm');
     const kickerEl = resultCard ? resultCard.querySelector('.congrats-kicker') : null;
     const prizeNameEl = document.getElementById('rouletteResultPrizeName');
     const prizeCondEl = document.getElementById('rouletteResultCondition');
+    const venueNoteEl = document.getElementById('rouletteResultVenueNote');
 
+    if (gateEl) gateEl.hidden = true;
     if (stageEl) stageEl.hidden = true;
     if (resultCard) resultCard.hidden = false;
 
-    const isNoPrize = (prize.id === 'segui-participando');
+    const isNoPrize = isNoPrizeSlot(prize);
 
     if (isNoPrize) {
+      playRouletteNoPrizeSound();
       if (kickerEl) kickerEl.textContent = '★ ¡CASI! SEGUÍ PARTICIPANDO ★';
       if (prizeNameEl) prizeNameEl.textContent = prize.name || 'Seguí Participando';
       if (prizeCondEl) {
@@ -1792,295 +2217,54 @@ document.addEventListener('DOMContentLoaded', () => {
         const devState = getRouletteDeviceState();
         const left = Math.max(0, (settings.maxSpinsPerDevice || 3) - devState.spinsUsed);
         prizeCondEl.textContent = left > 0
-          ? `Te quedan ${left} tiro${left === 1 ? '' : 's'} hoy. ¡Volvé a girar para llevarte un shot o 2x1!`
+          ? `No salió premio en este tiro. Te quedan ${left} tiro${left === 1 ? '' : 's'} hoy — ¡pedile otro código a la camarera con tu próxima vuelta!`
           : 'Completaste los tiros disponibles de hoy. ¡Volvé mañana!';
       }
-      if (claimForm) claimForm.hidden = true;
-      if (noPrizeCard) noPrizeCard.hidden = false;
+      if (venueNoteEl) venueNoteEl.hidden = true;
     } else {
+      playRouletteWinSound();
       if (kickerEl) kickerEl.textContent = '★ ¡FELICITACIONES! GANASTE ★';
       if (prizeNameEl) prizeNameEl.textContent = prize.name;
-      if (prizeCondEl) prizeCondEl.textContent = prize.condition || 'Válido para canjear hoy en barra';
-      if (claimForm) claimForm.hidden = false;
-      if (noPrizeCard) noPrizeCard.hidden = true;
-
-      // Prefill previous name/phone if available
-      const nameInput = document.getElementById('rouletteClaimName');
-      const phoneInput = document.getElementById('rouletteClaimPhone');
-      if (nameInput && !nameInput.value) nameInput.value = localStorage.getItem('mery_user_name') || '';
-      if (phoneInput && !phoneInput.value) phoneInput.value = localStorage.getItem('mery_user_phone') || '';
+      if (prizeCondEl) prizeCondEl.textContent = prize.condition || 'Válido para canjear en el momento';
+      if (venueNoteEl) {
+        venueNoteEl.textContent = 'Mostrale esta pantalla a la camarera para canjear tu premio en el momento.';
+        venueNoteEl.hidden = false;
+      }
     }
   }
 
-  const btnSpinAgain = document.getElementById('btnSpinAgain');
-  if (btnSpinAgain) {
-    btnSpinAgain.addEventListener('click', () => {
-      const stageEl = document.getElementById('rouletteWheelStage');
-      const resultCard = document.getElementById('rouletteResultCard');
-      if (resultCard) resultCard.hidden = true;
-      if (stageEl) stageEl.hidden = false;
-      const canvas = document.getElementById('rouletteCanvas');
-      const settings = getLiveRouletteSettings();
-      if (canvas) drawRouletteWheel(canvas, settings.prizes, currentWheelAngle);
-    });
-  }
-
-  // Claim Prize Form (Dispatches via Evolution API via MeryStore.claimRoulettePrize)
-  const claimForm = document.getElementById('rouletteClaimForm');
-  if (claimForm) {
-    claimForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      if (!currentPrizeWon) return;
-
-      const nameInput = document.getElementById('rouletteClaimName');
-      const phoneInput = document.getElementById('rouletteClaimPhone');
-
-      const name = nameInput ? nameInput.value.trim() : '';
-      const phone = phoneInput ? phoneInput.value.trim() : '';
-
-      if (!name || !phone) {
-        alert('Por favor ingresá tu nombre y WhatsApp para generar tu cupón digital.');
-        return;
-      }
-
-      try {
-        localStorage.setItem('mery_user_name', name);
-        localStorage.setItem('mery_user_phone', phone);
-      } catch (_) {}
-
-      let voucher = null;
-
-      if (window.MeryStore && typeof window.MeryStore.claimRoulettePrize === 'function') {
-        const res = window.MeryStore.claimRoulettePrize(currentPrizeWon.id, { name, phone });
-        if (res && res.success) {
-          voucher = res.voucher;
-        }
-      }
-
-      if (!voucher) {
-        const code = 'PREVIA-' + Math.random().toString(36).substring(2, 6).toUpperCase();
-        voucher = {
-          code,
-          prizeId: currentPrizeWon.id,
-          prizeName: currentPrizeWon.name,
-          condition: currentPrizeWon.condition,
-          clientName: name,
-          clientPhone: phone,
-          claimedAt: new Date().toISOString(),
-          status: 'valido'
-        };
-      }
-
-      currentIssuedVoucher = voucher;
-
-      const devState = getRouletteDeviceState();
-      if (!Array.isArray(devState.claimedVouchers)) devState.claimedVouchers = [];
-      devState.claimedVouchers.push(voucher);
-      saveRouletteDeviceState(devState);
-      updateRouletteBadges();
-
-      // Show voucher card
-      const resultCard = document.getElementById('rouletteResultCard');
-      const voucherCard = document.getElementById('rouletteVoucherCard');
-      if (resultCard) resultCard.hidden = true;
-      if (voucherCard) voucherCard.hidden = false;
-
-      const codeEl = document.getElementById('voucherCode');
-      const prizeEl = document.getElementById('voucherPrize');
-      const clientEl = document.getElementById('voucherClient');
-      const condEl = document.getElementById('voucherCondition');
-      const waNotice = document.getElementById('voucherWaNotice');
-
-      if (codeEl) codeEl.textContent = voucher.code;
-      if (prizeEl) prizeEl.textContent = voucher.prizeName;
-      if (clientEl) clientEl.textContent = voucher.clientName;
-      if (condEl) condEl.textContent = voucher.condition;
-      if (waNotice) {
-        waNotice.hidden = false;
-        waNotice.style.display = 'inline-flex';
-      }
-
-      const shareBtn = document.getElementById('btnShareVoucherWhatsapp');
-      if (shareBtn) {
-        const issueDate = new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-        const issueTime = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
-
-        const waText =
-          `*MERY JANE · LA PREVIA — CUPÓN DIGITAL EXCLUSIVO*\n\n` +
-          `¡Felicitaciones, ${voucher.clientName}! Tu premio obtenido en la Ruleta de La Previa ya está emitido y registrado en el sistema del bar con código de seguridad único.\n\n` +
-          `• *CÓDIGO DE VALIDACIÓN:* *${voucher.code}*\n` +
-          `• *BENEFICIO:* *${voucher.prizeName}*\n` +
-          `• *TITULAR:* ${voucher.clientName}\n` +
-          `• *CONDICIÓN DE USO:* ${voucher.condition}\n` +
-          `• *FECHA DE EMISIÓN:* ${issueDate} a las ${issueTime} hs\n\n` +
-          `*CLÁUSULA DE SEGURIDAD Y CANJE:*\n` +
-          `1. Este cupón digital es personal, intransferible y de un solo uso.\n` +
-          `2. Mostrá este mensaje o tu pantalla al mozo o en la barra al momento de ordenar.\n` +
-          `3. Al canjearse, el código queda registrado como utilizado en el sistema del bar y se invalida automáticamente.\n\n` +
-          `*Ubicación:* Calle 101 Nº 85, Guernica.\n` +
-          `*Tu noche empieza acá.*`;
-
-        shareBtn.onclick = () => {
-          window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(waText)}`, '_blank', 'noopener,noreferrer');
-        };
-      }
-    });
-  }
-
-  // --- Download Voucher as Image (Canvas Generation) ---
-  function downloadVoucherImage(voucher) {
-    if (!voucher) return;
-
-    const canvas = document.createElement('canvas');
-    canvas.width = 800;
-    canvas.height = 1000;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    // Background gradient
-    const bgGrad = ctx.createLinearGradient(0, 0, 0, 1000);
-    bgGrad.addColorStop(0, '#160e12');
-    bgGrad.addColorStop(0.5, '#0d0a0b');
-    bgGrad.addColorStop(1, '#1a0b10');
-    ctx.fillStyle = bgGrad;
-    ctx.fillRect(0, 0, 800, 1000);
-
-    // Outer border
-    ctx.strokeStyle = '#e02434';
-    ctx.lineWidth = 4;
-    ctx.strokeRect(24, 24, 752, 952);
-
-    // Inner subtle gold border
-    ctx.strokeStyle = 'rgba(212, 175, 55, 0.4)';
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(36, 36, 728, 928);
-
-    // Header Tag
-    ctx.fillStyle = '#e02434';
-    ctx.font = 'bold 22px Satoshi, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('MERY JANE • LA PREVIA', 400, 95);
-
-    ctx.fillStyle = '#d4af37';
-    ctx.font = '600 14px Satoshi, sans-serif';
-    ctx.letterSpacing = '4px';
-    ctx.fillText('★ CUPÓN DIGITAL OFICIAL ★', 400, 125);
-
-    // Divider Line
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(80, 160);
-    ctx.lineTo(720, 160);
-    ctx.stroke();
-
-    // Code Box
-    ctx.fillStyle = 'rgba(224, 36, 52, 0.08)';
-    ctx.fillRect(100, 195, 600, 110);
-    ctx.strokeStyle = '#e02434';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(100, 195, 600, 110);
-
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-    ctx.font = '600 15px Satoshi, sans-serif';
-    ctx.fillText('CÓDIGO DE VALIDACIÓN', 400, 230);
-
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '900 44px Satoshi, sans-serif';
-    ctx.fillText(voucher.code, 400, 285);
-
-    // Prize
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-    ctx.font = '600 16px Satoshi, sans-serif';
-    ctx.fillText('BENEFICIO GANADO', 400, 365);
-
-    ctx.fillStyle = '#e02434';
-    ctx.font = 'bold 36px Bodoni Moda, serif';
-    ctx.fillText(voucher.prizeName, 400, 420);
-
-    // Condition
-    ctx.fillStyle = 'rgba(251, 247, 238, 0.85)';
-    ctx.font = '500 20px Satoshi, sans-serif';
-    ctx.fillText(voucher.condition || 'Válido para canjear hoy en el local', 400, 470);
-
-    // Tear line simulation
-    ctx.setLineDash([12, 10]);
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
-    ctx.beginPath();
-    ctx.moveTo(50, 540);
-    ctx.lineTo(750, 540);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    // Details Grid
-    ctx.textAlign = 'left';
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
-    ctx.font = '600 14px Satoshi, sans-serif';
-    ctx.fillText('TITULAR', 100, 600);
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 22px Satoshi, sans-serif';
-    ctx.fillText(voucher.clientName, 100, 635);
-
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
-    ctx.font = '600 14px Satoshi, sans-serif';
-    ctx.fillText('FECHA DE EMISIÓN', 100, 695);
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 20px Satoshi, sans-serif';
-    const dateStr = new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' • ' + new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) + ' hs';
-    ctx.fillText(dateStr, 100, 730);
-
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
-    ctx.font = '600 14px Satoshi, sans-serif';
-    ctx.fillText('UBICACIÓN', 100, 790);
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 20px Satoshi, sans-serif';
-    ctx.fillText('Calle 101 Nº 85 • Guernica, Buenos Aires', 100, 825);
-
-    // Footer Security Notice
-    ctx.textAlign = 'center';
-    ctx.fillStyle = 'rgba(224, 36, 52, 0.9)';
-    ctx.font = 'bold 13px Satoshi, sans-serif';
-    ctx.fillText('● CUPÓN DE UN SOLO USO • INTRANSFERIBLE • VERIFICADO POR SISTEMA', 400, 900);
-
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-    ctx.font = '12px Satoshi, sans-serif';
-    ctx.fillText('Presentá esta imagen en la barra o a tu mozo al momento de ordenar.', 400, 930);
-
-    // Convert to PNG and Trigger Download
-    const dataUrl = canvas.toDataURL('image/png');
-    const a = document.createElement('a');
-    a.href = dataUrl;
-    a.download = `Cupon-Mery-La-Previa-${voucher.code}.png`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  }
-
-  const btnDownloadVoucher = document.getElementById('btnDownloadVoucher');
-  if (btnDownloadVoucher) {
-    btnDownloadVoucher.addEventListener('click', () => {
-      if (currentIssuedVoucher) {
-        downloadVoucherImage(currentIssuedVoucher);
-      } else {
-        const devState = getRouletteDeviceState();
-        const lastVoucher = devState.claimedVouchers && devState.claimedVouchers.length > 0
-          ? devState.claimedVouchers[devState.claimedVouchers.length - 1]
-          : null;
-        if (lastVoucher) downloadVoucherImage(lastVoucher);
-      }
-    });
-  }
-
-  const btnDismissVoucher = document.getElementById('btnDismissVoucher');
-  if (btnDismissVoucher) {
-    btnDismissVoucher.addEventListener('click', closeRouletteModal);
+  const btnCloseRouletteResult = document.getElementById('btnCloseRouletteResult');
+  if (btnCloseRouletteResult) {
+    btnCloseRouletteResult.addEventListener('click', closeRouletteModal);
   }
 
   const btnCloseCooldownBtn = document.getElementById('btnCloseCooldownBtn');
   if (btnCloseCooldownBtn) {
     btnCloseCooldownBtn.addEventListener('click', () => {
-      closeRouletteModal();
+      closeRouletteModal({ skipHistory: true });
       navigateView('menu');
     });
   }
+
+  // Deep-link route initialization & browser back/forward support
+  if (initialRoute.hasSlug) {
+    updateDOMView(initialRoute.view);
+    scrollToActiveSection(initialRoute.view);
+    if (initialRoute.openRoulette) {
+      openRouletteModal({ skipHistory: true });
+    }
+  }
+
+  window.addEventListener('popstate', () => {
+    const route = resolveRouteFromLocation();
+    if (!route.openRoulette) {
+      closeRouletteModal({ skipHistory: true });
+    }
+    if (route.view !== currentView) {
+      navigateView(route.view, { skipHistory: true });
+    }
+    if (route.openRoulette) {
+      openRouletteModal({ skipHistory: true });
+    }
+  });
 });
