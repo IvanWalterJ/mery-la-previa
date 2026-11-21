@@ -1132,6 +1132,16 @@ document.addEventListener('DOMContentLoaded', () => {
       navBtn.classList.toggle('active', navBtn.getAttribute('data-goto') === targetView);
     });
 
+    const floatingBackWrap = document.getElementById('qFloatingBackWrap');
+    const floatingBackBtn = document.getElementById('btnFloatingBack');
+    const showFloatingBack = targetView === 'drinks' || targetView === 'menu' || targetView === 'about';
+    if (floatingBackWrap) {
+      floatingBackWrap.setAttribute('aria-hidden', showFloatingBack ? 'false' : 'true');
+    }
+    if (floatingBackBtn) {
+      floatingBackBtn.tabIndex = showFloatingBack ? 0 : -1;
+    }
+
     currentView = targetView;
     syncHeroTextVisibility();
 

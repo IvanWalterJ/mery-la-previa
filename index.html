@@ -30,7 +30,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,900&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;0,6..96,700;0,6..96,900;1,6..96,500;1,6..96,700;1,6..96,900&family=Forum&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=31" />
+  <link rel="stylesheet" href="styles.css?v=32" />
   <style>
     /* Skip neon intro immediately on deep-link slugs (e.g. QR to /carta, /tragos, /ruleta) */
     html.skip-intro #neonIntroCurtain {
@@ -790,6 +790,24 @@
         </div>
       </section>
 
+      <!-- FLOATING BOTTOM "VOLVER" BUTTON (Visible on Drinks, Menu & About; hidden on Home & Reservation) -->
+      <div id="qFloatingBackWrap" class="q-floating-back-wrap" aria-hidden="true">
+        <button
+          type="button"
+          id="btnFloatingBack"
+          class="q-floating-back-btn"
+          data-goto="home"
+          aria-label="Volver al inicio"
+          tabindex="-1"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          <span>Volver</span>
+        </button>
+      </div>
+
     </main>
   </div>
 
@@ -976,6 +994,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js?v=25"></script>
-  <script src="app.js?v=32"></script>
+  <script src="app.js?v=33"></script>
 </body>
 </html>
