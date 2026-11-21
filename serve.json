@@ -6,11 +6,19 @@
     { "source": "/admin", "destination": "/admin.html" },
     { "source": "/pase", "destination": "/pase.html" },
     { "source": "/inicio", "destination": "/index.html" },
+    { "source": "/home", "destination": "/index.html" },
     { "source": "/tragos", "destination": "/index.html" },
+    { "source": "/bebidas", "destination": "/index.html" },
+    { "source": "/drinks", "destination": "/index.html" },
     { "source": "/carta", "destination": "/index.html" },
+    { "source": "/menu", "destination": "/index.html" },
     { "source": "/ruleta", "destination": "/index.html" },
     { "source": "/promos", "destination": "/index.html" },
+    { "source": "/roulette", "destination": "/index.html" },
     { "source": "/reservas", "destination": "/index.html" },
-    { "source": "/nosotros", "destination": "/index.html" }
+    { "source": "/reserva", "destination": "/index.html" },
+    { "source": "/reservation", "destination": "/index.html" },
+    { "source": "/nosotros", "destination": "/index.html" },
+    { "source": "/about", "destination": "/index.html" }
   ]
 }

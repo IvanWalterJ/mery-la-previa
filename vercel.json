@@ -6,14 +6,20 @@
     { "source": "/version2.html", "destination": "/", "permanent": false }
   ],
   "rewrites": [
-    { "source": "/admin", "destination": "/admin.html" },
-    { "source": "/pase", "destination": "/pase.html" },
-    { "source": "/inicio", "destination": "/index.html" },
-    { "source": "/tragos", "destination": "/index.html" },
-    { "source": "/carta", "destination": "/index.html" },
-    { "source": "/ruleta", "destination": "/index.html" },
-    { "source": "/promos", "destination": "/index.html" },
-    { "source": "/reservas", "destination": "/index.html" },
-    { "source": "/nosotros", "destination": "/index.html" }
+    { "source": "/inicio", "destination": "/" },
+    { "source": "/home", "destination": "/" },
+    { "source": "/tragos", "destination": "/" },
+    { "source": "/bebidas", "destination": "/" },
+    { "source": "/drinks", "destination": "/" },
+    { "source": "/carta", "destination": "/" },
+    { "source": "/menu", "destination": "/" },
+    { "source": "/ruleta", "destination": "/" },
+    { "source": "/promos", "destination": "/" },
+    { "source": "/roulette", "destination": "/" },
+    { "source": "/reservas", "destination": "/" },
+    { "source": "/reserva", "destination": "/" },
+    { "source": "/reservation", "destination": "/" },
+    { "source": "/nosotros", "destination": "/" },
+    { "source": "/about", "destination": "/" }
   ]
 }
